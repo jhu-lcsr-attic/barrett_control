@@ -65,9 +65,9 @@ class CISST_EXPORT mtsWAM :
 
   mtsWAM( const std::string& name,
 	  osaCANBus* canbus, 
-	  osaCPUMask cpumask,
-	  int priority,
-	  osaWAM::Configuration configuration = WAM_7DOF );
+	  osaWAM::Configuration configuration = WAM_7DOF,
+	  osaCPUMask cpumask = OSA_CPUANY,
+	  int priority = 80 );
 
   void Configure( const std::string& CMN_UNUSED(argv) = "" )
   { osaWAM::Initialize(); }

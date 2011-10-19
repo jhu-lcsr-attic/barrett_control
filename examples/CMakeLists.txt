@@ -6,10 +6,12 @@ set(
   cisstVector
   cisstOSAbstraction
   cisstMultiTask
-  cisstParameterTypes )
+  cisstParameterTypes
+  cisstRobot
+  cisstNumerical )
 
-find_package( cisst REQUIRED ${REQUIRED_CISST_LIBRARIES} )
-find_package( sawBarrett REQUIRED HINTS "${CISST_BINARY_DIR}/saw/components")
+find_package(cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package(sawBarrett REQUIRED HINTS "${CISST_BINARY_DIR}/saw/components")
 
 if( cisst_FOUND AND sawBarrett_FOUND )
 
@@ -37,5 +39,21 @@ if( cisst_FOUND AND sawBarrett_FOUND )
   cisst_target_link_libraries( osaBH8_280Example ${REQUIRED_CISST_LIBRARIES} )
   cisst_target_link_libraries( mtsPuckExample    ${REQUIRED_CISST_LIBRARIES} )
   cisst_target_link_libraries( mtsWAMExample     ${REQUIRED_CISST_LIBRARIES} )
+
+  find_package( sawControllers HINTS "${CISST_BINARY_DIR}/saw/components" )
+  find_package( sawKeyboard    HINTS "${CISST_BINARY_DIR}/saw/components" )
+  if( sawControllers_FOUND AND sawKeyboard_FOUND )
+
+    add_executable( osaWAMGCExample osaWAMGCExample.cpp )
+    add_executable( mtsWAMGCExample mtsWAMGCExample.cpp )
+
+    target_link_libraries( osaWAMGCExample sawBarrett sawCANBus sawControllers )
+    target_link_libraries( mtsWAMGCExample sawBarrett sawCANBus sawControllers sawKeyboard )
+
+    cisst_target_link_libraries( osaWAMGCExample ${REQUIRED_CISST_LIBRARIES} )
+    cisst_target_link_libraries( mtsWAMGCExample ${REQUIRED_CISST_LIBRARIES} )
+
+  endif( sawControllers_FOUND AND sawKeyboard_FOUND )
+
 
 endif( cisst_FOUND AND sawBarrett_FOUND )

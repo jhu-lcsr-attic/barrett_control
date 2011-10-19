@@ -472,14 +472,13 @@ osaGroup::Errno osaGroup::SetTorques( const vctFixedSizeVector<double,4>& tau ){
 
   if( GetID() == osaGroup::UPPERARM || GetID() == osaGroup::FOREARM ){
     
-    double currents[4] = {0.0, 0.0, 0.0, 0.0};
-
-    for( size_t i=0; i<4; i++ )
+    vctFixedSizeVector<double,4> currents( 0.0 );
+    for( size_t i=0; i<currents.size(); i++ )
       { currents[i] = tau[i] * pucks[i].IpNm(); }
     
     // pack the torques in a can frames
     osaCANBusFrame frame;
-    if( PackCurrents( frame, tau ) != osaGroup::ESUCCESS ){
+    if( PackCurrents( frame, currents ) != osaGroup::ESUCCESS ){
       CMN_LOG_RUN_ERROR << "Failed to pack the torques" << std::endl;
       return osaGroup::EFAILURE;
     }
@@ -490,6 +489,11 @@ osaGroup::Errno osaGroup::SetTorques( const vctFixedSizeVector<double,4>& tau ){
       return osaGroup::EFAILURE;
     }
 
+  }
+  else{
+    CMN_LOG_RUN_WARNING << LogPrefix() 
+			<< "Group  cannot send torques" << std::endl;
+    return osaGroup::EFAILURE;
   }
 
   return osaGroup::ESUCCESS;
@@ -519,7 +523,6 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
       }
 
       values[ idx ] = (Barrett::Value)I[i];        // cast the torque      
-
     }
 
     // pack the torques in a 8 bytes message (see the documentation)
@@ -535,12 +538,14 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
     
     // build a can frame addressed to the group ID 
     frame = osaCANBusFrame( osaGroup::CANID( GetID() ), msg, 8 );
+
     return osaGroup::ESUCCESS;
   }
-
-  CMN_LOG_RUN_ERROR << "Group " << GetID() << " cannot send torques"<<std::endl;
-
-  return osaGroup::EFAILURE;
+  else{
+    CMN_LOG_RUN_WARNING << LogPrefix() 
+			<< "Group cannot pack torques" << std::endl;
+    return osaGroup::EFAILURE;
+  }
 
 }
 
@@ -588,4 +593,5 @@ osaGroup::Errno osaGroup::SetMode( Barrett::Value mode ){
   return osaGroup::ESUCCESS;
 
 }
+
 

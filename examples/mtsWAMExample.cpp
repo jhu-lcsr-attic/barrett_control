@@ -75,7 +75,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  mtsWAM WAM( "WAM", &can, OSA_CPU4, 80 );
+  mtsWAM WAM( "WAM", &can, osaWAM::WAM_7DOF, OSA_CPU4, 80 );
   WAM.Configure();
   WAM.SetPositions( vctDynamicVector<double>(7, 
 					     0.0, -cmnPI_2, 0.0, cmnPI, 

@@ -58,7 +58,6 @@ osaPuck::osaPuck( osaPuck::ID id, osaCANBus* canbus, bool createfilter ){
     // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
     // GFF FFFT TTTT ( 0x5EF ) 
     canbus->AddFilter( osaCANBus::Filter( 0x05EF, (filterid | 0x0006) ) );
-    std::cout << "Added filter " << (int)id << std::endl;
   }
 
 }
@@ -614,6 +613,19 @@ osaPuck::Errno osaPuck::SetMode( Barrett::Value mode ){
   // set puck mode
   if( SetProperty( Barrett::MODE, mode, true ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to set mode" << std::endl;
+    return osaPuck::EFAILURE;
+  }
+
+  return osaPuck::ESUCCESS;
+
+}
+
+osaPuck::Errno osaPuck::GetMode( Barrett::Value& mode ){
+
+  //CMN_LOG_RUN_VERBOSE << "SetMode: " << (int)mode << std::endl;
+  // get puck mode
+  if( GetProperty( Barrett::MODE, mode ) != osaPuck::ESUCCESS ){
+    CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get mode" << std::endl;
     return osaPuck::EFAILURE;
   }
 

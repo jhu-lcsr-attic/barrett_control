@@ -234,6 +234,28 @@ osaWAM::Errno osaWAM::SetMode( Barrett::Value mode ){
 
 }
 
+osaWAM::Errno osaWAM::GetMode( osaWAM::Mode& mode ){
+  mode = osaWAM::MODE_ACTIVATED;
+
+  for( size_t i=0; i<pucks.size(); i++ ){
+    Barrett::Value mi = osaPuck::MODE_IDLE;
+
+    if( pucks[i].GetMode( mi ) != osaPuck::ESUCCESS ){
+      CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
+      return osaWAM::EFAILURE;
+    }
+    
+    if( mi == osaPuck::MODE_IDLE ){
+      mode = osaWAM::MODE_IDLE;
+      return osaWAM::ESUCCESS;
+    }
+
+  }
+
+  return osaWAM::ESUCCESS;
+
+}
+
 // set the motor positions 
 osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
 
@@ -359,7 +381,7 @@ osaWAM::Errno osaWAM::SetTorques( const vctDynamicVector<double>& jt ){
     if( jt.size() == 7 ){
 
       vctDynamicVector<double> mt = JointsTrq2MotorsTrq( jt );
-      
+
       vctFixedSizeVector<double,4> mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;

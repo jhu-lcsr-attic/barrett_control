@@ -21,9 +21,9 @@ http://www.cisst.org/cisst/license.txt.
 // main constructor
 mtsWAM::mtsWAM( const std::string& name,
 	        osaCANBus* canbus,
+		osaWAM::Configuration configuration,
 		osaCPUMask cpumask,
-		int priority,
-		osaWAM::Configuration configuration ) :
+		int priority ) : 
   mtsTaskContinuous( name ),
   osaWAM( canbus, configuration ),
   input( NULL ),

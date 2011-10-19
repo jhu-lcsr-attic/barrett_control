@@ -48,6 +48,8 @@ class CISST_EXPORT osaWAM{
 
   enum Configuration{ WAM_4DOF, WAM_7DOF };
 
+  enum Mode{ MODE_IDLE, MODE_ACTIVATED };
+
  private:
 
   osaWAM::Configuration configuration;
@@ -241,6 +243,8 @@ class CISST_EXPORT osaWAM{
 
   //! Set the modes of the pucks
   osaWAM::Errno SetMode( Barrett::Value mode );
+
+  osaWAM::Errno GetMode( osaWAM::Mode& mode );
 
 };
 

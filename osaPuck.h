@@ -244,6 +244,8 @@ public:
 
   
   osaPuck::Errno SetMode( Barrett::Value mode );
+  osaPuck::Errno GetMode( Barrett::Value& mode );
+
   osaPuck::Errno GetGroupA();
   osaPuck::Errno GetGroupB();
   osaPuck::Errno GetGroupC();
