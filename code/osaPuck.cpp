@@ -45,22 +45,28 @@ osaPuck::ID operator++( osaPuck::ID& pid, int  ){
 osaPuck::osaPuck(){}
 
 // Initialize the puck to its ID and the CAN bus
-osaPuck::osaPuck( osaPuck::ID id, osaCANBus* canbus ){
+osaPuck::osaPuck( osaPuck::ID id, osaCANBus* canbus, bool createfilter ){
   this->id = id;
   this->canbus = canbus;
 
-  // Add a filter for the puck property
-  osaCANBusFrame::ID filterid = 0x0000;
-  filterid |= ( 0x00000001 << 10 );
-  filterid |= ( GetID() << 5 );
-  canbus->AddFilter( osaCANBus::Filter( 0x05FF, (filterid | 0x0006) ) );
+  // Add a filter for the property feedback group (group 6)
+  // 
+  if( createfilter ){
+    osaCANBusFrame::ID filterid = 0x0000;
+    filterid |= ( 0x00000001 << 10 ); // group bit shifted 10 bits 
+    filterid |= ( GetID() << 5 );     // from  bits shifted 5 bits
+    // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+    // GFF FFFT TTTT ( 0x5EF ) 
+    canbus->AddFilter( osaCANBus::Filter( 0x05EF, (filterid | 0x0006) ) );
+    std::cout << "Added filter " << (int)id << std::endl;
+  }
 
 }
 
 std::string osaPuck::LogPrefix(){
 
   std::ostringstream oss;
-  oss << "Puck " << GetID() << ": ";
+  oss << "Puck " << (int)GetID() << ": ";
   return std::string( oss.str() );
 
 }
@@ -315,6 +321,8 @@ osaPuck::Errno osaPuck::UnpackCANFrame(const osaCANBusFrame& canframe,
 // configure the status of the puck and the motor/encoder constants
 osaPuck::Errno osaPuck::InitializeMotor(){
 
+  CMN_LOG_RUN_VERBOSE << LogPrefix() << "Initializing motor" << std::endl;
+
   Barrett::Value status;
   if( GetStatus( status ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to query the status" 
@@ -413,7 +421,7 @@ osaPuck::Errno osaPuck::InitializeSM(){
 
   if( GetID() == osaPuck::SAFETY_MODULE_ID ){
 
-    CMN_LOG_RUN_VERBOSE << LogPrefix() <<"Querying the status"<<std::endl;
+    //CMN_LOG_RUN_VERBOSE << LogPrefix() <<"Querying the status"<<std::endl;
     Barrett::Value smstatus;
     if( GetProperty( Barrett::STATUS, smstatus ) != osaSafetyModule::ESUCCESS ){
       CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to query the safety module."
@@ -588,6 +596,7 @@ osaPuck::Errno osaPuck::SetPosition( double q ){
 
 osaPuck::Errno osaPuck::GetStatus( Barrett::Value& status ){
 
+  //CMN_LOG_RUN_VERBOSE << "GetStatus" << std::endl;
   if( GetProperty( Barrett::STATUS, status ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to query the status" 
 		      << std::endl;
@@ -601,6 +610,7 @@ osaPuck::Errno osaPuck::GetStatus( Barrett::Value& status ){
 
 osaPuck::Errno osaPuck::SetMode( Barrett::Value mode ){
 
+  //CMN_LOG_RUN_VERBOSE << "SetMode: " << (int)mode << std::endl;
   // set puck mode
   if( SetProperty( Barrett::MODE, mode, true ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to set mode" << std::endl;
@@ -625,6 +635,7 @@ osaPuck::Errno osaPuck::GetCountsPerRev(){
 
 osaPuck::Errno osaPuck::GetIpNm(){
 
+  //CMN_LOG_RUN_VERBOSE << "GetIpNm" << std::endl;
   // get the motor torque constant
   if( GetProperty( Barrett::IPNM, ipnm ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get I/Nm" << std::endl;
@@ -638,6 +649,7 @@ osaPuck::Errno osaPuck::GetIpNm(){
 
 osaPuck::Errno osaPuck::GetGroupIndex(){
 
+  //CMN_LOG_RUN_VERBOSE << "Get group index" << std::endl;
   // get the puck index
   if( GetProperty( Barrett::PUCKINDEX, grpidx ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get index" << std::endl;
@@ -650,6 +662,8 @@ osaPuck::Errno osaPuck::GetGroupIndex(){
 }
 
 osaPuck::Errno osaPuck::GetMembership(){
+
+  //CMN_LOG_RUN_VERBOSE << "Get membership" << std::endl;
 
   if( GetGroupA() != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get group A" << std::endl;
@@ -706,6 +720,7 @@ osaPuck::Errno osaPuck::GetMembership(){
 
 osaPuck::Errno osaPuck::GetGroupA(){
 
+  //CMN_LOG_RUN_VERBOSE << "Get A membership" << std::endl;
   if( GetProperty( Barrett::GROUPA, groupA ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get group A" << std::endl;
     return osaPuck::EFAILURE;
@@ -716,6 +731,7 @@ osaPuck::Errno osaPuck::GetGroupA(){
 
 osaPuck::Errno osaPuck::GetGroupB(){
 
+  //CMN_LOG_RUN_VERBOSE << "Get B membership" << std::endl;
   if( GetProperty( Barrett::GROUPB, groupB ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get group B" << std::endl;
     return osaPuck::EFAILURE;
@@ -726,6 +742,7 @@ osaPuck::Errno osaPuck::GetGroupB(){
 
 osaPuck::Errno osaPuck::GetGroupC(){
 
+  //CMN_LOG_RUN_VERBOSE << "Get C membership" << std::endl;
   if( GetProperty( Barrett::GROUPC, groupC ) != osaPuck::ESUCCESS ){
     CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get group C" << std::endl;
     return osaPuck::EFAILURE;

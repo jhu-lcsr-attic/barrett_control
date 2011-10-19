@@ -124,9 +124,9 @@ private:
      \return false if no error occurred. true otherwise
   */
   osaGroup::Errno PackProperty( osaCANBusFrame& canframe,
-				  Barrett::Command command,
-				  Barrett::ID propid,
-				  Barrett::Value propval = 0 );
+				Barrett::Command command,
+				Barrett::ID propid,
+				Barrett::Value propval = 0 );
   
   //! The bit of a CAN ID that identicates a group
   static const osaCANBusFrame::ID GROUP_CODE = 0x0400;
@@ -154,7 +154,7 @@ public:
      \param groupid The ID of the puck
      \param can The CAN device used to communicate with the pucks
   */
-  osaGroup( osaGroup::ID id, osaCANBus* canbus );
+  osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter=true );
   
   //! Convert a group ID to a CAN id
   /**

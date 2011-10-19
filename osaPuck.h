@@ -155,7 +155,7 @@ public:
      \param puckid The ID of the puck
      \param can The CAN device used to communicate with the puck
   */
-  osaPuck( osaPuck::ID id, osaCANBus* can );
+  osaPuck( osaPuck::ID id, osaCANBus* can, bool createfilter=true );
 
   //! Return the puck ID
   osaPuck::ID GetID() const;

@@ -320,6 +320,7 @@ osaWAM::Errno osaWAM::GetPositions( vctDynamicVector<double>& jq ){
 				   mql[0], mql[1], mql[2] );
       
       jq = MotorsPos2JointsPos( mq );
+      
     }
 
     break;

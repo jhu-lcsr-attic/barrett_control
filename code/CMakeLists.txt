@@ -21,6 +21,7 @@ if( cisst_FOUND AND sawCANBus_FOUND )
     ../osaPuck.h
     ../osaGroup.h
     ../osaWAM.h
+    ../osaBH8_280.h
     ../mtsPuck.h
     ../mtsWAM.h )
   
@@ -29,6 +30,7 @@ if( cisst_FOUND AND sawCANBus_FOUND )
     osaPuck.cpp
     osaGroup.cpp
     osaWAM.cpp
+    osaBH8_280.cpp
     mtsPuck.cpp
     mtsWAM.cpp )
   

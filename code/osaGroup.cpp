@@ -53,13 +53,10 @@ osaGroup::ID operator++( osaGroup::ID& gid, int ){
 }
 
 // default constructor
-osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) : 
+osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) : 
   canbus( canbus ),
   id( id ){
   
-  // Only for group 3?
-  canbus->AddFilter( osaCANBus::Filter( 0x051F, 0x0403 ) );
-
   switch( GetID() ){
 
   case osaGroup::BROADCAST:
@@ -70,6 +67,10 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
     AddPuckToGroup( osaPuck::PUCK_ID5 );
     AddPuckToGroup( osaPuck::PUCK_ID6 );
     AddPuckToGroup( osaPuck::PUCK_ID7 );
+
+    if( createfilter ){
+    }
+
     break;
 
     // used to set torques
@@ -88,6 +89,10 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
     break;
 
   case osaGroup::POSITION:
+    AddPuckToGroup( osaPuck::PUCK_IDF1 );
+    AddPuckToGroup( osaPuck::PUCK_IDF2 );
+    AddPuckToGroup( osaPuck::PUCK_IDF3 );
+    AddPuckToGroup( osaPuck::PUCK_IDF4 );
     break;
 
     // used to get positions
@@ -96,6 +101,19 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
     AddPuckToGroup( osaPuck::PUCK_ID2 );
     AddPuckToGroup( osaPuck::PUCK_ID3 );
     AddPuckToGroup( osaPuck::PUCK_ID4 );
+    if( createfilter ){
+      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+      // GFF FFFT TTTT ( 0x5EF ) 
+      // Only fiter position to group 3. So G is set and TTTTT = 00011
+      // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
+      // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
+      // filter all 4 pucks because the forearm has similar filters
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0423 ) );
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0443 ) );
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0463 ) );
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0483 ) );
+    }
+    
     break;
 
     // used to get positions
@@ -103,6 +121,18 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
     AddPuckToGroup( osaPuck::PUCK_ID5 );
     AddPuckToGroup( osaPuck::PUCK_ID6 );
     AddPuckToGroup( osaPuck::PUCK_ID7 );
+    if( createfilter ){
+      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+      // GFF FFFT TTTT ( 0x5EF ) 
+      // Only fiter position to group 3. So G is set and TTTTT = 00011
+      // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
+      // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
+      // filter all 4 pucks because the forearm has similar filters
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04A3 ) );
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04C3 ) );
+      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04E3 ) );
+    }
+    
     break;
 
   case osaGroup::PROPERTY:
@@ -120,6 +150,16 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
     AddPuckToGroup( osaPuck::PUCK_IDF2 );
     AddPuckToGroup( osaPuck::PUCK_IDF3 );
     AddPuckToGroup( osaPuck::PUCK_IDF4 );
+    if( createfilter ){
+      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+      // GFF FFFT TTTT ( 0x5EF ) 
+      // Only fiter position to group 3. So G is set and TTTTT = 00011
+      // Also, the pucks id for the hand have FFFFF=01xxx such that we have:
+      // a mask: 0x0503 and id: 0x0503. The hand is the only device with the 
+      // 4th bit to 1 so use that bit to determine if the hand is replying
+      canbus->AddFilter( osaCANBus::Filter( 0x0503, 0x0503 ) );
+    }
+
     break;
 
   default:
@@ -127,7 +167,6 @@ osaGroup::osaGroup(osaGroup::ID id, osaCANBus* canbus) :
   }
 
 }
-
 
 std::string osaGroup::LogPrefix(){
   std::string s;
@@ -222,7 +261,7 @@ osaGroup::ID osaGroup::OriginID( const osaCANBusFrame& canframe )
 
 void osaGroup::AddPuckToGroup( osaPuck::ID pid ){
 
-  osaPuck puck( pid, canbus );
+  osaPuck puck( pid, canbus, false );
   pucks.push_back( puck );
 
 }
@@ -230,7 +269,7 @@ void osaGroup::AddPuckToGroup( osaPuck::ID pid ){
 // Query a group of puck.
 osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid, 
 				       std::vector<Barrett::Value>& values ){
-  
+
   // pack the query in a CAN frame
   osaCANBusFrame sendframe;
   if( PackProperty( sendframe, Barrett::GET, propid ) != osaGroup::ESUCCESS){
@@ -539,7 +578,7 @@ osaGroup::Errno osaGroup::Initialize(){
 osaGroup::Errno osaGroup::SetMode( Barrett::Value mode ){
   
   for( size_t i=0; i<pucks.size(); i++ ){
-    if( pucks[i].SetMode( mode ) != osaGroup::ESUCCESS ){
+    if( pucks[i].SetMode( mode ) != osaPuck::ESUCCESS ){
       CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to set the mode."
 			<< std::endl;
       return osaGroup::EFAILURE;
