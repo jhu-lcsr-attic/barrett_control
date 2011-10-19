@@ -1,6 +1,6 @@
 
 // check if this module is build as a DLL
-#ifdef cisstBarrett_EXPORTS
+#ifdef sawBarrett_EXPORTS
 #define CISST_THIS_LIBRARY_AS_DLL
 #endif
 
