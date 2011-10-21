@@ -76,8 +76,7 @@ mtsWAM::mtsWAM( const std::string& name,
 
 }
 
-void mtsWAM::Startup(){
-}
+void mtsWAM::Startup(){}
 
 void mtsWAM::Run(){
 

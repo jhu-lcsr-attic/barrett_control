@@ -14,7 +14,7 @@ int main( int argc, char** argv ){
 
   mlockall(MCL_CURRENT | MCL_FUTURE);
   RT_TASK task;
-  rt_task_shadow( &task, "GroupTest", 99, 0 );
+  rt_task_shadow( &task, "mtsWAMGCExample", 99, 0 );
 
   mtsTaskManager* taskManager = mtsTaskManager::GetInstance();
 
@@ -29,7 +29,7 @@ int main( int argc, char** argv ){
 
   mtsKeyboard kb;
   kb.SetQuitKey( 'q' );
-  kb.AddKeyWriteFunction( 'G', "GCEnable", "Enable", true );
+  kb.AddKeyWriteFunction( 'C', "GCEnable", "Enable", true );
   taskManager->AddComponent( &kb );
 
 
@@ -63,21 +63,24 @@ int main( int argc, char** argv ){
 			     OSA_CPU3 );
   taskManager->AddComponent( &GC );
 
-  if( !taskManager->Connect( kb.GetName(), "GCEnable",GC.GetName(),"Control") ){
+  if( !taskManager->Connect( kb.GetName(), "GCEnable",
+			     GC.GetName(), "Control") ){
     std::cout << "Failed to connect: " 
 	      << kb.GetName() << "::GCEnable to "
-	      << kb.GetName()  << "::Control" << std::endl;
+	      << GC.GetName() << "::Control" << std::endl;
     return -1;
   }
 
-  if( !taskManager->Connect( WAM.GetName(), "Input", GC.GetName(), "Output" ) ){
+  if( !taskManager->Connect( WAM.GetName(), "Input", 
+			     GC.GetName(), "Output" ) ){
     std::cout << "Failed to connect: " 
 	      << WAM.GetName() << "::Input to "
 	      << GC.GetName()  << "::Output" << std::endl;
     return -1;
   }
 
-  if( !taskManager->Connect( WAM.GetName(), "Output", GC.GetName(), "Input" ) ){
+  if( !taskManager->Connect( WAM.GetName(), "Output", 
+			     GC.GetName(), "Input" ) ){
     std::cout << "Failed to connect: " 
 	      << WAM.GetName() << "::Output to "
 	      << GC.GetName()  << "::Input" << std::endl;
