@@ -1,0 +1,14 @@
+<package>
+  <description brief="barrett_direct">
+
+     barrett_direct
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/barrett_direct</url>
+
+</package>
+
+
