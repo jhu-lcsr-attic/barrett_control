@@ -15,7 +15,9 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#include <sawBarrett/osaGroup.h>
+#include <Eigen/Dense>
+
+#include <barrett_direct/osaGroup.h>
 #include <cisstCommon/cmnLogger.h>
 
 
@@ -433,7 +435,7 @@ osaGroup::Errno osaGroup::Ready(){
 
 }
 
-osaGroup::Errno osaGroup::GetPositions( vctDynamicVector<double>& q ){
+osaGroup::Errno osaGroup::GetPositions( Eigen::VectorXd& q ){
 
   // Query a group of puck.
   std::vector<Barrett::Value> values;
@@ -468,11 +470,11 @@ osaGroup::Errno osaGroup::GetPositions( vctDynamicVector<double>& q ){
 }
 
 
-osaGroup::Errno osaGroup::SetTorques( const vctFixedSizeVector<double,4>& tau ){
+osaGroup::Errno osaGroup::SetTorques( const Eigen::Vector4d& tau ){
 
   if( GetID() == osaGroup::UPPERARM || GetID() == osaGroup::FOREARM ){
     
-    vctFixedSizeVector<double,4> currents( 0.0 );
+    Eigen::Vector4d currents( 0.0 );
     for( size_t i=0; i<currents.size(); i++ )
       { currents[i] = tau[i] * pucks[i].IpNm(); }
     
@@ -504,7 +506,7 @@ osaGroup::Errno osaGroup::SetTorques( const vctFixedSizeVector<double,4>& tau ){
 // pack motor torques in a CAN frame
 // this should go into devGroup
 osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame, 
-					const vctFixedSizeVector<double,4>& I ){
+					const Eigen::Vector4d& I ){
   
   // we can only pack torques for the upper arm and forearm groups
   if( GetID() == osaGroup::UPPERARM || GetID() == osaGroup::FOREARM ){

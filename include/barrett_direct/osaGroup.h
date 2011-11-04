@@ -19,9 +19,8 @@ http://www.cisst.org/cisst/license.txt.
 #define _osaGroup_h
 
 #include <vector>
-#include <sawBarrett/osaPuck.h>
-
-#include <sawBarrett/sawBarrettExport.h>
+#include <Eigen/Dense>
+#include <barrett_direct/osaPuck.h>
 
 //! A logical group of pucks
 /**
@@ -30,7 +29,7 @@ http://www.cisst.org/cisst/license.txt.
    BROADCAST group. Thus, when a CAN frame is destined to the BROADCAST group
    all the pucks will process the frame.
 */
-class CISST_EXPORT osaGroup {
+class osaGroup {
 public:
 
   //! The ID used to identify each group
@@ -133,7 +132,7 @@ private:
 
 
   osaGroup::Errno PackCurrents( osaCANBusFrame& frame, 
-				const vctFixedSizeVector<double,4>& I );
+				const Eigen::Vector4d& I );
 
   //! Querry the group. This is only valid for querying
   //  positions on group 3
@@ -202,8 +201,8 @@ public:
   osaGroup::Errno GetStatus( std::vector<Barrett::Value>& status );
 
 
-  osaGroup::Errno GetPositions( vctDynamicVector<double>& q );
-  osaGroup::Errno SetTorques( const vctFixedSizeVector<double,4>& tau );
+  osaGroup::Errno GetPositions( Eigen::VectorXd& q );
+  osaGroup::Errno SetTorques( const Eigen::Vector4d& tau );
 
   osaGroup::Errno SetMode( Barrett::Value mode );
 

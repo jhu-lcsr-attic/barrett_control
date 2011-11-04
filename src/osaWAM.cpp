@@ -15,7 +15,9 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#include <sawBarrett/osaWAM.h>
+#include <Eigen/Dense>
+
+#include <barrett_direct/osaWAM.h>
 #include <cisstCommon/cmnLogger.h>
 
 // main constructor
@@ -257,7 +259,7 @@ osaWAM::Errno osaWAM::GetMode( osaWAM::Mode& mode ){
 }
 
 // set the motor positions 
-osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
+osaWAM::Errno osaWAM::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
   if( jq.size() != pucks.size() ){
@@ -277,7 +279,7 @@ osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
   }
   
   // convert the joints positions to motor positions
-  vctDynamicVector<double> mq = JointsPos2MotorsPos( jq );
+  Eigen::VectorXd mq = JointsPos2MotorsPos( jq );
   
   // for each puck, send a position 
   for(size_t i=0; i<pucks.size(); i++){
@@ -305,14 +307,14 @@ osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
 
 
 // query the joint positions
-osaWAM::Errno osaWAM::GetPositions( vctDynamicVector<double>& jq ){
+osaWAM::Errno osaWAM::GetPositions( Eigen::VectorXd& jq ){
 
   switch( GetConfiguration() ){
 
   case osaWAM::WAM_4DOF:
 
     {
-      vctDynamicVector<double> mq;
+      Eigen::VectorXd mq;
       if( upperpositions.GetPositions( mq ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
 	return osaWAM::EFAILURE;
@@ -325,7 +327,7 @@ osaWAM::Errno osaWAM::GetPositions( vctDynamicVector<double>& jq ){
   case osaWAM::WAM_7DOF:
 
     {
-      vctDynamicVector<double> mqu, mql;
+      Eigen::VectorXd mqu, mql;
       
       if( upperpositions.GetPositions( mqu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
@@ -337,7 +339,7 @@ osaWAM::Errno osaWAM::GetPositions( vctDynamicVector<double>& jq ){
 	return osaWAM::EFAILURE;
       }
       
-      vctDynamicVector<double> mq( 7,
+      Eigen::VectorXd mq( 7,
 				   mqu[0], mqu[1], mqu[2], mqu[3], 
 				   mql[0], mql[1], mql[2] );
       
@@ -353,16 +355,16 @@ osaWAM::Errno osaWAM::GetPositions( vctDynamicVector<double>& jq ){
 
 }
 
-osaWAM::Errno osaWAM::SetTorques( const vctDynamicVector<double>& jt ){
+osaWAM::Errno osaWAM::SetTorques( const Eigen::VectorXd& jt ){
 
   switch( GetConfiguration() ){
 
   case osaWAM::WAM_4DOF:
 
     if( jt.size() != 4 ){
-      vctDynamicVector<double> mt = JointsTrq2MotorsTrq( jt );
+      Eigen::VectorXd mt = JointsTrq2MotorsTrq( jt );
 
-      vctFixedSizeVector<double,4> mtu( mt[0], mt[1], mt[2], mt[3] );
+      Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
 	return osaWAM::EFAILURE;
@@ -380,15 +382,15 @@ osaWAM::Errno osaWAM::SetTorques( const vctDynamicVector<double>& jt ){
 
     if( jt.size() == 7 ){
 
-      vctDynamicVector<double> mt = JointsTrq2MotorsTrq( jt );
+      Eigen::VectorXd mt = JointsTrq2MotorsTrq( jt );
 
-      vctFixedSizeVector<double,4> mtu( mt[0], mt[1], mt[2], mt[3] );
+      Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
 	return osaWAM::EFAILURE;
       }
       
-      vctFixedSizeVector<double,4> mtl( mt[4], mt[5], mt[6], 0.0 );
+      Eigen::Vector4d mtl( mt[4], mt[5], mt[6], 0.0 );
       if( lowertorques.SetTorques( mtl ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the lower arm torques" << std::endl;
 	return osaWAM::EFAILURE;
@@ -408,15 +410,15 @@ osaWAM::Errno osaWAM::SetTorques( const vctDynamicVector<double>& jt ){
 
 }
 
-vctDynamicVector<double> 
-osaWAM::MotorsPos2JointsPos( const vctDynamicVector<double>& mq )
+Eigen::VectorXd 
+osaWAM::MotorsPos2JointsPos( const Eigen::VectorXd& mq )
 {  return mpos2jpos*mq;  }
 
-vctDynamicVector<double> 
-osaWAM::JointsPos2MotorsPos( const vctDynamicVector<double>& jq )
+Eigen::VectorXd 
+osaWAM::JointsPos2MotorsPos( const Eigen::VectorXd& jq )
 {  return jpos2mpos*jq;  }
 
-vctDynamicVector<double> 
-osaWAM::JointsTrq2MotorsTrq( const vctDynamicVector<double>& jt )
+Eigen::VectorXd 
+osaWAM::JointsTrq2MotorsTrq( const Eigen::VectorXd& jt )
 {  return jtrq2mtrq*jt;  }
 

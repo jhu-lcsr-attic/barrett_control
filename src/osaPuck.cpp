@@ -15,8 +15,8 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#include <sawBarrett/osaPuck.h>
-#include <sawBarrett/osaGroup.h>
+#include <barrett_direct/osaPuck.h>
+#include <barrett_direct/osaGroup.h>
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstCommon/cmnLogger.h>
 

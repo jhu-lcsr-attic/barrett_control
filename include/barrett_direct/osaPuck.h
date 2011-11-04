@@ -19,9 +19,7 @@ http://www.cisst.org/cisst/license.txt.
 #define _osaPuck_h
 
 #include <sawCANBus/osaCANBus.h>
-#include <sawBarrett/Barrett.h>
-
-#include <sawBarrett/sawBarrettExport.h>
+#include <barrett_direct/Barrett.h>
 
 //! Implements a Barrett puck
 /**
@@ -33,7 +31,7 @@ http://www.cisst.org/cisst/license.txt.
    bus by its node ID but several pucks can be addressed by group 
    (\sa devGroup).
 */
-class CISST_EXPORT osaPuck {
+class osaPuck {
 
 public:
 

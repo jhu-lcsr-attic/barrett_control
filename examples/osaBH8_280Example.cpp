@@ -41,7 +41,7 @@ int main( int argc, char** argv ){
 
   while( 1 ){
 
-    vctDynamicVector<double> q( 4, 0.1 );
+    Eigen::VectorXd q( 4, 0.1 );
 
     BH.GetPositions( q );
     //BH.SetPositions( q );

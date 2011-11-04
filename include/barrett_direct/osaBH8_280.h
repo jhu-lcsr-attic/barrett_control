@@ -17,11 +17,10 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _osaBH8_280_h
 #define _osaBH8_280_h
 
-#include <cisstVector/vctDynamicMatrix.h>
+#include <Eigen/Dense>
 
-#include <sawBarrett/osaPuck.h>
-#include <sawBarrett/osaGroup.h>
-#include <sawBarrett/sawBarrettExport.h>
+#include <barrett_direct/osaPuck.h>
+#include <barrett_direct/osaGroup.h>
 
 //! A clas for a BH8_280 device
 /**
@@ -40,7 +39,7 @@ http://www.cisst.org/cisst/license.txt.
    safety module. Operations are pretty basic: set motors torques, set 
    motor positions and get motor positions.   
 */
-class CISST_EXPORT osaBH8_280{
+class osaBH8_280{
 
  public:
 
@@ -56,7 +55,7 @@ class CISST_EXPORT osaBH8_280{
   //! Vector of pucks
   std::vector< osaPuck > pucks;
   
-  vctDynamicVector<double> qinit;
+  Eigen::VectorXd qinit;
 
   //! Matrix used to convert motors positions to joints positions
   /**
@@ -65,7 +64,7 @@ class CISST_EXPORT osaBH8_280{
      a block diagonal matrix.
      \sa MotorsPos2JointsPos
   */
-  vctDynamicMatrix<double> mpos2jpos;
+  Eigen::MatrixXd mpos2jpos;
 
   //! Matrix used to convert joints positions to motors positions
   /**
@@ -74,7 +73,7 @@ class CISST_EXPORT osaBH8_280{
      a block diagonal matrix.
      \sa JointsPos2MotorsPos
   */
-  vctDynamicMatrix<double> jpos2mpos;
+  Eigen::MatrixXd jpos2mpos;
 
   //! Matrix used to convert joints torques to motors torques
   /**
@@ -83,7 +82,7 @@ class CISST_EXPORT osaBH8_280{
      a block diagonal matrix.
      \sa JointsTrq2MotorsTrq
   */
-  vctDynamicMatrix<double> jtrq2mtrq;
+  Eigen::MatrixXd jtrq2mtrq;
 
   //! Convert motor positions to joints positions
   /**
@@ -93,8 +92,8 @@ class CISST_EXPORT osaBH8_280{
      \return A vector of joint angles
      \sa mpos2jpos
   */
-  vctDynamicVector<double> 
-    MotorsPos2JointsPos( const vctDynamicVector<double>& q );
+  Eigen::VectorXd 
+    MotorsPos2JointsPos( const Eigen::VectorXd& q );
 
   //! Convert joints positions to motors positions
   /**
@@ -104,8 +103,8 @@ class CISST_EXPORT osaBH8_280{
      \return A vector of motors angles
      \sa jpos2mpos
   */
-  vctDynamicVector<double> 
-    JointsPos2MotorsPos( const vctDynamicVector<double>& q );
+  Eigen::VectorXd 
+    JointsPos2MotorsPos( const Eigen::VectorXd& q );
 
   //! Convert joints torques to motors torques
   /**
@@ -115,8 +114,8 @@ class CISST_EXPORT osaBH8_280{
      \return A vector of joint angles
      \sa jtrq2mtrq
   */
-  vctDynamicVector<double> 
-    JointsTrq2MotorsTrq( const vctDynamicVector<double>& t );
+  Eigen::VectorXd 
+    JointsTrq2MotorsTrq( const Eigen::VectorXd& t );
 
  public:
 
@@ -151,7 +150,7 @@ class CISST_EXPORT osaBH8_280{
      \param positions[out] The resulting motor positions in radians
      \return ESUCCESS if no error occurred. EFAILURE otherwise.
   */
-  osaBH8_280::Errno GetPositions( vctDynamicVector<double>& positions );
+  osaBH8_280::Errno GetPositions( Eigen::VectorXd& positions );
   
   //! Send joints positions
   /**
@@ -166,7 +165,7 @@ class CISST_EXPORT osaBH8_280{
      \param positions[in] The motor positions in radians
      \return ESUCCESS if no error occurred. EFAILURE otherwise.
   */
-  osaBH8_280::Errno SetPositions( const vctDynamicVector<double>& positions );
+  osaBH8_280::Errno SetPositions( const Eigen::VectorXd& positions );
 
   //! Set joints torques
   /**
@@ -177,7 +176,7 @@ class CISST_EXPORT osaBH8_280{
      \param torques[in] The motor torques
      \return ESUCCESS if no error occurred. EFAILURE otherwise
   */
-  //osaBH8_280::Errno SetTorques( const vctDynamicVector<double>& torques );
+  //osaBH8_280::Errno SetTorques( const Eigen::VectorXd& torques );
 
   //! Set velocity warning
   /**

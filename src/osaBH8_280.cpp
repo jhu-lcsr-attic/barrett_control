@@ -15,7 +15,9 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#include <sawBarrett/osaBH8_280.h>
+#include <Eigen/Dense>
+
+#include <barrett_direct/osaBH8_280.h>
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstCommon/cmnLogger.h>
 
@@ -125,7 +127,7 @@ void osaBH8_280::Hi(){
 }
 
 // set the motor positions 
-osaBH8_280::Errno osaBH8_280::SetPositions( const vctDynamicVector<double>& jq ){
+osaBH8_280::Errno osaBH8_280::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
   if( jq.size() != pucks.size() ){
@@ -136,7 +138,7 @@ osaBH8_280::Errno osaBH8_280::SetPositions( const vctDynamicVector<double>& jq )
   }
 
   // convert the joints positions to motor positions
-  vctDynamicVector<double> mq = JointsPos2MotorsPos( jq );
+  Eigen::VectorXd mq = JointsPos2MotorsPos( jq );
   std::cout << mq << std::endl;
   // for each puck, send a position 
   for(size_t i=0; i<pucks.size(); i++){
@@ -155,9 +157,9 @@ osaBH8_280::Errno osaBH8_280::SetPositions( const vctDynamicVector<double>& jq )
 
 
 // query the joint positions
-osaBH8_280::Errno osaBH8_280::GetPositions( vctDynamicVector<double>& jq ){
+osaBH8_280::Errno osaBH8_280::GetPositions( Eigen::VectorXd& jq ){
 
-  vctDynamicVector<double> mq;
+  Eigen::VectorXd mq;
   if( handposition.GetPositions( mq ) != osaGroup::ESUCCESS ){
     CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
     return osaBH8_280::EFAILURE;
@@ -170,16 +172,16 @@ osaBH8_280::Errno osaBH8_280::GetPositions( vctDynamicVector<double>& jq ){
 }
 
 /*
-osaBH8_280::Errno osaBH8_280::SetTorques( const vctDynamicVector<double>& jt ){
+osaBH8_280::Errno osaBH8_280::SetTorques( const Eigen::VectorXd& jt ){
 
   switch( GetConfiguration() ){
 
   case osaBH8_280::BH8_280_4DOF:
 
     if( jt.size() != 4 ){
-      vctDynamicVector<double> mt = JointsTrq2MotorsTrq( jt );
+      Eigen::VectorXd mt = JointsTrq2MotorsTrq( jt );
 
-      vctFixedSizeVector<double,4> mtu( mt[0], mt[1], mt[2], mt[3] );
+      Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
@@ -197,15 +199,15 @@ osaBH8_280::Errno osaBH8_280::SetTorques( const vctDynamicVector<double>& jt ){
 
     if( jt.size() == 7 ){
 
-      vctDynamicVector<double> mt = JointsTrq2MotorsTrq( jt );
+      Eigen::VectorXd mt = JointsTrq2MotorsTrq( jt );
       
-      vctFixedSizeVector<double,4> mtu( mt[0], mt[1], mt[2], mt[3] );
+      Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
       }
       
-      vctFixedSizeVector<double,4> mtl( mt[4], mt[5], mt[6], 0.0 );
+      Eigen::Vector4d mtl( mt[4], mt[5], mt[6], 0.0 );
       if( lowertorques.SetTorques( mtl ) != osaGroup::ESUCCESS ){
 	CMN_LOG_RUN_ERROR << "Failed to set the lower arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
@@ -225,15 +227,15 @@ osaBH8_280::Errno osaBH8_280::SetTorques( const vctDynamicVector<double>& jt ){
 
 }
 */
-vctDynamicVector<double> 
-osaBH8_280::MotorsPos2JointsPos( const vctDynamicVector<double>& mq )
+Eigen::VectorXd 
+osaBH8_280::MotorsPos2JointsPos( const Eigen::VectorXd& mq )
 {  return mpos2jpos*mq;  }
 
-vctDynamicVector<double> 
-osaBH8_280::JointsPos2MotorsPos( const vctDynamicVector<double>& jq )
+Eigen::VectorXd 
+osaBH8_280::JointsPos2MotorsPos( const Eigen::VectorXd& jq )
 {  return jpos2mpos*jq;  }
 
-vctDynamicVector<double> 
-osaBH8_280::JointsTrq2MotorsTrq( const vctDynamicVector<double>& jt )
+Eigen::VectorXd 
+osaBH8_280::JointsTrq2MotorsTrq( const Eigen::VectorXd& jt )
 {  return jtrq2mtrq*jt;  }
 

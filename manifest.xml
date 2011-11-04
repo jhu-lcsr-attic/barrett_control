@@ -9,6 +9,8 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/barrett_direct</url>
 
+  <depend package="eigen"/>
+
 </package>
 
 

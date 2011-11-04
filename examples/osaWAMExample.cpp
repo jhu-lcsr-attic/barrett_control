@@ -35,7 +35,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  vctDynamicVector<double> qinit( 7, 0.0 );
+  Eigen::VectorXd qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
   qinit[3] =  cmnPI;
   
@@ -49,13 +49,13 @@ int main( int argc, char** argv ){
 
   while( 1 ){
 
-    vctDynamicVector<double> q;
+    Eigen::VectorXd q;
     if( WAM.GetPositions( q ) != osaWAM::ESUCCESS ){
       CMN_LOG_RUN_ERROR << "Failed to get positions" << std::endl;
       return -1;
     }
 
-    vctDynamicVector<double> tau( q.size(), 0.0 );
+    Eigen::VectorXd tau( q.size(), 0.0 );
     if( WAM.SetTorques( tau ) != osaWAM::ESUCCESS ){
       CMN_LOG_RUN_ERROR << "Failed to set torques" << std::endl;
       return -1;

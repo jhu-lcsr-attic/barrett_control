@@ -38,7 +38,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  vctDynamicVector<double> qinit( 7, 0.0 );
+  Eigen::VectorXd qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
   qinit[3] =  cmnPI;
   
@@ -50,14 +50,13 @@ int main( int argc, char** argv ){
   std::string path(  CISST_SOURCE_ROOT"/cisst/etc/cisstRobot/" );
 
   // Rotate the base
-  vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
-                                   0.0,  1.0,  0.0,
-                                   1.0,  0.0,  0.0 );
-  vctFixedSizeVector<double,3> tw0(0.0);
-  vctFrame4x4<double> Rtw0( Rw0, tw0 );
+  Eigen::Matrix3d Rw0(  0.0,  0.0, -1.0,
+                        0.0,  1.0,  0.0,
+                        1.0,  0.0,  0.0 );
+  Eigen::Affine3d Rtw0( Eigen::Rotation3f(Rw0) );
   
   // Gain matrices
-  vctDynamicMatrix<double> Kp(7, 7, 0.0), Kd(7, 7, 0.0);
+  Eigen::MatrixXd Kp(7, 7, 0.0), Kd(7, 7, 0.0);
   Kp[0][0] = 250;     Kd[0][0] = 3.0;
   Kp[1][1] = 250;     Kd[1][1] = 3.0;
   Kp[2][2] = 250;     Kd[2][2] = 3.0;
@@ -76,7 +75,7 @@ int main( int argc, char** argv ){
   while( 1 ){
 
     // Get the positions
-    vctDynamicVector<double> q;
+    Eigen::VectorXd q;
     if( WAM.GetPositions( q ) != osaWAM::ESUCCESS ){
       CMN_LOG_RUN_ERROR << "Failed to get positions" << std::endl;
       return -1;
@@ -94,7 +93,7 @@ int main( int argc, char** argv ){
     }
 
     // if pucks are activated, run the controller
-    vctDynamicVector<double> tau( q.size(), 0.0 );
+    Eigen::VectorXd tau( q.size(), 0.0 );
     double t2 = osaGetTime();
     if( activated ){
       if( PDGC.Evaluate( qinit, q, tau, t2-t1 ) != osaPDGC::ESUCCESS ){

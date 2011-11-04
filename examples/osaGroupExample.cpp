@@ -73,11 +73,11 @@ int main( int argc, char** argv ){
 
   for( size_t i=0; i<10000; i++ ){
 
-    vctDynamicVector<double> q;
+    Eigen::VectorXd q;
     upperpositions.GetPositions( q );
     lowerpositions.GetPositions( q );
 
-    vctFixedSizeVector<double,4> t( 0.0 );
+    Eigen::Vector4d t( 0.0 );
     uppertorques.SetTorques( t );
     lowertorques.SetTorques( t );
 
