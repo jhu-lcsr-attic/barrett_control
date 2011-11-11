@@ -15,10 +15,12 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <unistd.h>
+
+#include <iostream>
+
 #include <barrett_direct/osaPuck.h>
 #include <barrett_direct/osaGroup.h>
-#include <cisstOSAbstraction/osaSleep.h>
-#include <cisstCommon/cmnLogger.h>
 
 osaPuck::ID operator++( osaPuck::ID& pid, int  ){
   // pucks for the arm
@@ -191,10 +193,11 @@ osaPuck::Errno osaPuck::SetProperty( Barrett::ID propid,
     
     // If we just changed the status of the puck, give it a bit of time to
     // initialize itself
-    if( propid  == Barrett::STATUS && propval == osaPuck::STATUS_READY )
-      osaSleep( 1.0 );
-    else
-      osaSleep( 0.01 );
+    if( propid  == Barrett::STATUS && propval == osaPuck::STATUS_READY ) {
+      usleep( 1000000 );
+    } else {
+      usleep( 10000 );
+    }
 
     // query the puck to make sure that the property is set
     Barrett::Value recvpropval = rand();
@@ -376,7 +379,7 @@ osaPuck::Errno osaPuck::InitializeMotor(){
       std::cerr << LogPrefix() << "Failed to wake up" << std::endl;
       return osaPuck::EFAILURE;
     }
-    osaSleep( 1.0 );
+    usleep(1000000);
     InitializeMotor();
   }
 

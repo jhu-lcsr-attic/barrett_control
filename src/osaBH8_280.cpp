@@ -15,12 +15,13 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <unistd.h>
+
 #include <iostream>
 
 #include <Eigen/Dense>
 
 #include <barrett_direct/osaBH8_280.h>
-#include <cisstOSAbstraction/osaSleep.h>
 
 // main constructor
 osaBH8_280::osaBH8_280(	osaCANBus* canbus ) :
@@ -117,7 +118,7 @@ osaBH8_280::Errno osaBH8_280::Initialize(){
   }
   
   Hi();
-  osaSleep( 1.0 );
+  usleep(1000000);
 
   return osaBH8_280::ESUCCESS;
 

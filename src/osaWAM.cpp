@@ -15,10 +15,11 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <iostream>
+
 #include <Eigen/Dense>
 
 #include <barrett_direct/osaWAM.h>
-#include <cisstCommon/cmnLogger.h>
 
 // main constructor
 osaWAM::osaWAM(	osaCANBus* canbus,

@@ -15,10 +15,11 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <iostream>
+
 #include <Eigen/Dense>
 
 #include <barrett_direct/osaGroup.h>
-#include <cisstCommon/cmnLogger.h>
 
 
 osaGroup::ID operator++( osaGroup::ID& gid, int ){
@@ -372,7 +373,7 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
    }
 
    if( verify ){
-     std::cerr << CMN_LOG_DETAILS
+     std::cerr << __FILE__
 			 << ": Verify is not implemented for groups."
 			 << std::endl;
    }
