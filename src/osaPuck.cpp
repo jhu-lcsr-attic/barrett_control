@@ -174,7 +174,7 @@ osaPuck::Errno osaPuck::SetProperty( Barrett::ID propid,
 
   // pack the property ID and value in a "set" CAN frame 
   if( PackProperty( frame, Barrett::SET, propid, propval )!=osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_WARNING << LogPrefix() << "Failed to pack property " << propid
+    std::cerr << LogPrefix() << "Failed to pack property " << propid
 			<< std::endl;
     return osaPuck::EFAILURE;
   }
@@ -199,13 +199,13 @@ osaPuck::Errno osaPuck::SetProperty( Barrett::ID propid,
     // query the puck to make sure that the property is set
     Barrett::Value recvpropval = rand();
     if( GetProperty( propid, recvpropval ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_WARNING << LogPrefix()<<"Failed to get puck property"
+      std::cerr << LogPrefix()<<"Failed to get puck property"
 			  << std::endl;
       return osaPuck::EFAILURE;
     }
 
     if( propval != recvpropval ){
-      CMN_LOG_RUN_WARNING << LogPrefix() << "Oop! Unexpected property value. " 
+      std::cerr << LogPrefix() << "Oop! Unexpected property value. " 
 			  << "Expected " << propval << " got " << recvpropval
 			  << std::endl;
       return osaPuck::EFAILURE;
@@ -320,7 +320,7 @@ osaPuck::Errno osaPuck::UnpackCANFrame(const osaCANBusFrame& canframe,
 // configure the status of the puck and the motor/encoder constants
 osaPuck::Errno osaPuck::InitializeMotor(){
 
-  CMN_LOG_RUN_VERBOSE << LogPrefix() << "Initializing motor" << std::endl;
+  std::clog << LogPrefix() << "Initializing motor" << std::endl;
 
   Barrett::Value status;
   if( GetStatus( status ) != osaPuck::ESUCCESS ){
@@ -368,7 +368,7 @@ osaPuck::Errno osaPuck::InitializeMotor(){
 
   // if the puck is not ready
   if( status == osaPuck::STATUS_RESET ){
-    CMN_LOG_RUN_WARNING << LogPrefix() << "Puck is resetting. Trying again." 
+    std::cerr << LogPrefix() << "Puck is resetting. Trying again." 
 			<< std::endl;
 
     // change its status to ready
@@ -420,7 +420,7 @@ osaPuck::Errno osaPuck::InitializeSM(){
 
   if( GetID() == osaPuck::SAFETY_MODULE_ID ){
 
-    //CMN_LOG_RUN_VERBOSE << LogPrefix() <<"Querying the status"<<std::endl;
+    //std::clog << LogPrefix() <<"Querying the status"<<std::endl;
     Barrett::Value smstatus;
     if( GetProperty( Barrett::STATUS, smstatus ) != osaSafetyModule::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to query the safety module."
@@ -434,47 +434,47 @@ osaPuck::Errno osaPuck::InitializeSM(){
 			<< std::endl;
       return osaPuck::EFAILURE;
     }  
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "The safety module is online" 
+    std::clog << LogPrefix() << "The safety module is online" 
 			<< std::endl;
   
     // Set the velocity warning
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Setting velocity warning" 
+    std::clog << LogPrefix() << "Setting velocity warning" 
 			<< std::endl;
     if( SetVelocityWarning( 4000 ) != osaPuck::ESUCCESS ){
       std::cerr << LogPrefix() << "velocity warning not set"
 			<< std::endl;
       return osaPuck::EFAILURE;
     }
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Velocity warning set" << std::endl;
+    std::clog << LogPrefix() << "Velocity warning set" << std::endl;
 
     // Set the velocity fault
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Setting velocity fault" << std::endl;
+    std::clog << LogPrefix() << "Setting velocity fault" << std::endl;
     if( SetVelocityFault( 8000 ) != osaPuck::ESUCCESS ){
       std::cerr << LogPrefix() << "velocity fault not set"
 			<< std::endl;
       return osaPuck::EFAILURE;
     }
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Velocity fault set" << std::endl;
+    std::clog << LogPrefix() << "Velocity fault set" << std::endl;
     
     // Set the torque warning
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Setting torque warning" << std::endl;
+    std::clog << LogPrefix() << "Setting torque warning" << std::endl;
     if( SetTorqueWarning( 4000 ) != osaPuck::ESUCCESS ){
       std::cerr << LogPrefix() << "torque warning not set"
 			<< std::endl;
       return osaPuck::EFAILURE;
     }
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Torque warning set" << std::endl;
+    std::clog << LogPrefix() << "Torque warning set" << std::endl;
 
     // Set the torque fault
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Setting torque fault" << std::endl;
+    std::clog << LogPrefix() << "Setting torque fault" << std::endl;
     if( SetTorqueFault( 8000 ) != osaPuck::ESUCCESS ){
       std::cerr << LogPrefix() << "torque fault not set"
 			<< std::endl;
       return osaPuck::EFAILURE;
     }
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Torque fault set" << std::endl;
+    std::clog << LogPrefix() << "Torque fault set" << std::endl;
 
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "The safety module is good to go" 
+    std::clog << LogPrefix() << "The safety module is good to go" 
 			<< std::endl;
 
     return osaPuck::ESUCCESS;
@@ -595,13 +595,13 @@ osaPuck::Errno osaPuck::SetPosition( double q ){
 
 osaPuck::Errno osaPuck::GetStatus( Barrett::Value& status ){
 
-  //CMN_LOG_RUN_VERBOSE << "GetStatus" << std::endl;
+  //std::clog << "GetStatus" << std::endl;
   if( GetProperty( Barrett::STATUS, status ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to query the status" 
 		      << std::endl;
     return osaPuck::EFAILURE;
   }
-  CMN_LOG_RUN_VERBOSE << LogPrefix() << "Status " << status << std::endl;
+  std::clog << LogPrefix() << "Status " << status << std::endl;
 
   return osaPuck::ESUCCESS;
 
@@ -609,7 +609,7 @@ osaPuck::Errno osaPuck::GetStatus( Barrett::Value& status ){
 
 osaPuck::Errno osaPuck::SetMode( Barrett::Value mode ){
 
-  //CMN_LOG_RUN_VERBOSE << "SetMode: " << (int)mode << std::endl;
+  //std::clog << "SetMode: " << (int)mode << std::endl;
   // set puck mode
   if( SetProperty( Barrett::MODE, mode, true ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to set mode" << std::endl;
@@ -622,7 +622,7 @@ osaPuck::Errno osaPuck::SetMode( Barrett::Value mode ){
 
 osaPuck::Errno osaPuck::GetMode( Barrett::Value& mode ){
 
-  //CMN_LOG_RUN_VERBOSE << "SetMode: " << (int)mode << std::endl;
+  //std::clog << "SetMode: " << (int)mode << std::endl;
   // get puck mode
   if( GetProperty( Barrett::MODE, mode ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get mode" << std::endl;
@@ -640,20 +640,20 @@ osaPuck::Errno osaPuck::GetCountsPerRev(){
     std::cerr << LogPrefix() << "Failed to get resolution" <<std::endl;
     return osaPuck::EFAILURE;
   }
-  CMN_LOG_RUN_VERBOSE << LogPrefix() << "Resolution: " << cntprev << std::endl;
+  std::clog << LogPrefix() << "Resolution: " << cntprev << std::endl;
   return osaPuck::ESUCCESS;
 
 }
 
 osaPuck::Errno osaPuck::GetIpNm(){
 
-  //CMN_LOG_RUN_VERBOSE << "GetIpNm" << std::endl;
+  //std::clog << "GetIpNm" << std::endl;
   // get the motor torque constant
   if( GetProperty( Barrett::IPNM, ipnm ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get I/Nm" << std::endl;
     return osaPuck::EFAILURE;
   }
-  CMN_LOG_RUN_VERBOSE << LogPrefix() << "I/Nm: " << ipnm << std::endl;
+  std::clog << LogPrefix() << "I/Nm: " << ipnm << std::endl;
 
   return osaPuck::ESUCCESS;
 
@@ -661,13 +661,13 @@ osaPuck::Errno osaPuck::GetIpNm(){
 
 osaPuck::Errno osaPuck::GetGroupIndex(){
 
-  //CMN_LOG_RUN_VERBOSE << "Get group index" << std::endl;
+  //std::clog << "Get group index" << std::endl;
   // get the puck index
   if( GetProperty( Barrett::PUCKINDEX, grpidx ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get index" << std::endl;
     return osaPuck::EFAILURE;
   }
-  CMN_LOG_RUN_VERBOSE << LogPrefix() << "Index: " << grpidx << std::endl;
+  std::clog << LogPrefix() << "Index: " << grpidx << std::endl;
   
   return osaPuck::ESUCCESS;
 
@@ -675,7 +675,7 @@ osaPuck::Errno osaPuck::GetGroupIndex(){
 
 osaPuck::Errno osaPuck::GetMembership(){
 
-  //CMN_LOG_RUN_VERBOSE << "Get membership" << std::endl;
+  //std::clog << "Get membership" << std::endl;
 
   if( GetGroupA() != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get group A" << std::endl;
@@ -697,7 +697,7 @@ osaPuck::Errno osaPuck::GetMembership(){
       GetID() == osaPuck::PUCK_ID7 ){
 
     if( groupC != 5 ){ 
-      CMN_LOG_RUN_WARNING << LogPrefix() << "Fixing membership of group C" 
+      std::cerr << LogPrefix() << "Fixing membership of group C" 
 			  << std::endl;
       
       if( SetGroupC( 5 ) != osaPuck::ESUCCESS ){
@@ -711,15 +711,15 @@ osaPuck::Errno osaPuck::GetMembership(){
       }
 
       if( groupC == 5 )
-	{ CMN_LOG_RUN_WARNING << LogPrefix() << "Fix succeeded" << std::endl; }
+	{ std::cerr << LogPrefix() << "Fix succeeded" << std::endl; }
       else
-	{ CMN_LOG_RUN_WARNING << LogPrefix() << "Fix failed" << std::endl; }
+	{ std::cerr << LogPrefix() << "Fix failed" << std::endl; }
       
     }
     
   }
 
-  CMN_LOG_RUN_VERBOSE << LogPrefix() 
+  std::clog << LogPrefix() 
 		      << "Member of group:"
 		      << " " << groupA
 		      << " " << groupB
@@ -732,7 +732,7 @@ osaPuck::Errno osaPuck::GetMembership(){
 
 osaPuck::Errno osaPuck::GetGroupA(){
 
-  //CMN_LOG_RUN_VERBOSE << "Get A membership" << std::endl;
+  //std::clog << "Get A membership" << std::endl;
   if( GetProperty( Barrett::GROUPA, groupA ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get group A" << std::endl;
     return osaPuck::EFAILURE;
@@ -743,7 +743,7 @@ osaPuck::Errno osaPuck::GetGroupA(){
 
 osaPuck::Errno osaPuck::GetGroupB(){
 
-  //CMN_LOG_RUN_VERBOSE << "Get B membership" << std::endl;
+  //std::clog << "Get B membership" << std::endl;
   if( GetProperty( Barrett::GROUPB, groupB ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get group B" << std::endl;
     return osaPuck::EFAILURE;
@@ -754,7 +754,7 @@ osaPuck::Errno osaPuck::GetGroupB(){
 
 osaPuck::Errno osaPuck::GetGroupC(){
 
-  //CMN_LOG_RUN_VERBOSE << "Get C membership" << std::endl;
+  //std::clog << "Get C membership" << std::endl;
   if( GetProperty( Barrett::GROUPC, groupC ) != osaPuck::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get group C" << std::endl;
     return osaPuck::EFAILURE;

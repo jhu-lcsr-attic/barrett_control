@@ -372,7 +372,7 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
    }
 
    if( verify ){
-     CMN_LOG_RUN_WARNING << CMN_LOG_DETAILS
+     std::cerr << CMN_LOG_DETAILS
 			 << ": Verify is not implemented for groups."
 			 << std::endl;
    }
@@ -493,7 +493,7 @@ osaGroup::Errno osaGroup::SetTorques( const Eigen::Vector4d& tau ){
 
   }
   else{
-    CMN_LOG_RUN_WARNING << LogPrefix() 
+    std::cerr << LogPrefix() 
 			<< "Group  cannot send torques" << std::endl;
     return osaGroup::EFAILURE;
   }
@@ -544,7 +544,7 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
     return osaGroup::ESUCCESS;
   }
   else{
-    CMN_LOG_RUN_WARNING << LogPrefix() 
+    std::cerr << LogPrefix() 
 			<< "Group cannot pack torques" << std::endl;
     return osaGroup::EFAILURE;
   }
@@ -567,7 +567,7 @@ osaGroup::Errno osaGroup::Initialize(){
 
   for( size_t i=0; i<pucks.size(); i++ ){
 
-    CMN_LOG_RUN_VERBOSE << LogPrefix() << "Initalizing puck " 
+    std::clog << LogPrefix() << "Initalizing puck " 
 			<< (int)pucks[i].GetID()
 			<< std::endl;
     if( pucks[i].InitializeMotor() != osaPuck::ESUCCESS ){
