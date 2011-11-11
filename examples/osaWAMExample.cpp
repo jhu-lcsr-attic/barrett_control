@@ -24,14 +24,14 @@ int main( int argc, char** argv ){
   osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
 
   if( can.Open() != osaCANBus::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
+    std::cerr << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
   }
 
   osaWAM WAM( &can );
 
   if( WAM.Initialize() != osaWAM::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize WAM" << std::endl;
+    std::cerr << "Failed to initialize WAM" << std::endl;
     return -1;
   }
 
@@ -40,7 +40,7 @@ int main( int argc, char** argv ){
   qinit[3] =  cmnPI;
   
   if( WAM.SetPositions( qinit ) != osaWAM::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to set position: " << qinit << std::endl;
+    std::cerr << "Failed to set position: " << qinit << std::endl;
     return -1;
   }
 
@@ -51,13 +51,13 @@ int main( int argc, char** argv ){
 
     Eigen::VectorXd q;
     if( WAM.GetPositions( q ) != osaWAM::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to get positions" << std::endl;
+      std::cerr << "Failed to get positions" << std::endl;
       return -1;
     }
 
     Eigen::VectorXd tau( q.size(), 0.0 );
     if( WAM.SetTorques( tau ) != osaWAM::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to set torques" << std::endl;
+      std::cerr << "Failed to set torques" << std::endl;
       return -1;
     }
 

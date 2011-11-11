@@ -23,7 +23,7 @@ int main( int argc, char** argv ){
   osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
 
   if( can.Open() != osaCANBus::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
+    std::cerr << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
   }
 
@@ -37,34 +37,34 @@ int main( int argc, char** argv ){
 
 
   if( broadcast.Reset() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to reset the puck" << std::endl;
+    std::cerr << "Failed to reset the puck" << std::endl;
     return -1;
   }
   osaSleep( 3.0 );
     
   if( broadcast.Ready() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to ready the puck" << std::endl;
+    std::cerr << "Failed to ready the puck" << std::endl;
     return -1;
   }
   osaSleep( 1.0 );
 
   if( upperpositions.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize upper positions" << std::endl;
+    std::cerr << "Failed to initialize upper positions" << std::endl;
     return -1;
   }
 
   if( uppertorques.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize upper torques" << std::endl;
+    std::cerr << "Failed to initialize upper torques" << std::endl;
     return -1;
   }
 
   if( lowerpositions.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize lower positions" << std::endl;
+    std::cerr << "Failed to initialize lower positions" << std::endl;
     return -1;
   }
 
   if( lowertorques.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize lower torques" << std::endl;
+    std::cerr << "Failed to initialize lower torques" << std::endl;
     return -1;
   }
 
@@ -92,7 +92,7 @@ int main( int argc, char** argv ){
   }
 
   if( can.Close() != osaCANBus::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << argv[0] << "Failed to close " << argv[1] << std::endl;
+    std::cerr << argv[0] << "Failed to close " << argv[1] << std::endl;
     return -1;
   }
 

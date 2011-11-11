@@ -275,13 +275,13 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
   // pack the query in a CAN frame
   osaCANBusFrame sendframe;
   if( PackProperty( sendframe, Barrett::GET, propid ) != osaGroup::ESUCCESS){
-    CMN_LOG_RUN_ERROR << "Failed to pack the property" << std::endl;
+    std::cerr << "Failed to pack the property" << std::endl;
     return osaGroup::EFAILURE;
   }
   
   // send the CAN frame
   if( canbus->Send( sendframe ) != osaCANBus::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << ": Failed to querry group" << std::endl;
+    std::cerr << ": Failed to querry group" << std::endl;
     return osaGroup::EFAILURE;
   }
 
@@ -295,7 +295,7 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
 
     // receive the response in a CAN frame
     if( canbus->Recv( recvframe ) != osaCANBus::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to receive property" 
+      std::cerr << LogPrefix() << "Failed to receive property" 
 			<< std::endl;
       return osaGroup::EFAILURE;
     }
@@ -317,14 +317,14 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
       // unpack the frame;
       if( pucks[pindex].UnpackCANFrame( recvframe, recvpropid, recvvalue ) 
 	  != osaPuck::ESUCCESS){
-	CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to unpack CAN frame"
+	std::cerr << LogPrefix() << "Failed to unpack CAN frame"
 			  << std::endl;
 	return osaGroup::EFAILURE;
       }
 
       // make sure that the property received is the one we asked for
       if( propid != recvpropid ){
-	CMN_LOG_RUN_ERROR << LogPrefix() << "Unexpected property ID. "
+	std::cerr << LogPrefix() << "Unexpected property ID. "
 			  << "Expected " << propid << " got " << recvpropid
 			  << std::endl;
 	return osaGroup::EFAILURE;
@@ -333,12 +333,12 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
       if( 0 <= pindex && pindex < (int)values.size() )
 	{ values[ pindex ] = recvvalue; }
       else
-	{ CMN_LOG_RUN_ERROR << LogPrefix() << "Could not index the value vector"
+	{ std::cerr << LogPrefix() << "Could not index the value vector"
 			    << std::endl; }
     }
 
     else{
-      CMN_LOG_RUN_ERROR << LogPrefix() << "Could not index the pucks" 
+      std::cerr << LogPrefix() << "Could not index the pucks" 
 			<< std::endl;
     }
 
@@ -359,14 +359,14 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
    osaCANBusFrame canframe;
    if( PackProperty( canframe, Barrett::SET, propid, propval )
        != osaGroup::ESUCCESS ){
-     CMN_LOG_RUN_ERROR << ": Failed to pack the property " << propid 
+     std::cerr << ": Failed to pack the property " << propid 
 		       << std::endl;
      return osaGroup::EFAILURE;
    }
 
    // Send the CAN frame
    if( canbus->Send( canframe ) != osaCANBus::ESUCCESS ){
-     CMN_LOG_RUN_ERROR << ": Failed to send the CAN frame."
+     std::cerr << ": Failed to send the CAN frame."
 		       << std::endl;
      return osaGroup::EFAILURE;
    }
@@ -415,7 +415,7 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
 osaGroup::Errno osaGroup::Reset(){
   if( SetProperty( Barrett::STATUS, osaPuck::STATUS_RESET, false ) != 
       osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to reset" << std::endl;
+    std::cerr << LogPrefix() << "Failed to reset" << std::endl;
     return osaGroup::EFAILURE;
   }
 
@@ -427,7 +427,7 @@ osaGroup::Errno osaGroup::Reset(){
 osaGroup::Errno osaGroup::Ready(){
   if( SetProperty( Barrett::STATUS, osaPuck::STATUS_READY, false ) != 
       osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to ready" << std::endl;
+    std::cerr << LogPrefix() << "Failed to ready" << std::endl;
     return osaGroup::EFAILURE;
   }
 
@@ -441,7 +441,7 @@ osaGroup::Errno osaGroup::GetPositions( Eigen::VectorXd& q ){
   std::vector<Barrett::Value> values;
 
   if( GetProperty( Barrett::POS, values ) != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to get positions" << std::endl;
+    std::cerr << LogPrefix() << "Failed to get positions" << std::endl;
     return osaGroup::EFAILURE;
   }
 
@@ -459,7 +459,7 @@ osaGroup::Errno osaGroup::GetPositions( Eigen::VectorXd& q ){
 
   }
   else{
-    CMN_LOG_RUN_ERROR << LogPrefix() << "Expected " << pucks.size() <<" values."
+    std::cerr << LogPrefix() << "Expected " << pucks.size() <<" values."
 		      << " Got " << values.size() 
 		      << std::endl;
     return osaGroup::EFAILURE;    
@@ -481,13 +481,13 @@ osaGroup::Errno osaGroup::SetTorques( const Eigen::Vector4d& tau ){
     // pack the torques in a can frames
     osaCANBusFrame frame;
     if( PackCurrents( frame, currents ) != osaGroup::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to pack the torques" << std::endl;
+      std::cerr << "Failed to pack the torques" << std::endl;
       return osaGroup::EFAILURE;
     }
 
     // send the canframe (blocking)
     if( canbus->Send( frame ) != osaCANBus::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to send upper arm torques" << std::endl;
+      std::cerr << "Failed to send upper arm torques" << std::endl;
       return osaGroup::EFAILURE;
     }
 
@@ -520,7 +520,7 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
       // get the index of the puck within its group [0,1,2,3]
       int idx =  pucks[i].GroupIndex()-1;          // -1 because of zero index
       if( idx < 0 || 3 < idx ){                    // sanity check
-	CMN_LOG_RUN_ERROR << "Illegal index" << std::endl;
+	std::cerr << "Illegal index" << std::endl;
 	return osaGroup::EFAILURE;
       }
 
@@ -554,7 +554,7 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
 osaGroup::Errno osaGroup::GetStatus( std::vector<Barrett::Value>& status ){
 
   if( GetProperty( Barrett::STATUS, status ) != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to query the status" 
+    std::cerr << LogPrefix() << "Failed to query the status" 
 		      << std::endl;
     return osaGroup::EFAILURE;
   }
@@ -571,7 +571,7 @@ osaGroup::Errno osaGroup::Initialize(){
 			<< (int)pucks[i].GetID()
 			<< std::endl;
     if( pucks[i].InitializeMotor() != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to initialize puck"
+      std::cerr << LogPrefix() << "Failed to initialize puck"
 			<< std::endl;
       return osaGroup::EFAILURE;      
     }
@@ -586,7 +586,7 @@ osaGroup::Errno osaGroup::SetMode( Barrett::Value mode ){
   
   for( size_t i=0; i<pucks.size(); i++ ){
     if( pucks[i].SetMode( mode ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << LogPrefix() << "Failed to set the mode."
+      std::cerr << LogPrefix() << "Failed to set the mode."
 			<< std::endl;
       return osaGroup::EFAILURE;
     }

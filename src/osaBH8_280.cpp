@@ -15,11 +15,12 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <iostream>
+
 #include <Eigen/Dense>
 
 #include <barrett_direct/osaBH8_280.h>
 #include <cisstOSAbstraction/osaSleep.h>
-#include <cisstCommon/cmnLogger.h>
 
 // main constructor
 osaBH8_280::osaBH8_280(	osaCANBus* canbus ) :
@@ -40,8 +41,9 @@ osaBH8_280::osaBH8_280(	osaCANBus* canbus ) :
   pucks.push_back( osaPuck( osaPuck::PUCK_IDF4, canbus ) );
 
 
-  if( canbus == NULL )
-    { CMN_LOG_RUN_ERROR << "CAN device missing" << std::endl; }
+  if( canbus == NULL ) {
+    std::cerr << "CAN device missing" << std::endl;
+  }
 
 }
 
@@ -52,7 +54,7 @@ osaBH8_280::Errno osaBH8_280::Initialize(){
   // initialize each puck
   for( size_t i=0; i<pucks.size(); i++ ){
     if( pucks[i].InitializeMotor() != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to initialize puck " << pucks[i].GetID()
+      std::cerr << "Failed to initialize puck " << pucks[i].GetID()
 			<< std::endl;
       return osaBH8_280::EFAILURE;
     }
@@ -61,7 +63,7 @@ osaBH8_280::Errno osaBH8_280::Initialize(){
   /*
   // initialize the broadcast group
   if( broadcast.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize broadcast group"
+    std::cerr << "Failed to initialize broadcast group"
 		      << std::endl;
     return osaBH8_280::EFAILURE;
   }
@@ -69,13 +71,13 @@ osaBH8_280::Errno osaBH8_280::Initialize(){
 
   // initialize the upper arm groups
   if( hand.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize hand group"
+    std::cerr << "Failed to initialize hand group"
 		      << std::endl;
     return osaBH8_280::EFAILURE;
   }
   
   if( handposition.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize hand positions group"
+    std::cerr << "Failed to initialize hand positions group"
 		      << std::endl;
     return osaBH8_280::EFAILURE;
   }
@@ -131,7 +133,7 @@ osaBH8_280::Errno osaBH8_280::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
   if( jq.size() != pucks.size() ){
-    CMN_LOG_RUN_ERROR << "Expected " << pucks.size() << " joint angles. "
+    std::cerr << "Expected " << pucks.size() << " joint angles. "
 		      << "Got " << jq.size()
 		      << std::endl;
     return osaBH8_280::EFAILURE;
@@ -145,7 +147,7 @@ osaBH8_280::Errno osaBH8_280::SetPositions( const Eigen::VectorXd& jq ){
 
     // Set the motor position
     if( pucks[i].SetPosition( mq[i] ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to set pos of puck#: " 
+      std::cerr << "Failed to set pos of puck#: " 
 			<< (int)pucks[i].GetID()
 			<< std::endl;
     }
@@ -161,7 +163,7 @@ osaBH8_280::Errno osaBH8_280::GetPositions( Eigen::VectorXd& jq ){
 
   Eigen::VectorXd mq;
   if( handposition.GetPositions( mq ) != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
+    std::cerr << "Failed to get the upper arm positions"<<std::endl;
     return osaBH8_280::EFAILURE;
   }
   std::cout << mq << std::endl;
@@ -183,13 +185,13 @@ osaBH8_280::Errno osaBH8_280::SetTorques( const Eigen::VectorXd& jt ){
 
       Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
+	std::cerr << "Failed to set the upper arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
       }
       
     }
     else{
-      CMN_LOG_RUN_ERROR << "Expected 4 values. Got " << jt.size() << std::endl;
+      std::cerr << "Expected 4 values. Got " << jt.size() << std::endl;
       return osaBH8_280::EFAILURE;
     }
 
@@ -203,19 +205,19 @@ osaBH8_280::Errno osaBH8_280::SetTorques( const Eigen::VectorXd& jt ){
       
       Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
+	std::cerr << "Failed to set the upper arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
       }
       
       Eigen::Vector4d mtl( mt[4], mt[5], mt[6], 0.0 );
       if( lowertorques.SetTorques( mtl ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the lower arm torques" << std::endl;
+	std::cerr << "Failed to set the lower arm torques" << std::endl;
 	return osaBH8_280::EFAILURE;
       }
 
     }      
     else{
-      CMN_LOG_RUN_ERROR << "Expected 7 values. Got " << jt.size() << std::endl;
+      std::cerr << "Expected 7 values. Got " << jt.size() << std::endl;
       return osaBH8_280::EFAILURE;
     }
 

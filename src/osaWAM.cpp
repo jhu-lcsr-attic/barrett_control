@@ -51,7 +51,7 @@ osaWAM::osaWAM(	osaCANBus* canbus,
   }
 
   if( canbus == NULL )
-    { CMN_LOG_RUN_ERROR << "CAN device missing" << std::endl; }
+    { std::cerr << "CAN device missing" << std::endl; }
 
 }
 
@@ -61,7 +61,7 @@ osaWAM::Errno osaWAM::Initialize(){
 
   // initialize the safety module
   if( safetymodule.InitializeSM() != osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize safety module"
+    std::cerr << "Failed to initialize safety module"
 		      << std::endl;
     return osaWAM::EFAILURE;
   }
@@ -69,7 +69,7 @@ osaWAM::Errno osaWAM::Initialize(){
   // initialize each puck
   for( size_t i=0; i<pucks.size(); i++ ){
     if( pucks[i].InitializeMotor() != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to initialize puck " << pucks[i].GetID()
+      std::cerr << "Failed to initialize puck " << pucks[i].GetID()
 			<< std::endl;
       return osaWAM::EFAILURE;
     }
@@ -78,20 +78,20 @@ osaWAM::Errno osaWAM::Initialize(){
 
   // initialize the broadcast group
   if( broadcast.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize broadcast group"
+    std::cerr << "Failed to initialize broadcast group"
 		      << std::endl;
     return osaWAM::EFAILURE;
   }
 
   // initialize the upper arm groups
   if( uppertorques.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize upper torques group"
+    std::cerr << "Failed to initialize upper torques group"
 		      << std::endl;
     return osaWAM::EFAILURE;
   }
   
   if( upperpositions.Initialize() != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize upper positions group"
+    std::cerr << "Failed to initialize upper positions group"
 		      << std::endl;
     return osaWAM::EFAILURE;
   }
@@ -131,13 +131,13 @@ osaWAM::Errno osaWAM::Initialize(){
     
     // for 7 dof initialize the lower arm groups
     if( lowertorques.Initialize() != osaGroup::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to initialize lower torques group"
+      std::cerr << "Failed to initialize lower torques group"
 			<< std::endl;
       return osaWAM::EFAILURE;
     }
     
     if( lowerpositions.Initialize() != osaGroup::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to initialize lower positions group"
+      std::cerr << "Failed to initialize lower positions group"
 			<< std::endl;
       return osaWAM::EFAILURE;
     }
@@ -190,7 +190,7 @@ osaWAM::Errno osaWAM::Initialize(){
 osaWAM::Errno osaWAM::SetVelocityWarning( Barrett::Value vw ){
 
   if( safetymodule.SetVelocityWarning( vw ) != osaSafetyModule::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Unable to set the velocity warning" << std::endl;
+    std::cerr << "Unable to set the velocity warning" << std::endl;
     return osaWAM::EFAILURE;
   }
 
@@ -201,7 +201,7 @@ osaWAM::Errno osaWAM::SetVelocityWarning( Barrett::Value vw ){
 osaWAM::Errno osaWAM::SetVelocityFault( Barrett::Value vf ){
 
   if( safetymodule.SetVelocityFault( vf ) != osaSafetyModule::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Unable to set the velocity fault" << std::endl;
+    std::cerr << "Unable to set the velocity fault" << std::endl;
     return osaWAM::EFAILURE;
   }
 
@@ -211,7 +211,7 @@ osaWAM::Errno osaWAM::SetVelocityFault( Barrett::Value vf ){
 osaWAM::Errno osaWAM::SetTorqueWarning( Barrett::Value tw ){
   
   if( safetymodule.SetTorqueWarning( tw ) != osaSafetyModule::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Unable to set the torques warning" << std::endl;
+    std::cerr << "Unable to set the torques warning" << std::endl;
     return osaWAM::EFAILURE;
   }
   return osaWAM::ESUCCESS;
@@ -220,7 +220,7 @@ osaWAM::Errno osaWAM::SetTorqueWarning( Barrett::Value tw ){
 osaWAM::Errno osaWAM::SetTorqueFault( Barrett::Value tf ){
 
   if( safetymodule.SetTorqueFault( tf ) != osaSafetyModule::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Unable to set the torques fault" << std::endl;
+    std::cerr << "Unable to set the torques fault" << std::endl;
     return osaWAM::EFAILURE;
   }
   return osaWAM::ESUCCESS;
@@ -229,7 +229,7 @@ osaWAM::Errno osaWAM::SetTorqueFault( Barrett::Value tf ){
 osaWAM::Errno osaWAM::SetMode( Barrett::Value mode ){
 
   if( broadcast.SetMode( mode ) != osaGroup::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to set mode" << std::endl;
+    std::cerr << "Failed to set mode" << std::endl;
     return osaWAM::EFAILURE;
   }
   return osaWAM::ESUCCESS;
@@ -243,7 +243,7 @@ osaWAM::Errno osaWAM::GetMode( osaWAM::Mode& mode ){
     Barrett::Value mi = osaPuck::MODE_IDLE;
 
     if( pucks[i].GetMode( mi ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
+      std::cerr << "Failed to get mode" << std::endl;
       return osaWAM::EFAILURE;
     }
     
@@ -263,7 +263,7 @@ osaWAM::Errno osaWAM::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
   if( jq.size() != pucks.size() ){
-    CMN_LOG_RUN_ERROR << "Expected " << pucks.size() << " joint angles. "
+    std::cerr << "Expected " << pucks.size() << " joint angles. "
 		      << "Got " << jq.size()
 		      << std::endl;
     return osaWAM::EFAILURE;
@@ -274,7 +274,7 @@ osaWAM::Errno osaWAM::SetPositions( const Eigen::VectorXd& jq ){
   // change of joint position in a short amount of time and trigger a velocity 
   // fault.  
   if( safetymodule.IgnoreFault( 8 ) != osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to configure the safety module" << std::endl;
+    std::cerr << "Failed to configure the safety module" << std::endl;
     return osaWAM::EFAILURE;
   }
   
@@ -286,7 +286,7 @@ osaWAM::Errno osaWAM::SetPositions( const Eigen::VectorXd& jq ){
 
     // Set the motor position
     if( pucks[i].SetPosition( mq[i] ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to set pos of puck#: " 
+      std::cerr << "Failed to set pos of puck#: " 
 			<< (int)pucks[i].GetID()
 			<< std::endl;
     }
@@ -298,7 +298,7 @@ osaWAM::Errno osaWAM::SetPositions( const Eigen::VectorXd& jq ){
   // change of joint position in a short amount of time and trigger a velocity 
   // fault.  
   if( safetymodule.IgnoreFault( 1 ) != osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to configure the safety module" << std::endl;
+    std::cerr << "Failed to configure the safety module" << std::endl;
     return osaWAM::EFAILURE;
   }
   
@@ -316,7 +316,7 @@ osaWAM::Errno osaWAM::GetPositions( Eigen::VectorXd& jq ){
     {
       Eigen::VectorXd mq;
       if( upperpositions.GetPositions( mq ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
+	std::cerr << "Failed to get the upper arm positions"<<std::endl;
 	return osaWAM::EFAILURE;
       }
       jq = MotorsPos2JointsPos( mq );
@@ -330,12 +330,12 @@ osaWAM::Errno osaWAM::GetPositions( Eigen::VectorXd& jq ){
       Eigen::VectorXd mqu, mql;
       
       if( upperpositions.GetPositions( mqu ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to get the upper arm positions"<<std::endl;
+	std::cerr << "Failed to get the upper arm positions"<<std::endl;
 	return osaWAM::EFAILURE;
       }
       
       if( lowerpositions.GetPositions( mql ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to get the lower arm positions"<<std::endl;
+	std::cerr << "Failed to get the lower arm positions"<<std::endl;
 	return osaWAM::EFAILURE;
       }
       
@@ -366,13 +366,13 @@ osaWAM::Errno osaWAM::SetTorques( const Eigen::VectorXd& jt ){
 
       Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
+	std::cerr << "Failed to set the upper arm torques" << std::endl;
 	return osaWAM::EFAILURE;
       }
       
     }
     else{
-      CMN_LOG_RUN_ERROR << "Expected 4 values. Got " << jt.size() << std::endl;
+      std::cerr << "Expected 4 values. Got " << jt.size() << std::endl;
       return osaWAM::EFAILURE;
     }
 
@@ -386,19 +386,19 @@ osaWAM::Errno osaWAM::SetTorques( const Eigen::VectorXd& jt ){
 
       Eigen::Vector4d mtu( mt[0], mt[1], mt[2], mt[3] );
       if( uppertorques.SetTorques( mtu ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the upper arm torques" << std::endl;
+	std::cerr << "Failed to set the upper arm torques" << std::endl;
 	return osaWAM::EFAILURE;
       }
       
       Eigen::Vector4d mtl( mt[4], mt[5], mt[6], 0.0 );
       if( lowertorques.SetTorques( mtl ) != osaGroup::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to set the lower arm torques" << std::endl;
+	std::cerr << "Failed to set the lower arm torques" << std::endl;
 	return osaWAM::EFAILURE;
       }
 
     }      
     else{
-      CMN_LOG_RUN_ERROR << "Expected 7 values. Got " << jt.size() << std::endl;
+      std::cerr << "Expected 7 values. Got " << jt.size() << std::endl;
       return osaWAM::EFAILURE;
     }
 

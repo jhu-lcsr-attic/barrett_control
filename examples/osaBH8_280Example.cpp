@@ -25,14 +25,14 @@ int main( int argc, char** argv ){
   osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
 
   if( can.Open() != osaCANBus::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
+    std::cerr << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
   }
 
   osaBH8_280 BH( &can );
 
   if( BH.Initialize() != osaBH8_280::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to initialize WAM" << std::endl;
+    std::cerr << "Failed to initialize WAM" << std::endl;
     return -1;
   }
   std::cout << "\n\n\n\n";
