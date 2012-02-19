@@ -19,57 +19,60 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <Eigen/Dense>
 
-#include <barrett_direct/osaGroup.h>
+#include <leoCAN/CANBus.h>
 
+#include <barrett_direct/Group.h>
 
-osaGroup::ID operator++( osaGroup::ID& gid, int ){
+using namespace barrett_direct;
 
-  if( gid==osaGroup::BROADCAST )
-    { return gid = osaGroup::UPPERARM; }
+Group::ID operator++( Group::ID& gid, int ){
 
-  if( gid==osaGroup::UPPERARM )
-    { return gid = osaGroup::FOREARM; }
+  if( gid==Group::BROADCAST )
+    { return gid = Group::UPPERARM; }
 
-  if( gid==osaGroup::FOREARM )
-    { return gid = osaGroup::POSITION; }
+  if( gid==Group::UPPERARM )
+    { return gid = Group::FOREARM; }
 
-  if( gid==osaGroup::POSITION )
-    { return gid = osaGroup::UPPERARM_POSITION; }
+  if( gid==Group::FOREARM )
+    { return gid = Group::POSITION; }
 
-  if( gid==osaGroup::UPPERARM_POSITION ) 
-    { return gid = osaGroup::FOREARM_POSITION; }
+  if( gid==Group::POSITION )
+    { return gid = Group::UPPERARM_POSITION; }
 
-  if( gid==osaGroup::FOREARM_POSITION )
-    { return gid = osaGroup::PROPERTY; }
+  if( gid==Group::UPPERARM_POSITION ) 
+    { return gid = Group::FOREARM_POSITION; }
 
-  if( gid==osaGroup::PROPERTY ) 
-    { return gid = osaGroup::HAND; }
+  if( gid==Group::FOREARM_POSITION )
+    { return gid = Group::PROPERTY; }
 
-  if( gid==osaGroup::HAND )
-    { return gid = osaGroup::HAND_POSITION; }
+  if( gid==Group::PROPERTY ) 
+    { return gid = Group::HAND; }
 
-  if( gid==osaGroup::HAND_POSITION )
-    { return gid = osaGroup::LASTGROUP; }
+  if( gid==Group::HAND )
+    { return gid = Group::HAND_POSITION; }
 
-  return gid = osaGroup::LASTGROUP;
+  if( gid==Group::HAND_POSITION )
+    { return gid = Group::LASTGROUP; }
+
+  return gid = Group::LASTGROUP;
 
 }
 
 // default constructor
-osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) : 
+Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) : 
   canbus( canbus ),
   id( id ){
   
   switch( GetID() ){
 
-  case osaGroup::BROADCAST:
-    AddPuckToGroup( osaPuck::PUCK_ID1 );
-    AddPuckToGroup( osaPuck::PUCK_ID2 );
-    AddPuckToGroup( osaPuck::PUCK_ID3 );
-    AddPuckToGroup( osaPuck::PUCK_ID4 );
-    AddPuckToGroup( osaPuck::PUCK_ID5 );
-    AddPuckToGroup( osaPuck::PUCK_ID6 );
-    AddPuckToGroup( osaPuck::PUCK_ID7 );
+  case Group::BROADCAST:
+    AddPuckToGroup( Puck::PUCK_ID1 );
+    AddPuckToGroup( Puck::PUCK_ID2 );
+    AddPuckToGroup( Puck::PUCK_ID3 );
+    AddPuckToGroup( Puck::PUCK_ID4 );
+    AddPuckToGroup( Puck::PUCK_ID5 );
+    AddPuckToGroup( Puck::PUCK_ID6 );
+    AddPuckToGroup( Puck::PUCK_ID7 );
 
     if( createfilter ){
     }
@@ -77,33 +80,33 @@ osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) :
     break;
 
     // used to set torques
-  case osaGroup::UPPERARM:
-    AddPuckToGroup( osaPuck::PUCK_ID1 );
-    AddPuckToGroup( osaPuck::PUCK_ID2 );
-    AddPuckToGroup( osaPuck::PUCK_ID3 );
-    AddPuckToGroup( osaPuck::PUCK_ID4 );
+  case Group::UPPERARM:
+    AddPuckToGroup( Puck::PUCK_ID1 );
+    AddPuckToGroup( Puck::PUCK_ID2 );
+    AddPuckToGroup( Puck::PUCK_ID3 );
+    AddPuckToGroup( Puck::PUCK_ID4 );
     break;
 
     // used to set torques
-  case osaGroup::FOREARM:
-    AddPuckToGroup( osaPuck::PUCK_ID5 );
-    AddPuckToGroup( osaPuck::PUCK_ID6 );
-    AddPuckToGroup( osaPuck::PUCK_ID7 );
+  case Group::FOREARM:
+    AddPuckToGroup( Puck::PUCK_ID5 );
+    AddPuckToGroup( Puck::PUCK_ID6 );
+    AddPuckToGroup( Puck::PUCK_ID7 );
     break;
 
-  case osaGroup::POSITION:
-    AddPuckToGroup( osaPuck::PUCK_IDF1 );
-    AddPuckToGroup( osaPuck::PUCK_IDF2 );
-    AddPuckToGroup( osaPuck::PUCK_IDF3 );
-    AddPuckToGroup( osaPuck::PUCK_IDF4 );
+  case Group::POSITION:
+    AddPuckToGroup( Puck::PUCK_IDF1 );
+    AddPuckToGroup( Puck::PUCK_IDF2 );
+    AddPuckToGroup( Puck::PUCK_IDF3 );
+    AddPuckToGroup( Puck::PUCK_IDF4 );
     break;
 
     // used to get positions
-  case osaGroup::UPPERARM_POSITION:
-    AddPuckToGroup( osaPuck::PUCK_ID1 );
-    AddPuckToGroup( osaPuck::PUCK_ID2 );
-    AddPuckToGroup( osaPuck::PUCK_ID3 );
-    AddPuckToGroup( osaPuck::PUCK_ID4 );
+  case Group::UPPERARM_POSITION:
+    AddPuckToGroup( Puck::PUCK_ID1 );
+    AddPuckToGroup( Puck::PUCK_ID2 );
+    AddPuckToGroup( Puck::PUCK_ID3 );
+    AddPuckToGroup( Puck::PUCK_ID4 );
     if( createfilter ){
       // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
       // GFF FFFT TTTT ( 0x5EF ) 
@@ -111,19 +114,19 @@ osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) :
       // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
       // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
       // filter all 4 pucks because the forearm has similar filters
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0423 ) );
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0443 ) );
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0463 ) );
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x0483 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0423 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0443 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0463 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0483 ) );
     }
     
     break;
 
     // used to get positions
-  case osaGroup::FOREARM_POSITION:
-    AddPuckToGroup( osaPuck::PUCK_ID5 );
-    AddPuckToGroup( osaPuck::PUCK_ID6 );
-    AddPuckToGroup( osaPuck::PUCK_ID7 );
+  case Group::FOREARM_POSITION:
+    AddPuckToGroup( Puck::PUCK_ID5 );
+    AddPuckToGroup( Puck::PUCK_ID6 );
+    AddPuckToGroup( Puck::PUCK_ID7 );
     if( createfilter ){
       // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
       // GFF FFFT TTTT ( 0x5EF ) 
@@ -131,28 +134,28 @@ osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) :
       // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
       // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
       // filter all 4 pucks because the forearm has similar filters
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04A3 ) );
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04C3 ) );
-      canbus->AddFilter( osaCANBus::Filter( 0x05E3, 0x04E3 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04A3 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04C3 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04E3 ) );
     }
     
     break;
 
-  case osaGroup::PROPERTY:
+  case Group::PROPERTY:
     break;
 
-  case osaGroup::HAND:
-    AddPuckToGroup( osaPuck::PUCK_IDF1 );
-    AddPuckToGroup( osaPuck::PUCK_IDF2 );
-    AddPuckToGroup( osaPuck::PUCK_IDF3 );
-    AddPuckToGroup( osaPuck::PUCK_IDF4 );
+  case Group::HAND:
+    AddPuckToGroup( Puck::PUCK_IDF1 );
+    AddPuckToGroup( Puck::PUCK_IDF2 );
+    AddPuckToGroup( Puck::PUCK_IDF3 );
+    AddPuckToGroup( Puck::PUCK_IDF4 );
     break;
 
-  case osaGroup::HAND_POSITION:
-    AddPuckToGroup( osaPuck::PUCK_IDF1 );
-    AddPuckToGroup( osaPuck::PUCK_IDF2 );
-    AddPuckToGroup( osaPuck::PUCK_IDF3 );
-    AddPuckToGroup( osaPuck::PUCK_IDF4 );
+  case Group::HAND_POSITION:
+    AddPuckToGroup( Puck::PUCK_IDF1 );
+    AddPuckToGroup( Puck::PUCK_IDF2 );
+    AddPuckToGroup( Puck::PUCK_IDF3 );
+    AddPuckToGroup( Puck::PUCK_IDF4 );
     if( createfilter ){
       // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
       // GFF FFFT TTTT ( 0x5EF ) 
@@ -160,7 +163,7 @@ osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) :
       // Also, the pucks id for the hand have FFFFF=01xxx such that we have:
       // a mask: 0x0503 and id: 0x0503. The hand is the only device with the 
       // 4th bit to 1 so use that bit to determine if the hand is replying
-      canbus->AddFilter( osaCANBus::Filter( 0x0503, 0x0503 ) );
+      canbus->AddFilter( leoCAN::CANBus::Filter( 0x0503, 0x0503 ) );
     }
 
     break;
@@ -171,7 +174,7 @@ osaGroup::osaGroup( osaGroup::ID id, osaCANBus* canbus, bool createfilter ) :
 
 }
 
-std::string osaGroup::LogPrefix(){
+std::string Group::LogPrefix(){
   std::string s;
   switch( GetID() ){
   case BROADCAST:
@@ -223,67 +226,67 @@ std::string osaGroup::LogPrefix(){
 
 // STATIC return true of the CAN frame is destined to a group
 // For this we test the CAN ID for the GROUPTAG bit
-bool osaGroup::IsDestinationAGroup( const osaCANBusFrame canframe )
-{ return (canframe.GetID() & osaGroup::GROUP_CODE) == osaGroup::GROUP_CODE; }
+bool Group::IsDestinationAGroup( const leoCAN::CANBusFrame canframe )
+{ return (canframe.GetID() & Group::GROUP_CODE) == Group::GROUP_CODE; }
 
 // return the group id
-osaGroup::ID osaGroup::GetID() const { return id; }
+Group::ID Group::GetID() const { return id; }
 
 // STATIC return the CAN of a message from the host (00000) to a group ID
 // A group ID is represented by 5 bits whereas a CAN ID has 11
-osaCANBusFrame::ID osaGroup::CANID( osaGroup::ID id )
-{ return (osaCANBusFrame::ID)( osaGroup::GROUP_CODE | (0x1F & id) ); }
+leoCAN::CANBusFrame::id_t Group::CANID( Group::ID id )
+{ return (leoCAN::CANBusFrame::id_t)( Group::GROUP_CODE | (0x1F & id) ); }
 
 // STATIC return true if the CAN frame is a "set" command (a command has a 
 // message of the form
 // [1*** ****][**** ****]...[**** ****]
 // thus we test if the MSB of the first byte is set
-bool osaGroup::IsSetFrame( const osaCANBusFrame& canframe ){
-  const osaCANBusFrame::Data* data = canframe.GetData();
+bool Group::IsSetFrame( const leoCAN::CANBusFrame& canframe ){
+  const leoCAN::CANBusFrame::data_t* data = canframe.GetData();
   return ( data[0] & Barrett::SET_CODE) == Barrett::SET_CODE;
 }
 
 // STATIC returns the destination of a CAN id. This assumes that the 
 // destination is a group (as opposed to a puck)
 // The destination group ID compose the 5 LSB of a CAN ID
-osaGroup::ID osaGroup::DestinationID( osaCANBusFrame::ID cid )
-{ return (osaGroup::ID) ( cid & 0x001F); }
+Group::ID Group::DestinationID( leoCAN::CANBusFrame::id_t cid )
+{ return (Group::ID) ( cid & 0x001F); }
 
 // STATIC extract the destination group ID
-osaGroup::ID osaGroup::DestinationID( const osaCANBusFrame& canframe )
-{ return osaGroup::DestinationID( canframe.GetID() ); }
+Group::ID Group::DestinationID( const leoCAN::CANBusFrame& canframe )
+{ return Group::DestinationID( canframe.GetID() ); }
 
 // STATIC extract the origin group ID
 // the origin bits are the bits 5 to 9 (zero index) in a CAN ID
-osaGroup::ID osaGroup::OriginID( osaCANBusFrame::ID cid )
-{ return (osaGroup::ID) ((cid>>5) & 0x001F); }
+Group::ID Group::OriginID( leoCAN::CANBusFrame::id_t cid )
+{ return (Group::ID) ((cid>>5) & 0x001F); }
 
 // STATIC extract the origin group ID
-osaGroup::ID osaGroup::OriginID( const osaCANBusFrame& canframe )
-{ return osaGroup::OriginID( canframe.GetID() ); }
+Group::ID Group::OriginID( const leoCAN::CANBusFrame& canframe )
+{ return Group::OriginID( canframe.GetID() ); }
 
-void osaGroup::AddPuckToGroup( osaPuck::ID pid ){
+void Group::AddPuckToGroup( Puck::ID pid ){
 
-  osaPuck puck( pid, canbus, false );
+  Puck puck( pid, canbus, false );
   pucks.push_back( puck );
 
 }
 
 // Query a group of puck.
-osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid, 
+Group::Errno Group::GetProperty( Barrett::ID propid, 
 				       std::vector<Barrett::Value>& values ){
 
   // pack the query in a CAN frame
-  osaCANBusFrame sendframe;
-  if( PackProperty( sendframe, Barrett::GET, propid ) != osaGroup::ESUCCESS){
+  leoCAN::CANBusFrame sendframe;
+  if( PackProperty( sendframe, Barrett::GET, propid ) != Group::ESUCCESS){
     std::cerr << "Failed to pack the property" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
   
   // send the CAN frame
-  if( canbus->Send( sendframe ) != osaCANBus::ESUCCESS ){
+  if( canbus->Send( sendframe ) != leoCAN::CANBus::ESUCCESS ){
     std::cerr << ": Failed to querry group" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
   values.clear();
@@ -292,17 +295,17 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
   for( size_t i=0; i<pucks.size(); i++ ){
 
     // empty CAN frame
-    osaCANBusFrame recvframe;
+    leoCAN::CANBusFrame recvframe;
 
     // receive the response in a CAN frame
-    if( canbus->Recv( recvframe ) != osaCANBus::ESUCCESS ){
+    if( canbus->Recv( recvframe ) != leoCAN::CANBus::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to receive property" 
 			<< std::endl;
-      return osaGroup::EFAILURE;
+      return Group::EFAILURE;
     }
 
     // figure which puck send that frame
-    osaPuck::ID pid = osaPuck::OriginID( recvframe );
+    Puck::ID pid = Puck::OriginID( recvframe );
     int pindex = -1;
     for( size_t j=0; j<pucks.size(); j++ ){
       if( pucks[j].GetID() == pid )
@@ -317,10 +320,10 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
       
       // unpack the frame;
       if( pucks[pindex].UnpackCANFrame( recvframe, recvpropid, recvvalue ) 
-	  != osaPuck::ESUCCESS){
+	  != Puck::ESUCCESS){
 	std::cerr << LogPrefix() << "Failed to unpack CAN frame"
 			  << std::endl;
-	return osaGroup::EFAILURE;
+	return Group::EFAILURE;
       }
 
       // make sure that the property received is the one we asked for
@@ -328,7 +331,7 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
 	std::cerr << LogPrefix() << "Unexpected property ID. "
 			  << "Expected " << propid << " got " << recvpropid
 			  << std::endl;
-	return osaGroup::EFAILURE;
+	return Group::EFAILURE;
       }
 
       if( 0 <= pindex && pindex < (int)values.size() )
@@ -345,31 +348,31 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
 
   }
   
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
    
 }
 
 
  // Set the properties of a group
  // Unlike devPuck::SetProperty, this doesn't verify the pucks values
- osaGroup::Errno osaGroup::SetProperty( Barrett::ID propid, 
+ Group::Errno Group::SetProperty( Barrett::ID propid, 
 					Barrett::Value propval,
 					bool verify){
 
    // pack the "set" command in a CAN frame
-   osaCANBusFrame canframe;
+   leoCAN::CANBusFrame canframe;
    if( PackProperty( canframe, Barrett::SET, propid, propval )
-       != osaGroup::ESUCCESS ){
+       != Group::ESUCCESS ){
      std::cerr << ": Failed to pack the property " << propid 
 		       << std::endl;
-     return osaGroup::EFAILURE;
+     return Group::EFAILURE;
    }
 
    // Send the CAN frame
-   if( canbus->Send( canframe ) != osaCANBus::ESUCCESS ){
+   if( canbus->Send( canframe ) != leoCAN::CANBus::ESUCCESS ){
      std::cerr << ": Failed to send the CAN frame."
 		       << std::endl;
-     return osaGroup::EFAILURE;
+     return Group::EFAILURE;
    }
 
    if( verify ){
@@ -378,18 +381,18 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
 			 << std::endl;
    }
 
-   return osaGroup::ESUCCESS;
+   return Group::ESUCCESS;
 
  }
 
  // This packs a frame originating from the host and destined to the puck
- osaGroup::Errno osaGroup::PackProperty( osaCANBusFrame& canframe,
+ Group::Errno Group::PackProperty( leoCAN::CANBusFrame& canframe,
 					 Barrett::Command cmd,
 					 Barrett::ID propid,
 					 Barrett::Value propval ){
 
-   osaCANBusFrame::DataField data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-   osaCANBusFrame::DataLength length=1;  // default message length (for a query)
+   leoCAN::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+   leoCAN::CANBusFrame::data_len_t length=1;  // default message length (for a query)
 
    // See Barrett's documentation to understand the format
    data[0] = propid & 0x7F;                                 //data[0] = APPPPPP
@@ -400,50 +403,50 @@ osaGroup::Errno osaGroup::GetProperty( Barrett::ID propid,
     
     // fill the rest of the bytes with the property value
     for(size_t i=2; i<6; i++){
-      data[i] = (osaCANBusFrame::Data)(propval & 0x000000FF);//data[i] = values
+      data[i] = (leoCAN::CANBusFrame::data_t)(propval & 0x000000FF);//data[i] = values
       propval >>= 8;
     }
     length = 6; // packed 6 bytes 
   }
 
   // create a new CAN frame
-  canframe = osaCANBusFrame( osaGroup::CANID( GetID() ), data, length );
+  canframe = leoCAN::CANBusFrame( Group::CANID( GetID() ), data, length );
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 }
 
 
-osaGroup::Errno osaGroup::Reset(){
-  if( SetProperty( Barrett::STATUS, osaPuck::STATUS_RESET, false ) != 
-      osaGroup::ESUCCESS ){
+Group::Errno Group::Reset(){
+  if( SetProperty( Barrett::STATUS, Puck::STATUS_RESET, false ) != 
+      Group::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to reset" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
 
-osaGroup::Errno osaGroup::Ready(){
-  if( SetProperty( Barrett::STATUS, osaPuck::STATUS_READY, false ) != 
-      osaGroup::ESUCCESS ){
+Group::Errno Group::Ready(){
+  if( SetProperty( Barrett::STATUS, Puck::STATUS_READY, false ) != 
+      Group::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to ready" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
-osaGroup::Errno osaGroup::GetPositions( Eigen::VectorXd& q ){
+Group::Errno Group::GetPositions( Eigen::VectorXd& q ){
 
   // Query a group of puck.
   std::vector<Barrett::Value> values;
 
-  if( GetProperty( Barrett::POS, values ) != osaGroup::ESUCCESS ){
+  if( GetProperty( Barrett::POS, values ) != Group::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to get positions" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
   if( values.size() == pucks.size() ){
@@ -463,54 +466,54 @@ osaGroup::Errno osaGroup::GetPositions( Eigen::VectorXd& q ){
     std::cerr << LogPrefix() << "Expected " << pucks.size() <<" values."
 		      << " Got " << values.size() 
 		      << std::endl;
-    return osaGroup::EFAILURE;    
+    return Group::EFAILURE;    
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
 
-osaGroup::Errno osaGroup::SetTorques( const Eigen::Vector4d& tau ){
+Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
 
-  if( GetID() == osaGroup::UPPERARM || GetID() == osaGroup::FOREARM ){
+  if( GetID() == Group::UPPERARM || GetID() == Group::FOREARM ){
     
     Eigen::Vector4d currents( 0.0 );
     for( size_t i=0; i<currents.size(); i++ )
       { currents[i] = tau[i] * pucks[i].IpNm(); }
     
     // pack the torques in a can frames
-    osaCANBusFrame frame;
-    if( PackCurrents( frame, currents ) != osaGroup::ESUCCESS ){
+    leoCAN::CANBusFrame frame;
+    if( PackCurrents( frame, currents ) != Group::ESUCCESS ){
       std::cerr << "Failed to pack the torques" << std::endl;
-      return osaGroup::EFAILURE;
+      return Group::EFAILURE;
     }
 
     // send the canframe (blocking)
-    if( canbus->Send( frame ) != osaCANBus::ESUCCESS ){
+    if( canbus->Send( frame ) != leoCAN::CANBus::ESUCCESS ){
       std::cerr << "Failed to send upper arm torques" << std::endl;
-      return osaGroup::EFAILURE;
+      return Group::EFAILURE;
     }
 
   }
   else{
     std::cerr << LogPrefix() 
 			<< "Group  cannot send torques" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
 
 // pack motor torques in a CAN frame
 // this should go into devGroup
-osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame, 
+Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame, 
 					const Eigen::Vector4d& I ){
   
   // we can only pack torques for the upper arm and forearm groups
-  if( GetID() == osaGroup::UPPERARM || GetID() == osaGroup::FOREARM ){
+  if( GetID() == Group::UPPERARM || GetID() == Group::FOREARM ){
 
     // copy each motor torques in this array with the correct index
     Barrett::Value values[4] = {0, 0, 0, 0};
@@ -522,7 +525,7 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
       int idx =  pucks[i].GroupIndex()-1;          // -1 because of zero index
       if( idx < 0 || 3 < idx ){                    // sanity check
 	std::cerr << "Illegal index" << std::endl;
-	return osaGroup::EFAILURE;
+	return Group::EFAILURE;
       }
 
       values[ idx ] = (Barrett::Value)I[i];        // cast the torque      
@@ -540,60 +543,60 @@ osaGroup::Errno osaGroup::PackCurrents( osaCANBusFrame& frame,
     msg[7]=(unsigned char)(  values[3]    &0x00FF);
     
     // build a can frame addressed to the group ID 
-    frame = osaCANBusFrame( osaGroup::CANID( GetID() ), msg, 8 );
+    frame = leoCAN::CANBusFrame( Group::CANID( GetID() ), msg, 8 );
 
-    return osaGroup::ESUCCESS;
+    return Group::ESUCCESS;
   }
   else{
     std::cerr << LogPrefix() 
 			<< "Group cannot pack torques" << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
 }
 
-osaGroup::Errno osaGroup::GetStatus( std::vector<Barrett::Value>& status ){
+Group::Errno Group::GetStatus( std::vector<Barrett::Value>& status ){
 
-  if( GetProperty( Barrett::STATUS, status ) != osaGroup::ESUCCESS ){
+  if( GetProperty( Barrett::STATUS, status ) != Group::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to query the status" 
 		      << std::endl;
-    return osaGroup::EFAILURE;
+    return Group::EFAILURE;
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
-osaGroup::Errno osaGroup::Initialize(){
+Group::Errno Group::Initialize(){
 
   for( size_t i=0; i<pucks.size(); i++ ){
 
     std::clog << LogPrefix() << "Initalizing puck " 
 			<< (int)pucks[i].GetID()
 			<< std::endl;
-    if( pucks[i].InitializeMotor() != osaPuck::ESUCCESS ){
+    if( pucks[i].InitializeMotor() != Puck::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to initialize puck"
 			<< std::endl;
-      return osaGroup::EFAILURE;      
+      return Group::EFAILURE;      
     }
 
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
-osaGroup::Errno osaGroup::SetMode( Barrett::Value mode ){
+Group::Errno Group::SetMode( Barrett::Value mode ){
   
   for( size_t i=0; i<pucks.size(); i++ ){
-    if( pucks[i].SetMode( mode ) != osaPuck::ESUCCESS ){
+    if( pucks[i].SetMode( mode ) != Puck::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to set the mode."
 			<< std::endl;
-      return osaGroup::EFAILURE;
+      return Group::EFAILURE;
     }
   }
 
-  return osaGroup::ESUCCESS;
+  return Group::ESUCCESS;
 
 }
 
