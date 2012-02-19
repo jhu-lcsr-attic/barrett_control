@@ -35,8 +35,12 @@ project(barrett_direct)
 
 set( INCLUDE_DIR "include/barrett_direct" )
 set( SRC_DIR "src" )
+set( EXAMPLES_DIR "examples" )
 
-message("barrett_direct_SOURCE_DIR ${barrett_direct_SOURCE_DIR}")
+#set the default path for built executables to the "bin" directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+#set the default path for built libraries to the "lib" directory
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 set( barrett_direct_INCLUDE_DIRS "${barrett_direct_SOURCE_DIR}/include" )
 set( barrett_direct_LIBRARIES_PATH )
@@ -67,12 +71,30 @@ set( SOURCE_FILES
   ${SRC_DIR}/WAM.cpp
   ${SRC_DIR}/BH8_280.cpp )
 
+# Find the Eigen linear algebra package
 find_package(Eigen REQUIRED)
-find_library(leoCAN_LIB leoCAN "${barrett_direct_SOURCE_DIR}/../leoCAN/build")
+# Find the leoCAN library
+find_package(leoCAN REQUIRED HINTS "${barrett_direct_SOURCE_DIR}/../leoCAN/build")
+if(leoCAN_FOUND)
+  list(APPEND barrett_direct_INCLUDE_DIRS ${leoCAN_INCLUDE_DIRS} )
+  list(APPEND barrett_direct_LIBRARY_DIRS ${leoCAN_LIBRARY_DIRS} )
+  list(APPEND barrett_direct_LIBRARIES ${leoCAN_LIBRARIES} )
+  list(APPEND barrett_direct_DEFINITIONS ${leoCAN_DEFINITIONS} )
+endif()
+
+# Add the library target
+include_directories(
+  ${Eigen_INCLUDE_DIRS}
+  ${barrett_direct_INCLUDE_DIRS}
+  "${barrett_direct_SOURCE_DIR}/include"
+  "${barrett_direct_SOURCE_DIR}/../leoCAN/include")
+link_directories( ${barrett_direct_LIBRARY_DIRS} )
+add_definitions( ${barrett_direct_DEFINITIONS} )
 
 add_library( barrett_direct SHARED ${HEADER_FILES} ${SOURCE_FILES} )
-include_directories(
-  "${barrett_direct_SOURCE_DIR}/include"
-  ${Eigen_INCLUDE_DIRS}
-  "${barrett_direct_SOURCE_DIR}/../leoCAN/include")
-target_link_libraries( barrett_direct ${leoCAN_LIB} )
+target_link_libraries( barrett_direct ${leoCAN_LIBRARIES} )
+
+# Add example targets
+
+add_executable( wam_test ${EXAMPLES_DIR}/wam_example.cpp )
+target_link_libraries( wam_test barrett_direct ${leoCAN_LIBRARIES} native )
