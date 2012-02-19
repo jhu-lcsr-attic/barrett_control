@@ -68,11 +68,11 @@ set( SOURCE_FILES
   ${SRC_DIR}/BH8_280.cpp )
 
 find_package(Eigen REQUIRED)
+find_library(leoCAN_LIB leoCAN "${barrett_direct_SOURCE_DIR}/../leoCAN/build")
 
-add_library( barrett_direct ${HEADER_FILES} ${SOURCE_FILES} )
+add_library( barrett_direct SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 include_directories(
   "${barrett_direct_SOURCE_DIR}/include"
   ${Eigen_INCLUDE_DIRS}
   "${barrett_direct_SOURCE_DIR}/../leoCAN/include")
-link_directories("${barrett_direct_SOURCE_DIR}/../leoCAN/build")
-target_link_libraries( barrett_direct leoCAN )
+target_link_libraries( barrett_direct ${leoCAN_LIB} )
