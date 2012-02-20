@@ -1,4 +1,6 @@
-if(0)
+cmake_minimum_required(VERSION 2.6.0)
+
+if(False)
   cmake_minimum_required(VERSION 2.4.6)
   include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
@@ -95,6 +97,5 @@ add_library( barrett_direct SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 target_link_libraries( barrett_direct ${leoCAN_LIBRARIES} )
 
 # Add example targets
-
 add_executable( wam_test ${EXAMPLES_DIR}/wam_example.cpp )
 target_link_libraries( wam_test barrett_direct ${leoCAN_LIBRARIES} native )
