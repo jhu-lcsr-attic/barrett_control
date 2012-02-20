@@ -46,14 +46,6 @@ set( barrett_direct_LIBRARIES_PATH )
 set( barrett_direct_LIBRARIES )
 set( barrett_direct_DEFINITIONS )
 
-set( HEADER_FILES 
-  ${INCLUDE_DIR}/CANBus.h 
-  ${INCLUDE_DIR}/CANBusFrame.h )
-
-set( SOURCE_FILES 
-  ${SRC_DIR}/CANBus.cpp
-  ${SRC_DIR}/CANBusFrame.cpp )
-
 # Add path to cmake modules in this package
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${barrett_direct_SOURCE_DIR}/cmake")
 
