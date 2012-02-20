@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6.0)
 
-if(False)
-  cmake_minimum_required(VERSION 2.4.6)
+set(ROS_ROOT $ENV{ROS_ROOT})
+if(ROS_ROOT)
   include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
   # Set the build type.  Options are:
@@ -13,11 +13,6 @@ if(False)
   #set(ROS_BUILD_TYPE RelWithDebInfo)
 
   rosbuild_init()
-
-  #set the default path for built executables to the "bin" directory
-  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-  #set the default path for built libraries to the "lib" directory
-  set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
   #uncomment if you have defined messages
   #rosbuild_genmsg()
@@ -31,6 +26,9 @@ if(False)
   #rosbuild_link_boost(${PROJECT_NAME} thread)
   #rosbuild_add_executable(example examples/example.cpp)
   #target_link_libraries(example ${PROJECT_NAME})
+
+  # Find the leoCAN ROS package
+  rosbuild_find_ros_package(leoCAN)
 endif()
  
 project(barrett_direct)
@@ -39,10 +37,9 @@ set( INCLUDE_DIR "include/barrett_direct" )
 set( SRC_DIR "src" )
 set( EXAMPLES_DIR "examples" )
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+# Set the executable and library output paths
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 set( barrett_direct_INCLUDE_DIRS "${barrett_direct_SOURCE_DIR}/include" )
 set( barrett_direct_LIBRARIES_PATH )
@@ -75,8 +72,9 @@ set( SOURCE_FILES
 
 # Find the Eigen linear algebra package
 find_package(Eigen REQUIRED)
+
 # Find the leoCAN library
-find_package(leoCAN REQUIRED HINTS "${barrett_direct_SOURCE_DIR}/../leoCAN/build")
+find_package(leoCAN REQUIRED HINTS "${leoCAN_PACKAGE_PATH}/share/cmake")
 if(leoCAN_FOUND)
   list(APPEND barrett_direct_INCLUDE_DIRS ${leoCAN_INCLUDE_DIRS} )
   list(APPEND barrett_direct_LIBRARY_DIRS ${leoCAN_LIBRARY_DIRS} )
