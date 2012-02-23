@@ -12,6 +12,7 @@
   <url>http://ros.org/wiki/barrett_direct</url>
 
   <depend package="eigen"/>
+  <depend package="leoCAN"/>
 
 </package>
 

@@ -87,5 +87,5 @@ add_library( barrett_direct SHARED ${HEADER_FILES} ${SOURCE_FILES} )
 target_link_libraries( barrett_direct ${leoCAN_LIBRARIES} )
 
 # Add example targets
-add_executable( wam_test ${EXAMPLES_DIR}/wam_example.cpp )
-target_link_libraries( wam_test barrett_direct ${leoCAN_LIBRARIES} native )
+add_executable( wam_example ${EXAMPLES_DIR}/wam_example.cpp )
+target_link_libraries( wam_example barrett_direct ${leoCAN_LIBRARIES} native )

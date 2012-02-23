@@ -40,7 +40,7 @@ WAM::WAM(	leoCAN::CANBus* canbus,
   // create the safety module
   safetymodule(   Puck::SAFETY_MODULE_ID,   canbus ),
 
-  qinit( qinit ) {
+  qinit() {
 
 
   // create the pucks

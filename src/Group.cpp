@@ -478,7 +478,7 @@ Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
 
   if( GetID() == Group::UPPERARM || GetID() == Group::FOREARM ){
     
-    Eigen::Vector4d currents( 0.0 );
+    Eigen::Vector4d currents(tau.size());
     for( size_t i=0; i<currents.size(); i++ )
       { currents[i] = tau[i] * pucks[i].IpNm(); }
     
