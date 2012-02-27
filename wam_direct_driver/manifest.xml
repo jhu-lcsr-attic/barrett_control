@@ -1,5 +1,5 @@
 <package>
-  <description brief="barrett_direct">
+  <description brief="wam_direct_driver">
     This is a driver package for the Barrett Technologies Whole Arm Manipulator
     (WAM) Robot. It is a 4- to 7-DOF robotic arm for use in manipulation
     research. This driver, in particular, enables direct control of a WAM robot

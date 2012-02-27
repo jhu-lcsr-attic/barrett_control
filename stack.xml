@@ -1,0 +1,11 @@
+<stack>
+  <description brief="wam_direct">wam_direct</description>
+  <author>Maintained by Jonathan Bohren / jbo@jhu.edu</author>
+  <license>CISST (http://www.cisst.org/cisst/license.txt)</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/wam_direct</url>
+
+  <depend stack="eigen" />
+  <depend stack="ros" />
+
+</stack>
