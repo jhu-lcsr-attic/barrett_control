@@ -1,6 +1,3 @@
-//#include <cisstOSAbstraction/osaSleep.h>
-//#include <cisstOSAbstraction/osaGetTime.h>
-
 #include <barrett_direct/WAM.h>
 #include <leoCAN/RTSocketCAN.h>
 #include <native/task.h>
