@@ -1,0 +1,14 @@
+<package>
+  <description brief="rosbuild_xenomai">
+
+     rosbuild_xenomai
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rosbuild_xenomai</url>
+
+</package>
+
+
