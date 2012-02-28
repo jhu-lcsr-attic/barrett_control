@@ -24,6 +24,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <barrett_direct/Puck.h>
 #include <barrett_direct/Group.h>
 
+#include <exception>
+
 //! A clas for a WAM device
 /**
    Whole Arm Manipulator (WAM) is a 4-7DOF robot manufactured by Barrett Tech. 
@@ -52,6 +54,17 @@ namespace barrett_direct {
     enum Configuration{ WAM_4DOF, WAM_7DOF };
 
     enum Mode{ MODE_IDLE, MODE_ACTIVATED };
+
+    static size_t DOF(Configuration wam_conf) {
+      switch(wam_conf) {
+        case WAM_4DOF:
+          return 4;
+        case WAM_7DOF:
+          return 7;
+        default:
+          throw(std::exception());
+      };
+    }
 
   private:
 
