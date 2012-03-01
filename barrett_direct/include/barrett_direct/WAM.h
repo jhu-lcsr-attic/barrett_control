@@ -14,8 +14,8 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#ifndef _WAM_h
-#define _WAM_h
+#ifndef __BARRETT_DIRECT_WAM_H
+#define __BARRETT_DIRECT_WAM_H
 
 #include <Eigen/Dense>
 

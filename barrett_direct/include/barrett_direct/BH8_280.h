@@ -14,8 +14,8 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#ifndef _BH8_280_h
-#define _BH8_280_h
+#ifndef __BARRETT_DIRECT_BH8_280_H
+#define __BARRETT_DIRECT_BH8_280_H
 
 #include <Eigen/Dense>
 
@@ -240,4 +240,4 @@ namespace barrett_direct {
 
 }
 
-#endif
+#endif // ifndef __BARRETT_DIRECT_BH8_280_H

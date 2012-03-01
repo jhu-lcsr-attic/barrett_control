@@ -15,8 +15,8 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#ifndef _Group_h
-#define _Group_h
+#ifndef __BARRETT_DIRECT_GROUP_H
+#define __BARRETT_DIRECT_GROUP_H
 
 #include <vector>
 
@@ -220,4 +220,4 @@ namespace barrett_direct {
   Group::ID operator++( Group::ID& gid, int i );
 }
 
-#endif
+#endif // ifndef __BARRETT_DIRECT_GROUP_H

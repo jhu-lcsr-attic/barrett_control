@@ -15,8 +15,8 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#ifndef _Puck_h
-#define _Puck_h
+#ifndef __BARRETT_DIRECT_PUCK_H
+#define __BARRETT_DIRECT_PUCK_H
 
 #include <leoCAN/CANBus.h>
 #include <barrett_direct/Barrett.h>
@@ -325,4 +325,4 @@ namespace barrett_direct {
   typedef Puck SafetyModule;
 }
 
-#endif
+#endif // ifndef __BARRETT_DIRECT_PUCK_H

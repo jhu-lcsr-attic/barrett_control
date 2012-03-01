@@ -14,6 +14,10 @@
   <depend package="eigen"/>
   <depend package="leoCAN"/>
 
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -Wl,-rpath,-L${prefix}lib -lbarrett_direct"/>
+  </export>
+
 </package>
 
 
