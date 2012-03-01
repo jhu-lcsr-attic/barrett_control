@@ -67,7 +67,7 @@ orocos_install_headers( include/bard_components/wam.h ) # ...you may add multipl
 # Building a typekit (recommended):
 # Creates a typekit library libbard_components-types-<target>.so
 # and installs in the directory lib/orocos/bard_components/types/
-orocos_typegen_headers(bard_components-types.hpp) # ...you may add multiple header files
+##orocos_typegen_headers(bard_components-types.hpp) # ...you may add multiple header files
 # You may only have *ONE* orocos_typegen_headers statement !
 
 

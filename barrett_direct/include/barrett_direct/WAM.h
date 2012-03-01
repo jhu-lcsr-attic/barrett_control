@@ -51,7 +51,7 @@ namespace barrett_direct {
 
     enum Errno{ ESUCCESS, EFAILURE };
 
-    enum Configuration{ WAM_4DOF, WAM_7DOF };
+    enum Configuration{ WAM_4DOF=4, WAM_7DOF=7 };
 
     enum Mode{ MODE_IDLE, MODE_ACTIVATED };
 
