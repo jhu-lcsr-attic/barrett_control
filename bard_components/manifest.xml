@@ -1,0 +1,15 @@
+<package>
+    <description brief="Orocos bard_components Component package">
+        This package contains the components of the bard_components package
+    </description>
+    <!--NOTE: set the license and author before you publish this code-->
+    <license></license>
+    <author>Unknown Author</author>
+    <depend package="eigen" />
+    <depend package="rtt" />
+    <depend package="rtt_rosnode"/>
+    <depend package="std_msgs"/>
+    <depend package="barrett_direct" />
+    <depend package="leoCAN" />
+  </package>
+
