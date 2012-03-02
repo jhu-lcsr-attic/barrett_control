@@ -259,7 +259,7 @@ WAM::Errno WAM::GetMode( WAM::Mode& mode ){
 WAM::Errno WAM::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
-  if( jq.size() != pucks.size() ){
+  if( (size_t)jq.size() != pucks.size() ){
     std::cerr << "Expected " << pucks.size() << " joint angles. "
 		      << "Got " << jq.size()
 		      << std::endl;

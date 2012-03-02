@@ -71,10 +71,6 @@ namespace bard_components {
     }
 
     bool startHook() {
-      // Reconstruct CAN and WAM structures
-      canbus_ = new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 );
-      robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
-
       // Check the data ports
       if ( !torques_in_port_.connected() ) {
         std::cerr<<"ERROR: No connection to \"torques_in\" for WAM on \""<<can_dev_name_<<"\"!"<<std::endl;
@@ -83,6 +79,10 @@ namespace bard_components {
       if ( !positions_out_port_.connected() ) {
         std::cerr<<"WARNING: No connection to \"positions_out\" for WAM on \""<<can_dev_name_<<"\"!"<<std::endl;
       }
+      
+      // Reconstruct CAN and WAM structures
+      canbus_ = new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 );
+      robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
 
       // Open the canbus
       if( canbus_->Open() != leoCAN::CANBus::ESUCCESS ){

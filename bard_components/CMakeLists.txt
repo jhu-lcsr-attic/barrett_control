@@ -40,12 +40,18 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 # Creates a component library libbard_components-<target>.so
 # and installs in the directory lib/orocos/bard_components/
-orocos_component(components include/bard_components/wam.h src/bard_components.cpp) # ...you may add multiple source files
+orocos_component(components
+  include/bard_components/wam.h
+  include/bard_components/controllers/trivial.h
+  src/bard_components.cpp) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 
 # Additional headers:
 # Installs in the include/orocos/bard_components/ directory
-orocos_install_headers( include/bard_components/wam.h ) # ...you may add multiple header files
+orocos_install_headers(
+  include/bard_components/wam.h 
+  include/bard_components/controllers/trivial.h
+  ) # ...you may add multiple header files
 # You may add multiple orocos_install_headers statements.
 
 # Building a Plugin
