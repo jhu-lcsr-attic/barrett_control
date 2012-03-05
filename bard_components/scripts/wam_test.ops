@@ -27,5 +27,8 @@ connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
 // Connect WAM state to ROS topic
 stream(wam_name+".joint_state_out", ros.topic(wam_name+"/joint_states")) 
 
-//con_trivial.start
-//my_wam.start
+wam_left_con_trivial.configure()
+wam_left_con_trivial.start()
+
+wam_left.configure()
+wam_left.start()

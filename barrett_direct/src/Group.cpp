@@ -1,15 +1,15 @@
 /*
 
-  Author(s): Simon Leonard
-  Created on: Dec 02 2009
+   Author(s): Simon Leonard
+   Created on: Dec 02 2009
 
-  (C) Copyright 2009 Johns Hopkins University (JHU), All Rights
-  Reserved.
+   (C) Copyright 2009 Johns Hopkins University (JHU), All Rights
+   Reserved.
 
---- begin cisst license - do not edit ---
+   --- begin cisst license - do not edit ---
 
-This software is provided "as is" under an open source license, with
-no warranty.  The complete license can be found in license.txt and
+   This software is provided "as is" under an open source license, with
+   no warranty.  The complete license can be found in license.txt and
 http://www.cisst.org/cisst/license.txt.
 
 --- end cisst license ---
@@ -28,31 +28,31 @@ using namespace barrett_direct;
 Group::ID operator++( Group::ID& gid, int ){
 
   if( gid==Group::BROADCAST )
-    { return gid = Group::UPPERARM; }
+  { return gid = Group::UPPERARM; }
 
   if( gid==Group::UPPERARM )
-    { return gid = Group::FOREARM; }
+  { return gid = Group::FOREARM; }
 
   if( gid==Group::FOREARM )
-    { return gid = Group::POSITION; }
+  { return gid = Group::POSITION; }
 
   if( gid==Group::POSITION )
-    { return gid = Group::UPPERARM_POSITION; }
+  { return gid = Group::UPPERARM_POSITION; }
 
   if( gid==Group::UPPERARM_POSITION ) 
-    { return gid = Group::FOREARM_POSITION; }
+  { return gid = Group::FOREARM_POSITION; }
 
   if( gid==Group::FOREARM_POSITION )
-    { return gid = Group::PROPERTY; }
+  { return gid = Group::PROPERTY; }
 
   if( gid==Group::PROPERTY ) 
-    { return gid = Group::HAND; }
+  { return gid = Group::HAND; }
 
   if( gid==Group::HAND )
-    { return gid = Group::HAND_POSITION; }
+  { return gid = Group::HAND_POSITION; }
 
   if( gid==Group::HAND_POSITION )
-    { return gid = Group::LASTGROUP; }
+  { return gid = Group::LASTGROUP; }
 
   return gid = Group::LASTGROUP;
 
@@ -62,159 +62,159 @@ Group::ID operator++( Group::ID& gid, int ){
 Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) : 
   canbus( canbus ),
   id( id ){
-  
-  switch( GetID() ){
 
-  case Group::BROADCAST:
-    AddPuckToGroup( Puck::PUCK_ID1 );
-    AddPuckToGroup( Puck::PUCK_ID2 );
-    AddPuckToGroup( Puck::PUCK_ID3 );
-    AddPuckToGroup( Puck::PUCK_ID4 );
-    AddPuckToGroup( Puck::PUCK_ID5 );
-    AddPuckToGroup( Puck::PUCK_ID6 );
-    AddPuckToGroup( Puck::PUCK_ID7 );
+    switch( GetID() ){
 
-    if( createfilter ){
+      case Group::BROADCAST:
+        AddPuckToGroup( Puck::PUCK_ID1 );
+        AddPuckToGroup( Puck::PUCK_ID2 );
+        AddPuckToGroup( Puck::PUCK_ID3 );
+        AddPuckToGroup( Puck::PUCK_ID4 );
+        AddPuckToGroup( Puck::PUCK_ID5 );
+        AddPuckToGroup( Puck::PUCK_ID6 );
+        AddPuckToGroup( Puck::PUCK_ID7 );
+
+        if( createfilter ){
+        }
+
+        break;
+
+        // used to set torques
+      case Group::UPPERARM:
+        AddPuckToGroup( Puck::PUCK_ID1 );
+        AddPuckToGroup( Puck::PUCK_ID2 );
+        AddPuckToGroup( Puck::PUCK_ID3 );
+        AddPuckToGroup( Puck::PUCK_ID4 );
+        break;
+
+        // used to set torques
+      case Group::FOREARM:
+        AddPuckToGroup( Puck::PUCK_ID5 );
+        AddPuckToGroup( Puck::PUCK_ID6 );
+        AddPuckToGroup( Puck::PUCK_ID7 );
+        break;
+
+      case Group::POSITION:
+        AddPuckToGroup( Puck::PUCK_IDF1 );
+        AddPuckToGroup( Puck::PUCK_IDF2 );
+        AddPuckToGroup( Puck::PUCK_IDF3 );
+        AddPuckToGroup( Puck::PUCK_IDF4 );
+        break;
+
+        // used to get positions
+      case Group::UPPERARM_POSITION:
+        AddPuckToGroup( Puck::PUCK_ID1 );
+        AddPuckToGroup( Puck::PUCK_ID2 );
+        AddPuckToGroup( Puck::PUCK_ID3 );
+        AddPuckToGroup( Puck::PUCK_ID4 );
+        if( createfilter ){
+          // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+          // GFF FFFT TTTT ( 0x5EF ) 
+          // Only fiter position to group 3. So G is set and TTTTT = 00011
+          // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
+          // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
+          // filter all 4 pucks because the forearm has similar filters
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0423 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0443 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0463 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0483 ) );
+        }
+
+        break;
+
+        // used to get positions
+      case Group::FOREARM_POSITION:
+        AddPuckToGroup( Puck::PUCK_ID5 );
+        AddPuckToGroup( Puck::PUCK_ID6 );
+        AddPuckToGroup( Puck::PUCK_ID7 );
+        if( createfilter ){
+          // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+          // GFF FFFT TTTT ( 0x5EF ) 
+          // Only fiter position to group 3. So G is set and TTTTT = 00011
+          // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
+          // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
+          // filter all 4 pucks because the forearm has similar filters
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04A3 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04C3 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04E3 ) );
+        }
+
+        break;
+
+      case Group::PROPERTY:
+        break;
+
+      case Group::HAND:
+        AddPuckToGroup( Puck::PUCK_IDF1 );
+        AddPuckToGroup( Puck::PUCK_IDF2 );
+        AddPuckToGroup( Puck::PUCK_IDF3 );
+        AddPuckToGroup( Puck::PUCK_IDF4 );
+        break;
+
+      case Group::HAND_POSITION:
+        AddPuckToGroup( Puck::PUCK_IDF1 );
+        AddPuckToGroup( Puck::PUCK_IDF2 );
+        AddPuckToGroup( Puck::PUCK_IDF3 );
+        AddPuckToGroup( Puck::PUCK_IDF4 );
+        if( createfilter ){
+          // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
+          // GFF FFFT TTTT ( 0x5EF ) 
+          // Only fiter position to group 3. So G is set and TTTTT = 00011
+          // Also, the pucks id for the hand have FFFFF=01xxx such that we have:
+          // a mask: 0x0503 and id: 0x0503. The hand is the only device with the 
+          // 4th bit to 1 so use that bit to determine if the hand is replying
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x0503, 0x0503 ) );
+        }
+
+        break;
+
+      default:
+        break;
     }
 
-    break;
-
-    // used to set torques
-  case Group::UPPERARM:
-    AddPuckToGroup( Puck::PUCK_ID1 );
-    AddPuckToGroup( Puck::PUCK_ID2 );
-    AddPuckToGroup( Puck::PUCK_ID3 );
-    AddPuckToGroup( Puck::PUCK_ID4 );
-    break;
-
-    // used to set torques
-  case Group::FOREARM:
-    AddPuckToGroup( Puck::PUCK_ID5 );
-    AddPuckToGroup( Puck::PUCK_ID6 );
-    AddPuckToGroup( Puck::PUCK_ID7 );
-    break;
-
-  case Group::POSITION:
-    AddPuckToGroup( Puck::PUCK_IDF1 );
-    AddPuckToGroup( Puck::PUCK_IDF2 );
-    AddPuckToGroup( Puck::PUCK_IDF3 );
-    AddPuckToGroup( Puck::PUCK_IDF4 );
-    break;
-
-    // used to get positions
-  case Group::UPPERARM_POSITION:
-    AddPuckToGroup( Puck::PUCK_ID1 );
-    AddPuckToGroup( Puck::PUCK_ID2 );
-    AddPuckToGroup( Puck::PUCK_ID3 );
-    AddPuckToGroup( Puck::PUCK_ID4 );
-    if( createfilter ){
-      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
-      // GFF FFFT TTTT ( 0x5EF ) 
-      // Only fiter position to group 3. So G is set and TTTTT = 00011
-      // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
-      // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
-      // filter all 4 pucks because the forearm has similar filters
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0423 ) );
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0443 ) );
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0463 ) );
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0483 ) );
-    }
-    
-    break;
-
-    // used to get positions
-  case Group::FOREARM_POSITION:
-    AddPuckToGroup( Puck::PUCK_ID5 );
-    AddPuckToGroup( Puck::PUCK_ID6 );
-    AddPuckToGroup( Puck::PUCK_ID7 );
-    if( createfilter ){
-      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
-      // GFF FFFT TTTT ( 0x5EF ) 
-      // Only fiter position to group 3. So G is set and TTTTT = 00011
-      // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
-      // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
-      // filter all 4 pucks because the forearm has similar filters
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04A3 ) );
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04C3 ) );
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04E3 ) );
-    }
-    
-    break;
-
-  case Group::PROPERTY:
-    break;
-
-  case Group::HAND:
-    AddPuckToGroup( Puck::PUCK_IDF1 );
-    AddPuckToGroup( Puck::PUCK_IDF2 );
-    AddPuckToGroup( Puck::PUCK_IDF3 );
-    AddPuckToGroup( Puck::PUCK_IDF4 );
-    break;
-
-  case Group::HAND_POSITION:
-    AddPuckToGroup( Puck::PUCK_IDF1 );
-    AddPuckToGroup( Puck::PUCK_IDF2 );
-    AddPuckToGroup( Puck::PUCK_IDF3 );
-    AddPuckToGroup( Puck::PUCK_IDF4 );
-    if( createfilter ){
-      // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
-      // GFF FFFT TTTT ( 0x5EF ) 
-      // Only fiter position to group 3. So G is set and TTTTT = 00011
-      // Also, the pucks id for the hand have FFFFF=01xxx such that we have:
-      // a mask: 0x0503 and id: 0x0503. The hand is the only device with the 
-      // 4th bit to 1 so use that bit to determine if the hand is replying
-      canbus->AddFilter( leoCAN::CANBus::Filter( 0x0503, 0x0503 ) );
-    }
-
-    break;
-
-  default:
-    break;
   }
-
-}
 
 std::string Group::LogPrefix(){
   std::string s;
   switch( GetID() ){
-  case BROADCAST:
-    s = std::string( "BROADCAST" );
-    break;
+    case BROADCAST:
+      s = std::string( "BROADCAST" );
+      break;
 
-  case UPPERARM:
-    s = std::string( "UPPERARM" );
-    break;
+    case UPPERARM:
+      s = std::string( "UPPERARM" );
+      break;
 
-  case FOREARM:
-    s = std::string( "FOREARM" );
-    break;
+    case FOREARM:
+      s = std::string( "FOREARM" );
+      break;
 
-  case POSITION:
-    s = std::string( "POSITION" );
-    break;
+    case POSITION:
+      s = std::string( "POSITION" );
+      break;
 
-  case UPPERARM_POSITION:
-    s = std::string( "UPPERARM_POSITION" );
-    break;
+    case UPPERARM_POSITION:
+      s = std::string( "UPPERARM_POSITION" );
+      break;
 
-  case FOREARM_POSITION:
-    s = std::string( "FOREARM_POSITION" );
-    break;
+    case FOREARM_POSITION:
+      s = std::string( "FOREARM_POSITION" );
+      break;
 
-  case PROPERTY:
-    s = std::string( "PROPERTY" );
-    break;
+    case PROPERTY:
+      s = std::string( "PROPERTY" );
+      break;
 
-  case HAND:
-    s = std::string( "HAND" );
-    break;
+    case HAND:
+      s = std::string( "HAND" );
+      break;
 
-  case HAND_POSITION:
-    s = std::string( "HAND_POSITION" );
-    break;
+    case HAND_POSITION:
+      s = std::string( "HAND_POSITION" );
+      break;
 
-  default:
-    s = std::string( "UNKNOWN" );
+    default:
+      s = std::string( "UNKNOWN" );
 
   }
 
@@ -274,7 +274,7 @@ void Group::AddPuckToGroup( Puck::ID pid ){
 
 // Query a group of puck.
 Group::Errno Group::GetProperty( Barrett::ID propid, 
-				       std::vector<Barrett::Value>& values ){
+    std::vector<Barrett::Value>& values ){
 
   // pack the query in a CAN frame
   leoCAN::CANBusFrame sendframe;
@@ -282,7 +282,7 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
     std::cerr << "Failed to pack the property" << std::endl;
     return Group::EFAILURE;
   }
-  
+
   // send the CAN frame
   if( canbus->Send( sendframe ) != leoCAN::CANBus::ESUCCESS ){
     std::cerr << ": Failed to querry group" << std::endl;
@@ -300,7 +300,7 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
     // receive the response in a CAN frame
     if( canbus->Recv( recvframe ) != leoCAN::CANBus::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to receive property" 
-			<< std::endl;
+        << std::endl;
       return Group::EFAILURE;
     }
 
@@ -309,7 +309,7 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
     int pindex = -1;
     for( size_t j=0; j<pucks.size(); j++ ){
       if( pucks[j].GetID() == pid )
-	{ pindex = j; }
+      { pindex = j; }
     }
 
     // unpack the frame
@@ -317,90 +317,89 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
 
       Barrett::ID recvpropid;
       Barrett::Value recvvalue;
-      
+
       // unpack the frame;
       if( pucks[pindex].UnpackCANFrame( recvframe, recvpropid, recvvalue ) 
-	  != Puck::ESUCCESS){
-	std::cerr << LogPrefix() << "Failed to unpack CAN frame"
-			  << std::endl;
-	return Group::EFAILURE;
+          != Puck::ESUCCESS){
+        std::cerr << LogPrefix() << "Failed to unpack CAN frame"
+          << std::endl;
+        return Group::EFAILURE;
       }
 
       // make sure that the property received is the one we asked for
       if( propid != recvpropid ){
-	std::cerr << LogPrefix() << "Unexpected property ID. "
-			  << "Expected " << propid << " got " << recvpropid
-			  << std::endl;
-	return Group::EFAILURE;
+        std::cerr << LogPrefix() << "Unexpected property ID. "
+          << "Expected " << propid << " got " << recvpropid
+          << std::endl;
+        return Group::EFAILURE;
       }
 
       if( 0 <= pindex && pindex < (int)values.size() )
-	{ values[ pindex ] = recvvalue; }
+      { values[ pindex ] = recvvalue; }
       else
-	{ std::cerr << LogPrefix() << "Could not index the value vector"
-			    << std::endl; }
+      { std::cerr << LogPrefix() << "Could not index the value vector"
+        << std::endl; }
     }
-
     else{
       std::cerr << LogPrefix() << "Could not index the pucks" 
-			<< std::endl;
+        << std::endl;
     }
 
   }
-  
+
   return Group::ESUCCESS;
-   
+
 }
 
 
- // Set the properties of a group
- // Unlike devPuck::SetProperty, this doesn't verify the pucks values
- Group::Errno Group::SetProperty( Barrett::ID propid, 
-					Barrett::Value propval,
-					bool verify){
+// Set the properties of a group
+// Unlike devPuck::SetProperty, this doesn't verify the pucks values
+Group::Errno Group::SetProperty( Barrett::ID propid, 
+    Barrett::Value propval,
+    bool verify){
 
-   // pack the "set" command in a CAN frame
-   leoCAN::CANBusFrame canframe;
-   if( PackProperty( canframe, Barrett::SET, propid, propval )
-       != Group::ESUCCESS ){
-     std::cerr << ": Failed to pack the property " << propid 
-		       << std::endl;
-     return Group::EFAILURE;
-   }
+  // pack the "set" command in a CAN frame
+  leoCAN::CANBusFrame canframe;
+  if( PackProperty( canframe, Barrett::SET, propid, propval )
+      != Group::ESUCCESS ){
+    std::cerr << ": Failed to pack the property " << propid 
+      << std::endl;
+    return Group::EFAILURE;
+  }
 
-   // Send the CAN frame
-   if( canbus->Send( canframe ) != leoCAN::CANBus::ESUCCESS ){
-     std::cerr << ": Failed to send the CAN frame."
-		       << std::endl;
-     return Group::EFAILURE;
-   }
+  // Send the CAN frame
+  if( canbus->Send( canframe ) != leoCAN::CANBus::ESUCCESS ){
+    std::cerr << ": Failed to send the CAN frame."
+      << std::endl;
+    return Group::EFAILURE;
+  }
 
-   if( verify ){
-     std::cerr << __FILE__
-			 << ": Verify is not implemented for groups."
-			 << std::endl;
-   }
+  if( verify ){
+    std::cerr << __FILE__
+      << ": Verify is not implemented for groups."
+      << std::endl;
+  }
 
-   return Group::ESUCCESS;
+  return Group::ESUCCESS;
 
- }
+}
 
- // This packs a frame originating from the host and destined to the puck
- Group::Errno Group::PackProperty( leoCAN::CANBusFrame& canframe,
-					 Barrett::Command cmd,
-					 Barrett::ID propid,
-					 Barrett::Value propval ){
+// This packs a frame originating from the host and destined to the puck
+Group::Errno Group::PackProperty( leoCAN::CANBusFrame& canframe,
+    Barrett::Command cmd,
+    Barrett::ID propid,
+    Barrett::Value propval ){
 
-   leoCAN::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-   leoCAN::CANBusFrame::data_len_t length=1;  // default message length (for a query)
+  leoCAN::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  leoCAN::CANBusFrame::data_len_t length=1;  // default message length (for a query)
 
-   // See Barrett's documentation to understand the format
-   data[0] = propid & 0x7F;                                 //data[0] = APPPPPP
-   data[1] = 0x00;                                          //data[1] = 0000000
+  // See Barrett's documentation to understand the format
+  data[0] = propid & 0x7F;                                 //data[0] = APPPPPP
+  data[1] = 0x00;                                          //data[1] = 0000000
 
   if(cmd == Barrett::SET){                                  //this is a 'SET'
     data[0] |= 0x80;                                        //data[0] = 1PPPPPP
-    
+
     // fill the rest of the bytes with the property value
     for(size_t i=2; i<6; i++){
       data[i] = (leoCAN::CANBusFrame::data_t)(propval & 0x000000FF);//data[i] = values
@@ -452,20 +451,20 @@ Group::Errno Group::GetPositions( Eigen::VectorXd& q ){
   if( values.size() == pucks.size() ){
 
     q.resize( pucks.size() );
-    
+
     for( size_t i=0; i<pucks.size(); i++ ){
-      
+
       // convert the position from encoder ticks to radians
       q[i] = ( ((double)values[i]) * 2.0 * M_PI  /
-	       ((double)pucks[i].CountsPerRevolution() ) );
-      
+          ((double)pucks[i].CountsPerRevolution() ) );
+
     }
 
   }
   else{
     std::cerr << LogPrefix() << "Expected " << pucks.size() <<" values."
-		      << " Got " << values.size() 
-		      << std::endl;
+      << " Got " << values.size() 
+      << std::endl;
     return Group::EFAILURE;    
   }
 
@@ -477,11 +476,11 @@ Group::Errno Group::GetPositions( Eigen::VectorXd& q ){
 Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
 
   if( GetID() == Group::UPPERARM || GetID() == Group::FOREARM ){
-    
+
     Eigen::Vector4d currents(tau.size());
     for( size_t i=0; i<currents.size(); i++ )
-      { currents[i] = tau[i] * pucks[i].IpNm(); }
-    
+    { currents[i] = tau[i] * pucks[i].IpNm(); }
+
     // pack the torques in a can frames
     leoCAN::CANBusFrame frame;
     if( PackCurrents( frame, currents ) != Group::ESUCCESS ){
@@ -498,7 +497,7 @@ Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
   }
   else{
     std::cerr << LogPrefix() 
-			<< "Group  cannot send torques" << std::endl;
+      << "Group  cannot send torques" << std::endl;
     return Group::EFAILURE;
   }
 
@@ -510,8 +509,8 @@ Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
 // pack motor torques in a CAN frame
 // this should go into devGroup
 Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame, 
-					const Eigen::Vector4d& I ){
-  
+    const Eigen::Vector4d& I ){
+
   // we can only pack torques for the upper arm and forearm groups
   if( GetID() == Group::UPPERARM || GetID() == Group::FOREARM ){
 
@@ -520,12 +519,12 @@ Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame,
 
     // for each puck in the group
     for( size_t i=0; i<pucks.size(); i++ ){
-      
+
       // get the index of the puck within its group [0,1,2,3]
       int idx =  pucks[i].GroupIndex()-1;          // -1 because of zero index
       if( idx < 0 || 3 < idx ){                    // sanity check
-	std::cerr << "Illegal index" << std::endl;
-	return Group::EFAILURE;
+        std::cerr << "Illegal index" << std::endl;
+        return Group::EFAILURE;
       }
 
       values[ idx ] = (Barrett::Value)I[i];        // cast the torque      
@@ -541,7 +540,7 @@ Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame,
     msg[5]=(unsigned char)(( values[2]>>2)&0x00FF);
     msg[6]=(unsigned char)(((values[2]<<6)&0x00C0)|((values[3]>>8) &0x003F));
     msg[7]=(unsigned char)(  values[3]    &0x00FF);
-    
+
     // build a can frame addressed to the group ID 
     frame = leoCAN::CANBusFrame( Group::CANID( GetID() ), msg, 8 );
 
@@ -549,7 +548,7 @@ Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame,
   }
   else{
     std::cerr << LogPrefix() 
-			<< "Group cannot pack torques" << std::endl;
+      << "Group cannot pack torques" << std::endl;
     return Group::EFAILURE;
   }
 
@@ -559,7 +558,7 @@ Group::Errno Group::GetStatus( std::vector<Barrett::Value>& status ){
 
   if( GetProperty( Barrett::STATUS, status ) != Group::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to query the status" 
-		      << std::endl;
+      << std::endl;
     return Group::EFAILURE;
   }
 
@@ -572,11 +571,11 @@ Group::Errno Group::Initialize(){
   for( size_t i=0; i<pucks.size(); i++ ){
 
     std::clog << LogPrefix() << "Initalizing puck " 
-			<< (int)pucks[i].GetID()
-			<< std::endl;
+      << (int)pucks[i].GetID()
+      << std::endl;
     if( pucks[i].InitializeMotor() != Puck::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to initialize puck"
-			<< std::endl;
+        << std::endl;
       return Group::EFAILURE;      
     }
 
@@ -587,11 +586,11 @@ Group::Errno Group::Initialize(){
 }
 
 Group::Errno Group::SetMode( Barrett::Value mode ){
-  
+
   for( size_t i=0; i<pucks.size(); i++ ){
     if( pucks[i].SetMode( mode ) != Puck::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to set the mode."
-			<< std::endl;
+        << std::endl;
       return Group::EFAILURE;
     }
   }

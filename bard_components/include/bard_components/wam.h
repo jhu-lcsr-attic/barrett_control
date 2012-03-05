@@ -34,6 +34,9 @@ namespace bard_components {
       can_dev_name_(""),
       robot_model_xml_(""),
       joint_prefix_(""),
+      // Throttle joint state publisher
+      joint_state_throttle_max_(10),
+      joint_state_throttle_counter_(0),
       // Internal variables
       canbus_(NULL),
       robot_(NULL),
@@ -165,14 +168,17 @@ namespace bard_components {
           std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
       }
 
-      // Copy joint positions into joint state
-      for(size_t i=0; i<positions_.rows(); i++) {
-        joint_state_.position[i] = positions_(i);
-      }
-
       // Send joint positions
       positions_out_port_.write( positions_ );
-      joint_state_out_port_.write( joint_state_ );
+
+      // Copy joint positions into joint state
+      if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
+        for(size_t i=0; i<n_wam_dof_; i++) {
+          joint_state_.position[i] = positions_(i);
+        }
+        joint_state_out_port_.write( joint_state_ );
+        joint_state_throttle_counter_ = 0;
+      } 
     }
 
     void stopHook() {
@@ -210,6 +216,8 @@ namespace bard_components {
     std::string can_dev_name_;
     std::string robot_model_xml_;
     std::string joint_prefix_;
+    size_t joint_state_throttle_max_;
+    size_t joint_state_throttle_counter_;
 
     // Hardware hooks
     leoCAN::RTSocketCAN *canbus_;
