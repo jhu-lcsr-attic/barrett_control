@@ -303,6 +303,7 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
         << std::endl;
       return Group::EFAILURE;
     }
+    std::cout << recvframe << std::endl<<std::endl;
 
     // figure which puck send that frame
     Puck::ID pid = Puck::OriginID( recvframe );
@@ -341,8 +342,8 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
         << std::endl; }
     }
     else{
-      //std::cerr << LogPrefix() << "Could not index the pucks" 
-      //  << std::endl;
+      std::cerr << LogPrefix() << "Could not index the pucks" 
+        << std::endl;
     }
 
   }

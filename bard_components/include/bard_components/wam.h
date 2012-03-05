@@ -148,6 +148,17 @@ namespace bard_components {
           std::cerr<<"Failed to initialize WAM"<<std::endl;
           throw std::exception();
         }
+
+        Eigen::VectorXd q_init(n_wam_dof_);
+        q_init.setConstant( 0.0 );
+        q_init[1] = -M_PI_2;
+        q_init[3] =  M_PI;
+
+        // Set the calibration position
+        if( robot_->SetPositions( q_init ) != barrett_direct::WAM::ESUCCESS ){
+          std::cerr << "Failed to set position: " << q_init << std::endl;
+          return -1;
+        }
       } catch(std::exception &ex) {
         // Free the device handles
         this->cleanup_lowleve();
@@ -159,16 +170,16 @@ namespace bard_components {
     }
 
     void updateHook() {
+      // Get joint positions
+      if( robot_->GetPositions( positions_.data ) != barrett_direct::WAM::ESUCCESS) {
+          std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+      }
+
       // Only send joint torques if new data is coming in
       if( torques_in_port_.read( torques_ ) == RTT::NewData ) {
         if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
           std::cerr<<"Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
         }
-      }
-
-      // Get joint positions
-      if( robot_->GetPositions( positions_.data ) != barrett_direct::WAM::ESUCCESS) {
-          std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
       }
 
       // Send joint positions
