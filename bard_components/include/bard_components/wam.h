@@ -110,6 +110,8 @@ namespace bard_components {
       joint_state_.name.push_back(joint_prefix_+"/LowerWristYawJoint");
 
       joint_state_.position.resize(n_wam_dof_);
+      joint_state_.velocity.resize(n_wam_dof_);
+      joint_state_.effort.resize(n_wam_dof_);
       
       // Prepare ports for realtime processing
       positions_out_port_.setDataSample(positions_);
@@ -175,6 +177,7 @@ namespace bard_components {
       if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
         for(size_t i=0; i<n_wam_dof_; i++) {
           joint_state_.position[i] = positions_(i);
+          joint_state_.effort[i] = torques_(i);
         }
         joint_state_out_port_.write( joint_state_ );
         joint_state_throttle_counter_ = 0;

@@ -35,8 +35,7 @@ namespace bard_components {
         torques_.data.setZero();
 
         // Prepare ports for realtime processing
-        KDL::JntArray joints_sample(7);
-        torques_out_port_.setDataSample(joints_sample);
+        torques_out_port_.setDataSample(torques_);
       }
 
       bool configureHook() {
