@@ -165,8 +165,14 @@ namespace bard_components {
           std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
       }
 
+      // Copy joint positions into joint state
+      for(size_t i=0; i<positions_.rows(); i++) {
+        joint_state_.position[i] = positions_(i);
+      }
+
       // Send joint positions
       positions_out_port_.write( positions_ );
+      joint_state_out_port_.write( joint_state_ );
     }
 
     void stopHook() {
