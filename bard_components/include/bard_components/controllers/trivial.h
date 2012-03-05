@@ -2,6 +2,7 @@
 #define __BARD_COMPONENTS_CONTROLLERS_TRIVIAL_H
 
 #include <Eigen/Dense>
+#include <kdl/jntarray.hpp>
 
 #include <barrett_direct/WAM.h>
 #include <leoCAN/RTSocketCAN.h>
@@ -16,7 +17,7 @@ namespace bard_components {
     class Trivial : public RTT::TaskContext
     {
       // RTT Interface
-      RTT::OutputPort<Eigen::VectorXd> torques_out_port_;
+      RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
       // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
       // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
@@ -31,10 +32,10 @@ namespace bard_components {
         // Configure data ports
         this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 
-        torques_.setZero();
+        torques_.data.setZero();
 
         // Prepare ports for realtime processing
-        Eigen::VectorXd joints_sample(7);
+        KDL::JntArray joints_sample(7);
         torques_out_port_.setDataSample(joints_sample);
       }
 
@@ -61,7 +62,7 @@ namespace bard_components {
       // Configuration properties
       int n_wam_dof_;
       // Working variables
-      Eigen::VectorXd torques_;
+      KDL::JntArray torques_;
 
     };
   }
