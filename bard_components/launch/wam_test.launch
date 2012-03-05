@@ -1,5 +1,7 @@
 <launch>
-  <node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops --">
+  <node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops --"/>
+
+  <group ns="wam_rtt">
     <group ns="wam_left">
       <param name="n_wam_dof" value="7"/>
       <param name="can_dev_name" value="rtcan0"/>
@@ -12,5 +14,5 @@
       <param name="robot_model_xml" value="none"/>
       <param name="joint_prefix" value="DarmSim/RightArm/WAM"/>
     </group>
-  </node>
+  </group>
 </launch>
