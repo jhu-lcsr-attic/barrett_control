@@ -341,8 +341,8 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
         << std::endl; }
     }
     else{
-      std::cerr << LogPrefix() << "Could not index the pucks" 
-        << std::endl;
+      //std::cerr << LogPrefix() << "Could not index the pucks" 
+      //  << std::endl;
     }
 
   }

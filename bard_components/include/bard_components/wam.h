@@ -1,6 +1,7 @@
 #ifndef __BARD_COMPONENTS_WAM_H
 #define __BARD_COMPONENTS_WAM_H
 
+#include <ros/ros.h>
 #include <Eigen/Dense>
 #include <kdl/jntarray.hpp>
 
@@ -175,6 +176,7 @@ namespace bard_components {
 
       // Copy joint positions into joint state
       if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
+        joint_state_.header.stamp = ros::Time::now();
         for(size_t i=0; i<n_wam_dof_; i++) {
           joint_state_.position[i] = positions_(i);
           joint_state_.effort[i] = torques_(i);
