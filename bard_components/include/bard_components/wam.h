@@ -133,16 +133,18 @@ namespace bard_components {
       
       // Try to connect and initialize hardware
       try{
-        // Reconstruct CAN and WAM structures
+        // Construct CAN structure
         canbus_ = new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 );
-        robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
 
         // Open the canbus
         if( canbus_->Open() != leoCAN::CANBus::ESUCCESS ){
           std::cerr<<"Failed to open CAN device \""<<can_dev_name_<<"\""<<std::endl;
           throw std::exception();
         }
-        
+
+        // Construct WAM structure
+        robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
+
         // Initialize the WAM robot
         if( robot_->Initialize() != barrett_direct::WAM::ESUCCESS ){
           std::cerr<<"Failed to initialize WAM"<<std::endl;
