@@ -31,4 +31,4 @@ wam_left_con_trivial.configure()
 wam_left_con_trivial.start()
 
 wam_left.configure()
-wam_left.start()
+//wam_left.start()
