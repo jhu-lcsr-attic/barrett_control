@@ -16,4 +16,12 @@
       <param name="joint_prefix" value="DarmSim/RightArm/WAM"/>
     </group>
   </group>
+
+
+  <!-- Publish TF frames between all the links -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+    <remap from="joint_states" to="/wam_left/joint_states"/>
+  </node>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
+
 </launch>

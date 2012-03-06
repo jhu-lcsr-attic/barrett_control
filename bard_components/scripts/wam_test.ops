@@ -19,7 +19,7 @@ wam_left.rosparam.storeProperties()
 
 // Create controller
 loadComponent(wam_name+"_con_trivial","bard_components::controllers::Trivial")
-setActivity(wam_name+"_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
+setActivity(wam_name+"_con_trivial",0.0014,HighestPriority,ORO_SCHED_RT)
 
 //Connect controller to wam
 connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
@@ -31,4 +31,4 @@ wam_left_con_trivial.configure()
 wam_left_con_trivial.start()
 
 wam_left.configure()
-wam_left.start()
+//wam_left.start()

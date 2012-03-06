@@ -1,6 +1,7 @@
 #ifndef __BARD_COMPONENTS_WAM_H
 #define __BARD_COMPONENTS_WAM_H
 
+#include <ros/ros.h>
 #include <Eigen/Dense>
 #include <kdl/jntarray.hpp>
 
@@ -132,20 +133,33 @@ namespace bard_components {
       
       // Try to connect and initialize hardware
       try{
-        // Reconstruct CAN and WAM structures
+        // Construct CAN structure
         canbus_ = new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 );
-        robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
 
         // Open the canbus
         if( canbus_->Open() != leoCAN::CANBus::ESUCCESS ){
           std::cerr<<"Failed to open CAN device \""<<can_dev_name_<<"\""<<std::endl;
           throw std::exception();
         }
-        
+
+        // Construct WAM structure
+        robot_ = new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_);
+
         // Initialize the WAM robot
         if( robot_->Initialize() != barrett_direct::WAM::ESUCCESS ){
           std::cerr<<"Failed to initialize WAM"<<std::endl;
           throw std::exception();
+        }
+
+        Eigen::VectorXd q_init(n_wam_dof_);
+        q_init.setConstant( 0.0 );
+        q_init[1] = -M_PI_2;
+        q_init[3] =  M_PI;
+
+        // Set the calibration position
+        if( robot_->SetPositions( q_init ) != barrett_direct::WAM::ESUCCESS ){
+          std::cerr << "Failed to set position: " << q_init << std::endl;
+          return -1;
         }
       } catch(std::exception &ex) {
         // Free the device handles
@@ -158,6 +172,11 @@ namespace bard_components {
     }
 
     void updateHook() {
+      // Get joint positions
+      if( robot_->GetPositions( positions_.data ) != barrett_direct::WAM::ESUCCESS) {
+          std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+      }
+
       // Only send joint torques if new data is coming in
       if( torques_in_port_.read( torques_ ) == RTT::NewData ) {
         if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
@@ -165,16 +184,12 @@ namespace bard_components {
         }
       }
 
-      // Get joint positions
-      if( robot_->GetPositions( positions_.data ) != barrett_direct::WAM::ESUCCESS) {
-          std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
-      }
-
       // Send joint positions
       positions_out_port_.write( positions_ );
 
       // Copy joint positions into joint state
       if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
+        joint_state_.header.stamp = ros::Time::now();
         for(size_t i=0; i<n_wam_dof_; i++) {
           joint_state_.position[i] = positions_(i);
           joint_state_.effort[i] = torques_(i);
