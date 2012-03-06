@@ -41,7 +41,7 @@ int main( int argc, char** argv ){
   Eigen::VectorXd qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
   qinit[3] =  cmnPI;
-  
+
   if( WAM.SetPositions( qinit ) != osaWAM::ESUCCESS ){
     std::cerr << "Failed to set position: " << qinit << std::endl;
     return -1;
@@ -51,10 +51,10 @@ int main( int argc, char** argv ){
 
   // Rotate the base
   Eigen::Matrix3d Rw0(  0.0,  0.0, -1.0,
-                        0.0,  1.0,  0.0,
-                        1.0,  0.0,  0.0 );
+      0.0,  1.0,  0.0,
+      1.0,  0.0,  0.0 );
   Eigen::Affine3d Rtw0( Eigen::Rotation3f(Rw0) );
-  
+
   osaGravityCompensation GC( path+"WAM/wam7.rob", Rtw0 );
 
   std::cout << "Activate the WAM" << std::endl;
@@ -76,19 +76,19 @@ int main( int argc, char** argv ){
     if( !activated ) {
       osaWAM::Mode mode;
       if( WAM.GetMode( mode ) != osaWAM::ESUCCESS ){
-	std::cerr << "Failed to get mode" << std::endl;
-	return -1;
+        std::cerr << "Failed to get mode" << std::endl;
+        return -1;
       }
       if( mode == osaWAM::MODE_ACTIVATED )
-	{ activated = true; }
+      { activated = true; }
     }
 
     // if pucks are activated, run the controller
     Eigen::VectorXd tau( q.size(), 0.0 );
     if( activated ){
       if( GC.Evaluate( q, tau ) != osaGravityCompensation::ESUCCESS ){
-	std::cerr << "Failed to evaluate controller" << std::endl;
-	return -1;
+        std::cerr << "Failed to evaluate controller" << std::endl;
+        return -1;
       }
     }
 

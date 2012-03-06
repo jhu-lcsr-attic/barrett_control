@@ -149,7 +149,7 @@ namespace bard_components {
         }
       } catch(std::exception &ex) {
         // Free the device handles
-        this->cleanup_lowleve();
+        this->cleanup_lowlevel();
         return false;
       }
 
@@ -195,7 +195,7 @@ namespace bard_components {
       }
 
       // Free the device handles
-      this->cleanup_lowleve();
+      this->cleanup_lowlevel();
     }
 
     void cleanupHook() {
@@ -203,7 +203,7 @@ namespace bard_components {
 
   private:
 
-    void cleanup_lowleve() {
+    void cleanup_lowlevel() {
       if(robot_) {
         delete robot_;
         robot_ = NULL;
