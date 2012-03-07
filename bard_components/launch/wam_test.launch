@@ -8,12 +8,14 @@
       <param name="can_dev_name" value="rtcan0"/>
       <param name="robot_model_xml" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
       <param name="joint_prefix" value="DarmSim/LeftArm/WAM"/>
+      <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
     </group>
     <group ns="wam_right">
       <param name="n_wam_dof" value="7"/>
       <param name="can_dev_name" value="rtcan1"/>
       <param name="robot_model_xml" command="$(find xacro)/xacro.py '$(find popeye)/models/right_wam.urdf.xacro'" />
       <param name="joint_prefix" value="DarmSim/RightArm/WAM"/>
+      <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
     </group>
   </group>
 

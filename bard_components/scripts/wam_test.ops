@@ -30,5 +30,5 @@ stream(wam_name+".joint_state_out", ros.topic(wam_name+"/joint_states"))
 wam_left_con_trivial.configure()
 wam_left_con_trivial.start()
 
-wam_left.configure()
+//wam_left.configure()
 //wam_left.start()
