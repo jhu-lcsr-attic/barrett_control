@@ -16,23 +16,22 @@
 
 namespace bard_components {
   namespace controllers {
-    class Trivial : public RTT::TaskContext
+    class GravityCompensation : public RTT::TaskContext
     {
       // RTT Interface
+      RTT::InputPort<KDL::JntArray> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
-      // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
-      // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
-      // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
     public:
-      Trivial(string const& name) :
-        TaskContext(name),
-        n_wam_dof_(7),
-        robot_model_xml_(""),
-        torques_(n_wam_dof_)
+      GravityCompensation(string const& name) :
+        TaskContext(name)
+        ,n_wam_dof_(7)
+        ,robot_model_xml_("")
+        ,joint_prefix_("")
+        ,torques_(n_wam_dof_)
       {
         // Configure data ports
+        this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint angles. (n joints)");
         this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 
         // Zero out torque data
@@ -52,7 +51,7 @@ namespace bard_components {
         urdf_model.initString(robot_model_xml_);
 
         // Get root link
-        std::string root_name = urdf_model.getRoot().name;
+        std::string root_name = urdf_model.getRoot()->name;
 
         // Get a KDL tree from the robot URDF
         if (!kdl_parser::treeFromUrdfModel(urdf_model, tree)){
@@ -64,7 +63,7 @@ namespace bard_components {
         tree.getChain(joint_prefix_+"/YawJoint",joint_prefix_+"/LowerWristYawJoint",chain);
 
         // Create chainsolver
-        KDL::ChainIdSolver_RNE ChainIdSolver_RNE(
+        //KDL::ChainIdSolver_RNE ChainIdSolver_RNE(
 
         return true;
       }
@@ -88,8 +87,10 @@ namespace bard_components {
       // Configuration properties
       int n_wam_dof_;
       std::string robot_model_xml_;
+      std::string joint_prefix_;
 
       // Working variables
+      KDL::JntArray positions_;
       KDL::JntArray torques_;
     };
   }

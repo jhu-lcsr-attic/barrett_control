@@ -23,10 +23,6 @@ namespace bard_components {
     RTT::OutputPort<KDL::JntArray> positions_out_port_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
-    // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
-    // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
-    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
   public:
     WAM(string const& name) :
       TaskContext(name, RTT::base::TaskCore::PreOperational)
@@ -37,11 +33,14 @@ namespace bard_components {
       ,joint_prefix_("")
       ,initial_positions_(7,0.0)
       // Throttle joint state publisher
+      ,joint_state_throttle_period_(0.01)
+      ,joint_state_pub_time_(0)
       ,joint_state_throttle_max_(10)
       ,joint_state_throttle_counter_(0)
       // Internal variables
       ,canbus_(NULL)
       ,robot_(NULL)
+      ,needs_calibration_(true)
       ,torques_()
       ,positions_()
       ,joint_state_()
@@ -84,14 +83,14 @@ namespace bard_components {
       // Make sure we have a connection to the robot
       if(this->isConfigured()) {
         // Assign the positions to the current robot configuration
-        if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0], actual_positions.size()))
-            != barrett_direct::WAM::ESUCCESS)
+        if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0],actual_positions.size())) != barrett_direct::WAM::ESUCCESS)
         {
           std::cerr<<"Failed to calibrate encoders!"<<std::endl;
         }
+        
         std::cerr<<"Calibrated encoders."<<std::endl;
       } else {
-        std::cerr<<"Cannot calibrate encoders! The connection to the WAM robot on device "<<can_dev_name_<<" is not open."<<std::endl;
+        std::cerr<<"Cannot calibrate encoders! The WAM control task on device "<<can_dev_name_<<" is not configured."<<std::endl;
       }
     }
 
@@ -147,8 +146,6 @@ namespace bard_components {
           throw std::exception();
         }
 
-        // Set the joints to the calibration position
-        this->calibrate_position(initial_positions_);
 
       } catch(std::exception &ex) {
         // Free the device handles
@@ -164,19 +161,24 @@ namespace bard_components {
     bool startHook() {
       // Check the data ports
       if ( !torques_in_port_.connected() ) {
-        std::cerr<<"ERROR: No connection to \"torques_in\" for WAM on \""<<can_dev_name_<<"\"!"<<std::endl;
-        return false;
+        std::cerr<<"WARNING: No connection to \"torques_in\" for WAM on \""<<can_dev_name_<<"\"!"<<std::endl;
       }
 
       if ( !positions_out_port_.connected() ) {
         std::cerr<<"WARNING: No connection to \"positions_out\" for WAM on \""<<can_dev_name_<<"\"!"<<std::endl;
+      }
+
+      if(needs_calibration_) {
+        // Set the joints to the calibration position
+        this->calibrate_position(initial_positions_);
+        needs_calibration_ = false;
       }
       
       // Set the robot to Activated
       if( robot_->SetMode(barrett_direct::WAM::MODE_ACTIVATED) != barrett_direct::WAM::ESUCCESS ){
         std::cerr<<"Failed to ACTIVATE WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
       }
-
+      
       std::cout << "WAM started on CAN device \""<<can_dev_name_<<"\"!" <<std::endl;
       return true;
     }
@@ -198,14 +200,16 @@ namespace bard_components {
       positions_out_port_.write( positions_ );
 
       // Copy joint positions into joint state
-      if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
+      //if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
+      if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
         joint_state_.header.stamp = ros::Time::now();
         for(int i=0; i<n_wam_dof_; i++) {
           joint_state_.position[i] = positions_(i);
           joint_state_.effort[i] = torques_(i);
         }
         joint_state_out_port_.write( joint_state_ );
-        joint_state_throttle_counter_ = 0;
+        //joint_state_throttle_counter_ = 0;
+        joint_state_pub_time_ = RTT::os::TimeService::Instance()->getTicks();
       } 
     }
 
@@ -221,6 +225,9 @@ namespace bard_components {
       if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
         std::cerr<<"Failed to close CAN device \""<<can_dev_name_<<"\""<<std::endl;
       }
+      
+      // Reset calibration flag
+      needs_calibration_ = true;
 
       // Free the device handles
       this->cleanup_lowlevel();
@@ -245,6 +252,8 @@ namespace bard_components {
     std::string robot_model_xml_;
     std::string joint_prefix_;
     std::vector<double> initial_positions_;
+    RTT::os::TimeService::Seconds joint_state_throttle_period_;
+    RTT::os::TimeService::ticks joint_state_pub_time_;
     size_t joint_state_throttle_max_;
     size_t joint_state_throttle_counter_;
 
@@ -253,6 +262,7 @@ namespace bard_components {
     barrett_direct::WAM *robot_;
 
     // Working variables
+    bool needs_calibration_;
     KDL::JntArray torques_;
     KDL::JntArray positions_;
     sensor_msgs::JointState joint_state_;

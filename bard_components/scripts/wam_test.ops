@@ -10,25 +10,32 @@ import("rtt_trajectory_msgs")
 // Create WAM
 var string wam_name = "wam_left"
 loadComponent(wam_name,"bard_components::WAM")
-setActivity(wam_name,0.0,HighestPriority,ORO_SCHED_RT)
+setActivity(wam_name,0.01,HighestPriority,ORO_SCHED_RT)
 
 // Load properties from rosparam
 loadService(wam_name,"rosparam")
 wam_left.rosparam.refreshProperties()
 wam_left.rosparam.storeProperties()
 
-// Create controller
-loadComponent(wam_name+"_con_trivial","bard_components::controllers::Trivial")
-setActivity(wam_name+"_con_trivial",0.0014,HighestPriority,ORO_SCHED_RT)
-
-//Connect controller to wam
-connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
-
 // Connect WAM state to ROS topic
 stream(wam_name+".joint_state_out", ros.topic(wam_name+"/joint_states")) 
 
+// Create trivial controller
+loadComponent(wam_name+"_con_trivial","bard_components::controllers::Trivial")
+setActivity(wam_name+"_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
+connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
 wam_left_con_trivial.configure()
-wam_left_con_trivial.start()
+
+// Create gravity controller
+//loadComponent(wam_name+"_con_grav","bard_components::controllers::Trivial")
+//setActivity(wam_name+"_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
+//connect(wam_name+".positions_out",wam_name+"_con_grav.positions_in",ConnPolicy())
+//connect(wam_name+".torques_in",wam_name+"_con_grav.torques_out",ConnPolicy())
+//stream(wam_name+".torques_out", ros.topic(wam_name+"/gravity_compensation/efforts")) 
+//wam_left_con_grav.configure()
+
+// Start controller
+//wam_left_con_trivial.start()
 
 //wam_left.configure()
 //wam_left.start()
