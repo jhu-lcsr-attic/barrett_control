@@ -29,7 +29,7 @@ namespace bard_components {
 
   public:
     WAM(string const& name) :
-      TaskContext(name),
+      TaskContext(name, RTT::PreOperational),
       // Properties
       n_wam_dof_(0),
       can_dev_name_(""),
@@ -57,9 +57,9 @@ namespace bard_components {
       this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs::JointState.");
 
       // Add operation for setting the encoder values
-      this->addOperation("set_encoders", &WAM::set_encoders, this, RTT::OwnThread)
-        .doc("Set the values that the encoders should read. This is used for calibrating the robot.")
-        .arg("Encoder Values","The new values for the encoders.");
+      this->addOperation("calibrate_position", &WAM::calibrate_position, this, RTT::OwnThread)
+        .doc("Set the angles that the encoders should read with the arm in the current configuration. This is used for calibrating the robot.")
+        .arg("angles","The new joint angles.");
 
       // Add operations for setting warnings and faults
       this->addOperation("setVelocityWarning", &barrett_direct::WAM::SetVelocityWarning, robot_, RTT::OwnThread)
@@ -78,8 +78,8 @@ namespace bard_components {
       std::cout << "WAM \""<<name<<"\" constructed !" <<std::endl;
     }
 
-    void set_encoders(KDL::JntArray positions) {
-      if(robot_->SetPositions(positions.data) != barrett_direct::WAM::ESUCCESS) {
+    void calibrate_position(const std::vector<double> &actual_positions) {
+      if(robot_->SetPositions(eigen::Map<eigen::VectorXd>(actual_positions)) != barrett_direct::WAM::ESUCCESS) {
         std::cerr<<"Failed to set encoders!"<<std::endl;
       }
       std::cerr<<"Zeroed encoders."<<std::endl;
