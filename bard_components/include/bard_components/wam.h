@@ -29,7 +29,7 @@ namespace bard_components {
 
   public:
     WAM(string const& name) :
-      TaskContext(name, RTT::PreOperational),
+      TaskContext(name, RTT::base::TaskCore::PreOperational),
       // Properties
       n_wam_dof_(0),
       can_dev_name_(""),
@@ -78,11 +78,17 @@ namespace bard_components {
       std::cout << "WAM \""<<name<<"\" constructed !" <<std::endl;
     }
 
-    void calibrate_position(const std::vector<double> &actual_positions) {
-      if(robot_->SetPositions(eigen::Map<eigen::VectorXd>(actual_positions)) != barrett_direct::WAM::ESUCCESS) {
-        std::cerr<<"Failed to set encoders!"<<std::endl;
+    void calibrate_position(std::vector<double> &actual_positions) {
+      if(this->isRunning()) {
+        if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0], actual_positions.size()))
+            != barrett_direct::WAM::ESUCCESS)
+        {
+          std::cerr<<"Failed to set encoders!"<<std::endl;
+        }
+        std::cerr<<"Calibrated encoders."<<std::endl;
+      } else {
+        std::cerr<<"Cannot calibrate encoders! The connection to the WAM robot on device "<<can_dev_name_<<" is not open."<<std::endl;
       }
-      std::cerr<<"Zeroed encoders."<<std::endl;
     }
 
 
@@ -190,7 +196,7 @@ namespace bard_components {
       // Copy joint positions into joint state
       if(joint_state_throttle_counter_++ == joint_state_throttle_max_) {
         joint_state_.header.stamp = ros::Time::now();
-        for(size_t i=0; i<n_wam_dof_; i++) {
+        for(int i=0; i<n_wam_dof_; i++) {
           joint_state_.position[i] = positions_(i);
           joint_state_.effort[i] = torques_(i);
         }
