@@ -94,7 +94,7 @@
   </gazebo>
 
   <!-- Construct the actual arms -->
-  <xacro:darpa_arm prefix="RightWAM" parentLink="RightWAM/FixedLink" xyz="0 0 0 " rpy="0 0 0" />
-  <xacro:darpa_arm prefix="LeftWAM" parentLink="LeftWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
+  <xacro:wam_arm prefix="RightWAM" parentLink="RightWAM/FixedLink" xyz="0 0 0 " rpy="0 0 0" />
+  <xacro:wam_arm prefix="LeftWAM" parentLink="LeftWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
 
 </robot>

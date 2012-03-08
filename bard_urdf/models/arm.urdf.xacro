@@ -29,7 +29,7 @@
   <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
   <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
 
-  <xacro:macro name="darpa_arm" params="prefix parentLink xyz rpy">
+  <xacro:macro name="wam_arm" params="prefix parentLink xyz rpy">
     <xacro:Shoulder prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
     <xacro:UpperArmInShoulder prefix="${prefix}"/>
     <xacro:UpperArm prefix="${prefix}"/>
