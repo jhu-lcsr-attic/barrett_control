@@ -28,6 +28,7 @@
   xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
   xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
   xmlns:xacro="http://www.ros.org/wiki/xacro">
+
   <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
 
   <xacro:macro name="fingers" params="parent prefix number xyz rpy">

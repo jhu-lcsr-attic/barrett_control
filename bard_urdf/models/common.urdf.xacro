@@ -38,11 +38,6 @@
   <!-- Constants -->
   <xacro:property name="PI" value="3.1415926535897931" />
 
-  <!-- Materials -->
-  <material name="WAMGrey">
-    <color rgba="0.9 0.9 0.9 1.0"/>
-  </material>
-
 
   <!-- Gazebo macros -->
   <xacro:macro name="gazeboReference" params="name material">

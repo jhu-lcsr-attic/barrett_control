@@ -34,6 +34,35 @@
   <include filename="$(find bard_urdf)/models/hand.urdf.xacro"/>
   <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
 
+  <xacro:macro name="base" params="xyz rpy parent">
+    <link name ="baseLink">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="1.0" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey" />
+        <origin xyz="0 0 0" rpy="${0.5 * PI} 0 0" />
+        <geometry>
+          <mesh filename="package://bard_urdf/models/componentSTL/Re2_Body.DAE"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${0.5 * PI} 0 0" />
+        <geometry>
+          <mesh filename="package://bard_urdf/models/componentSTL/baseLinkTwoArms.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="baseLink"/>
+    <joint name="baseJoint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="baseLink"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+  </xacro:macro>
+
   <xacro:macro name="Shoulder" params="prefix parentLink xyz rpy">
     <link name="${prefix}/ShoulderLink" >
       <inertial>
