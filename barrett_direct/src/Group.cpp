@@ -114,10 +114,10 @@ Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) :
           // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
           // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
           // filter all 4 pucks because the forearm has similar filters
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x0423 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x0443 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x0463 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x0483 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0423 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0443 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0463 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0483 ) );
         }
 
         break;
@@ -134,9 +134,9 @@ Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) :
           // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
           // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
           // filter all 4 pucks because the forearm has similar filters
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x04A3 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x04C3 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x04E3, 0x04E3 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04A3 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04C3 ) );
+          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04E3 ) );
         }
 
         break;
