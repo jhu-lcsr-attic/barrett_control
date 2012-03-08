@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>dmh</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.2.5;  Revision: 673;  Platform: Win32;  Configuration: Release Max9</authoring_tool>
+      <source_data>file:///D:/Re2_components_20110111/Re2_DAE_Conversion_Source/Re2_DAE_conversion3.max</source_data>
+    </contributor>
+    <created>2011-02-01T18:25:15</created>
+    <modified>2011-02-01T18:25:15</modified>
+    <unit name="inch" meter="0.0254"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="tiltbeamsdarkM">
+      <profile_COMMON>
+        <newparam sid="tilt_beams_dark_128x_jpg-surface">
+          <surface type="2D">
+            <init_from>tilt_beams_dark_128x_jpg</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="tilt_beams_dark_128x_jpg-sampler">
+          <sampler2D>
+            <source>tilt_beams_dark_128x_jpg-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>1 1 1 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="tilt_beams_dark_128x_jpg-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>40</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>0</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="tiltbeamsdarkM-material" name="tiltbeamsdarkM">
+      <instance_effect url="#tiltbeamsdarkM"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-upperTiltUnitLink" name="upperTiltUnitLink">
+      <mesh>
+        <source id="geom-upperTiltUnitLink-positions">
+          <float_array id="geom-upperTiltUnitLink-positions-array" count="24">-0.02095 0.065951 0.02195 -0.02095 0.065951 -0.06822 -0.02095 0 -0.06822 0.02095 0 -0.06822 0.02095 0 0.02195 -0.02095 0 0.02195 0.02095 0.065951 0.02195 0.02095 0.065951 -0.06822</float_array>
+          <technique_common>
+            <accessor source="#geom-upperTiltUnitLink-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-upperTiltUnitLink-normals">
+          <float_array id="geom-upperTiltUnitLink-normals-array" count="108">0 -0.9999999 0 0 -1 0 0 -1 0 0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 0.9999999 0 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 -0.9999999 0 0 -1 0 0 -1 0 -0.9999999 0 0 -1 0 0 -1 0 0 0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 0.9999999 0 0.9999999 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -0.9999999 0 0 1 0 0 0.9999999 0 0 1 0 0</float_array>
+          <technique_common>
+            <accessor source="#geom-upperTiltUnitLink-normals-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-upperTiltUnitLink-map1">
+          <float_array id="geom-upperTiltUnitLink-map1-array" count="72">0.4834054 0.7688828 0 0.5165946 0.6094224 0 0.8628468 0.6094224 0 0.8628468 0.3894414 0 0.01 0.7356936 0 0.8628468 0.8625928 0 0.01 0.7688828 0 0.5165946 0.3894414 0 0.4834054 0.3562522 0 0.01 0.3562522 0 0.01 0.01 0 0.4834054 0.01 0 0.4834054 0.9888639 0 0.01 0.9888639 0 0.5165946 0.229981 0 0.5165946 0.01 0 0.99 0.01 0 0.99 0.229981 0 0.5165946 0.6426117 0 0.5165946 0.8625928 0 0.8628468 0.6426117 0 0.4834054 0.7356936 0 0.4834054 0.3894414 0 0.01 0.3894414 0</float_array>
+          <technique_common>
+            <accessor source="#geom-upperTiltUnitLink-map1-array" count="24" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-upperTiltUnitLink-map1-textangents">
+          <float_array id="geom-upperTiltUnitLink-map1-textangents-array" count="108">0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 1 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#geom-upperTiltUnitLink-map1-textangents-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-upperTiltUnitLink-map1-texbinormals">
+          <float_array id="geom-upperTiltUnitLink-map1-texbinormals-array" count="108">1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 -1 0 0 -1 0 0 -1 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0</float_array>
+          <technique_common>
+            <accessor source="#geom-upperTiltUnitLink-map1-texbinormals-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-upperTiltUnitLink-vertices">
+          <input semantic="POSITION" source="#geom-upperTiltUnitLink-positions"/>
+        </vertices>
+        <triangles material="tiltbeamsdarkM_1" count="12">
+          <input semantic="VERTEX" source="#geom-upperTiltUnitLink-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-upperTiltUnitLink-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-upperTiltUnitLink-map1" offset="2" set="1"/>
+          <input semantic="TEXTANGENT" source="#geom-upperTiltUnitLink-map1-textangents" offset="3" set="1"/>
+          <input semantic="TEXBINORMAL" source="#geom-upperTiltUnitLink-map1-texbinormals" offset="3" set="1"/>
+          <p>2 0 14 0 4 1 16 1 5 2 17 2 0 3 5 3 4 4 18 4 6 5 20 5 7 6 13 6 1 7 6 7 0 8 0 8 2 9 2 9 1 10 1 10 7 11 7 11 2 12 2 12 7 13 7 13 3 14 3 14 4 15 16 15 2 16 14 16 3 17 15 17 0 18 8 18 2 19 10 19 5 20 11 20 4 21 18 21 0 22 5 22 5 23 19 23 0 24 0 24 6 25 12 25 7 26 13 26 7 27 23 27 4 28 21 28 3 29 4 29 0 30 8 30 1 31 9 31 2 32 10 32 6 33 22 33 4 34 21 34 7 35 23 35</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="tilt_beams_dark_128x_jpg">
+      <init_from>./images/tilt_beams_dark_128x.jpg</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-upperTiltUnitLink" name="upperTiltUnitLink">
+        <matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#geom-upperTiltUnitLink">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="tiltbeamsdarkM_1" target="#tiltbeamsdarkM-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="1"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

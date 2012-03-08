@@ -1,0 +1,14 @@
+<package>
+  <description brief="bard_urdf">
+
+     bard_urdf
+
+  </description>
+  <author>RE2 (original URDF), maintained by Jonathan Bohren</author>
+  <license>GPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/bard_urdf</url>
+
+</package>
+
+
