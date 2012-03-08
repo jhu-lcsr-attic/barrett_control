@@ -6,23 +6,21 @@
     <group ns="wam_left">
       <param name="n_wam_dof" value="7"/>
       <param name="can_dev_name" value="rtcan0"/>
-      <param name="robot_model_xml" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
+      <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
       <param name="joint_prefix" value="LeftWAM"/>
       <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
     </group>
     <group ns="wam_right">
       <param name="n_wam_dof" value="7"/>
       <param name="can_dev_name" value="rtcan1"/>
-      <param name="robot_model_xml" command="$(find xacro)/xacro.py '$(find popeye)/models/right_wam.urdf.xacro'" />
+      <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/right_wam.urdf.xacro'" />
       <param name="joint_prefix" value="RightWAM"/>
       <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
     </group>
   </group>
 
-
   <!-- Publish TF frames between all the links -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
     <remap from="joint_states" to="/wam_left/joint_states"/>
   </node>
-
 </launch>

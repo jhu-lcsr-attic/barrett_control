@@ -18,7 +18,7 @@ wam_left.rosparam.refreshProperties()
 wam_left.rosparam.storeProperties()
 
 // Connect WAM state to ROS topic
-stream(wam_name+".joint_state_out", ros.topic(wam_name+"/joint_states")) 
+stream(wam_name+".joint_state_out", ros.topic("wam_rtt/"+wam_name+"/joint_states")) 
 
 // Create trivial controller
 loadComponent(wam_name+"_con_trivial","bard_components::controllers::Trivial")
@@ -35,7 +35,7 @@ wam_left_con_trivial.configure()
 //wam_left_con_grav.configure()
 
 // Start controller
-//wam_left_con_trivial.start()
+wam_left_con_trivial.start()
 
-//wam_left.configure()
+wam_left.configure()
 //wam_left.start()

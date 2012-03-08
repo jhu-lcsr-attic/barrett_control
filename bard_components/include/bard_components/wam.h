@@ -29,7 +29,7 @@ namespace bard_components {
       // Properties
       ,n_wam_dof_(0)
       ,can_dev_name_("")
-      ,robot_model_xml_("")
+      ,robot_description_("")
       ,joint_prefix_("")
       ,initial_positions_(7,0.0)
       // Throttle joint state publisher
@@ -48,7 +48,7 @@ namespace bard_components {
       // Declare properties (configuration variables)
       this->addProperty("n_wam_dof",n_wam_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
       this->addProperty("can_dev_name",can_dev_name_).doc("The name of the RTCAN device to which this WAM robot is connected.");
-      this->addProperty("robot_model_xml",robot_model_xml_).doc("The WAM URDF xml string.");
+      this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
       this->addProperty("joint_prefix",joint_prefix_).doc("The joint name prefix used in the WAM URDF.");
       this->addProperty("initial_positions",initial_positions_).doc("The calibration position of the robot.");
 
@@ -249,7 +249,7 @@ namespace bard_components {
     // Configuration properties
     int n_wam_dof_;
     std::string can_dev_name_;
-    std::string robot_model_xml_;
+    std::string robot_description_;
     std::string joint_prefix_;
     std::vector<double> initial_positions_;
     RTT::os::TimeService::Seconds joint_state_throttle_period_;
