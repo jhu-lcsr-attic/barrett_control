@@ -31,10 +31,20 @@
   xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
   xmlns:xacro="http://ros.org/wiki/xacro">
 
+  <!-- Directories -->
   <xacro:property name="homeDirectory" value="package://bard_urdf" />
   <xacro:property name="highResModelDirectory" value="${homeDirectory}/models/componentSTL/splitModels" />
+
+  <!-- Constants -->
   <xacro:property name="PI" value="3.1415926535897931" />
 
+  <!-- Materials -->
+  <material name="WAMGrey">
+    <color rgba="0.9 0.9 0.9 1.0"/>
+  </material>
+
+
+  <!-- Gazebo macros -->
   <xacro:macro name="gazeboReference" params="name material">
     <gazebo reference="${name}">
       <material>
@@ -60,6 +70,7 @@
     </gazebo>
   </xacro:macro>
 
+  <!-- Controller macros -->
   <xacro:macro name="control" params="name topicName linkName jointName">
     <transmission type="pr2_mechanism_model/SimpleTransmission" name="${name}_trans">
       <actuator name="${name}_motor" />

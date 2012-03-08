@@ -23,21 +23,13 @@
  * of or in connection with the use or performance of this software.
 -->
 
-<robot name="darpa_arm_robot"
+<robot name="dual_wam_robot"
   xmlns:xacro="http://www.ros.org/wiki/xacro"
   xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller">
 
   <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
   <include filename="$(find bard_urdf)/models/arm.urdf.xacro"/>
-  <include filename="$(find bard_urdf)/models/headAssembly.urdf.xacro"/>
   <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
-
-  <material name="WAMGrey">
-    <color rgba="0.9 0.9 0.9 1.0"/>
-  </material>
-  <material name="DarpaBlue">
-    <color rgba="0.0 0.5 0.5 1.0"/>
-  </material>
 
   <link name = "world"/>
 
@@ -65,8 +57,8 @@
   </link>
   <xacro:gazeboReferenceDAE name="cylinderLink" />
 
-  <link name = "DarmSim/RightArm/WAM/FixedLink" />
-  <link name = "DarmSim/LeftArm/WAM/FixedLink" />
+  <link name = "LeftWAM/FixedLink" />
+  <link name = "RightWAM/FixedLink" />
 
   <joint name="cylinderJoint" type="fixed">
     <parent link="baseLink"/>
@@ -75,12 +67,12 @@
   </joint>
   <joint name="rightFixedJoint" type="fixed">
     <parent link="baseLink"/>
-    <child link="DarmSim/RightArm/WAM/FixedLink"/>
+    <child link="RightWAM/FixedLink"/>
     <origin xyz="-0.350177361 -0.350177361 .37836125" rpy="0 ${-0.5*PI} ${0.25*PI}"/>
   </joint>
   <joint name="leftFixedJoint" type="fixed">
     <parent link="baseLink"/>
-    <child link="DarmSim/LeftArm/WAM/FixedLink"/>
+    <child link="LeftWAM/FixedLink"/>
     <origin xyz="0.350177361 -0.350177361 .37836125" rpy="0 ${-0.5*PI} ${0.75*PI}"/>
   </joint>
 
@@ -93,8 +85,8 @@
   </gazebo>
 
 
-  <xacro:darpa_arm prefix="Right" parentLink="baseLink" xyz="-0.350177361 -0.350177361 .37836125" rpy="-${0.5 * PI} -${0.5 * PI} ${0.25*PI}" />
-  <xacro:darpa_arm prefix="Left" parentLink="baseLink" xyz="0.350177361 -0.350177361 .37836125" rpy="-${0.5 * PI} -${0.5 * PI} ${0.75*PI}" />
+  <xacro:darpa_arm prefix="RightWAM" parentLink="baseLink" xyz="-0.350177361 -0.350177361 .37836125" rpy="-${0.5 * PI} -${0.5 * PI} ${0.25*PI}" />
+  <xacro:darpa_arm prefix="LeftWAM" parentLink="baseLink" xyz="0.350177361 -0.350177361 .37836125" rpy="-${0.5 * PI} -${0.5 * PI} ${0.75*PI}" />
   <xacro:darpa_head_assembly parent="baseLink" xyz="0 -.1292225 .52971" rpy="${0.5 * PI} 0 0"/>
 
 </robot>
