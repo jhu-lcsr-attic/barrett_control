@@ -39,47 +39,51 @@
 
   <link name = "world"/>
 
-  <xacro:base xyz="0 0 0.813372" rpy="0 0 0" parent="world"/>
+  <xacro:macro name="base" params="xyz rpy parent">
+    <link name ="baseLink">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="1.0" />
+        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <!--box size="0.04 2.54 0.04"/-->
+          <mesh filename="package://bard_urdf/models/componentSTL/bench_lattice.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://bard_urdf/models/componentSTL/baseLinkTwoArms.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="baseLink"/>
+    <joint name="baseJoint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="baseLink"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+  </xacro:macro>
 
-  <link name = "cylinderLink">
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <mass value="1.0" />
-      <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
-    </inertial>
-    <visual>
-      <material name="WAMGrey" />
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="${homeDirectory}/models/componentSTL/armBase.DAE"/>
-      </geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <mesh filename="${homeDirectory}/models/componentSTL/armBase.stl"/>
-      </geometry>
-    </collision>
-  </link>
-  <xacro:gazeboReferenceDAE name="cylinderLink" />
+
+  <xacro:base xyz="0 0 0.68" rpy="0 0 0" parent="world"/>
 
   <link name = "LeftWAM/FixedLink" />
   <link name = "RightWAM/FixedLink" />
 
-  <joint name="cylinderJoint" type="fixed">
-    <parent link="baseLink"/>
-    <child link="cylinderLink"/>
-    <origin xyz="0 0 0" rpy="${0.5 * PI} 0 -${0.5 * PI}"/>
-  </joint>
   <joint name="rightFixedJoint" type="fixed">
     <parent link="baseLink"/>
     <child link="RightWAM/FixedLink"/>
-    <origin xyz="-0.350177361 -0.350177361 .37836125" rpy="0 ${-0.5*PI} ${0.25*PI}"/>
+    <origin xyz="0.346 -0.46 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
   </joint>
   <joint name="leftFixedJoint" type="fixed">
     <parent link="baseLink"/>
     <child link="LeftWAM/FixedLink"/>
-    <origin xyz="0.350177361 -0.350177361 .37836125" rpy="0 ${-0.5*PI} ${0.75*PI}"/>
+    <origin xyz="0.356 0.46 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
   </joint>
 
   <gazebo>
