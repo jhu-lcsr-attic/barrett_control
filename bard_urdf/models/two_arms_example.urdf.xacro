@@ -57,7 +57,7 @@
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://bard_urdf/models/componentSTL/baseLinkTwoArms.stl"/>
+          <mesh filename="package://bard_urdf/models/componentSTL/bench_lattice.stl"/>
         </geometry>
       </collision>
     </link>
@@ -94,7 +94,7 @@
   </gazebo>
 
   <!-- Construct the actual arms -->
-  <xacro:wam_arm prefix="RightWAM" parentLink="RightWAM/FixedLink" xyz="0 0 0 " rpy="0 0 0" />
-  <xacro:wam_arm prefix="LeftWAM" parentLink="LeftWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
+  <xacro:wam_arm_and_hand prefix="RightWAM" parentLink="RightWAM/FixedLink" xyz="0 0 0 " rpy="0 0 0" />
+  <xacro:wam_arm_and_hand prefix="LeftWAM" parentLink="LeftWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
 
 </robot>

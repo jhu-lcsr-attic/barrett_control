@@ -49,7 +49,7 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:macro name="darpa_hand" params="prefix">
+  <xacro:macro name="barrett_hand" params="prefix">
     <xacro:fingers prefix="${prefix}" parent="${prefix}/LowerWristFTPalmLink" number="Three" xyz="0 -0.05 0.0801966" rpy="-${0.5 * PI} -0.0429350996 -${0.5 * PI}"/>
     <xacro:KnuckleOne prefix="${prefix}" number="One" xyz=".02497 0 0.0587966" rpy="0 0 ${0.5 * PI}" axis="0 0 -1"/>
     <xacro:fingers prefix="${prefix}" parent="${prefix}/BHand/FingerOne/KnuckleOneLink" number="One" xyz=".05 0 0.02140" rpy="-${0.5 * PI} -0.0429350996 0"/>

@@ -29,6 +29,7 @@
   <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
   <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
 
+  <!-- Define a macro to construct the arm -->
   <xacro:macro name="wam_arm" params="prefix parentLink xyz rpy">
     <xacro:Shoulder prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
     <xacro:UpperArmInShoulder prefix="${prefix}"/>
@@ -36,6 +37,12 @@
     <xacro:ForeArm prefix="${prefix}"/>
     <xacro:UpperWristYaw prefix="${prefix}"/>
     <xacro:UpperWristPitch prefix="${prefix}"/>
+  </xacro:macro>
+
+  <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
+  <xacro:macro name="wam_arm_and_hand" params="prefix parentLink xyz rpy">
+    <xacro:wam_arm prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
+
     <xacro:ForceTorque prefix="${prefix}"/>
     <xacro:LowerWristFTPalm prefix="${prefix}"/>
 
@@ -48,6 +55,6 @@
       <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
     </joint>
 
-    <xacro:darpa_hand prefix="${prefix}" />
+    <xacro:barrett_hand prefix="${prefix}" />
   </xacro:macro>
 </robot>

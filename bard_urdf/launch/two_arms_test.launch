@@ -1,6 +1,6 @@
 <launch>
   <!-- Set the robot model -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find bard_urdf)/models/root.urdf.xacro'" />
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find bard_urdf)/models/two_arms_example.urdf.xacro'" />
   <!-- Publish TF frames between all the links -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
   <!-- Publish joint states for all the joints -->
