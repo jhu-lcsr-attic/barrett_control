@@ -1,97 +1,53 @@
 #ifndef __BARD_COMPONENTS_CONTROLLERS_GRAVITY_COMPENSATION_H
 #define __BARD_COMPONENTS_CONTROLLERS_GRAVITY_COMPENSATION_H
 
-#include <Eigen/Dense>
-#include <kdl/jntarray.hpp>
-
-#include <barrett_direct/WAM.h>
-#include <leoCAN/RTSocketCAN.h>
+#include <boost/scoped_ptr.hpp>
 
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
-#include <kdl_parser/kdl_parser.hpp>
-
-#include <iostream>
+#include <kdl/jntarray.hpp>
 
 namespace bard_components {
   namespace controllers {
     class GravityCompensation : public RTT::TaskContext
     {
-      // RTT Interface
-      RTT::InputPort<KDL::JntArray> positions_in_port_;
+      // RTT Properties
+      std::string root_joint_;
+      std::String tip_joint_;
+
+      // RTT Ports
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
+      RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
+
+      // RTT Operations
+      OperationCaller<void(int&,std::string&,std::string&)> get_robot_properties_;
 
     public:
-      GravityCompensation(string const& name) :
-        TaskContext(name)
-        ,n_wam_dof_(7)
-        ,robot_model_xml_("")
-        ,joint_prefix_("")
-        ,torques_(n_wam_dof_)
-      {
-        // Configure data ports
-        this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint angles. (n joints)");
-        this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
-
-        // Zero out torque data
-        torques_.data.setZero();
-
-        // Prepare ports for realtime processing
-        torques_out_port_.setDataSample(torques_);
-      }
-
-      bool configureHook() {
-        // Working variables
-        KDL::Tree tree;
-        KDL::Chain chain;
-
-        // Construct an URDF model from the xml string
-        urdf::Model urdf_model;
-        urdf_model.initString(robot_model_xml_);
-
-        // Get root link
-        std::string root_name = urdf_model.getRoot()->name;
-
-        // Get a KDL tree from the robot URDF
-        if (!kdl_parser::treeFromUrdfModel(urdf_model, tree)){
-          ROS_ERROR("Failed to construct kdl tree");
-          return false;
-        }
-
-        // Populate the KDL chain
-        tree.getChain(joint_prefix_+"/YawJoint",joint_prefix_+"/LowerWristYawJoint",chain);
-
-        // Create chainsolver
-        //KDL::ChainIdSolver_RNE ChainIdSolver_RNE(
-
-        return true;
-      }
-
-      bool startHook() {
-        return true;
-      }
-
-      void updateHook() {
-        // Send joint positions
-        torques_out_port_.write( torques_ );
-      }
-
-      void stopHook() {
-      }
-
-      void cleanupHook() {
-      }
+      GravityCompensation(string const& name);
+      bool configureHook();
+      bool startHook();
+      void updateHook();
+      void stopHook();
+      void cleanupHook();
 
     private:
-      // Configuration properties
+      //  Robot configuration
       int n_wam_dof_;
       std::string robot_model_xml_;
       std::string joint_prefix_;
 
       // Working variables
+      KDL::Tree kdl_tree_;
+      KDL::Chain kdl_chain_;
+      boost::scoped_ptr<KDL::ChainIdSolver_RNE> id_solver_;
+
       KDL::JntArray positions_;
+      KDL::JntArray velocities_;
+      KDL::JntArray accelerations_;
       KDL::JntArray torques_;
+
+      KDL::Wrenches ext_wrenches_;
     };
   }
 }
