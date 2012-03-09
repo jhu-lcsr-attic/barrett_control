@@ -20,6 +20,7 @@ namespace bard_components {
       // RTT Properties
       std::string root_joint_;
       std::string tip_joint_;
+      RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
@@ -55,6 +56,7 @@ namespace bard_components {
       KDL::JntArray torques_;
 
       sensor_msgs::JointState joint_state_;
+      RTT::os::TimeService::ticks joint_state_pub_time_;
     };
   }
 }

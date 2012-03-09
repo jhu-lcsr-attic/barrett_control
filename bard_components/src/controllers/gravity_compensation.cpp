@@ -34,6 +34,7 @@ GravityCompensation::GravityCompensation(string const& name) :
   ,accelerations_(n_wam_dof_)
   ,torques_(n_wam_dof_)
   ,joint_state_()
+  ,joint_state_pub_time_(0)
 {
   // Declare properties
   this->addProperty("root_joint",root_joint_).doc("The root joint for the controller.");
@@ -124,8 +125,20 @@ void GravityCompensation::updateHook()
       accelerations_,
       ext_wrenches_,
       torques_);
+
   // Send joint positions
   torques_out_port_.write( torques_ );
+  
+  // Copy the command into a sensor_msgs/JointState message
+  if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
+    joint_state_.header.stamp = ros::Time::now();
+    for(int i=0; i<n_wam_dof_; i++) {
+      joint_state_.position[i] = positions_(i);
+      joint_state_.effort[i] = torques_(i);
+    }
+    joint_state_out_port_.write( joint_state_ );
+    joint_state_pub_time_ = RTT::os::TimeService::Instance()->getTicks();
+  } 
 }
 
 void GravityCompensation::stopHook()
