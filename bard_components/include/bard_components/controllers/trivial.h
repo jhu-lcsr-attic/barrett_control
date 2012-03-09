@@ -1,6 +1,8 @@
 #ifndef __BARD_COMPONENTS_CONTROLLERS_TRIVIAL_H
 #define __BARD_COMPONENTS_CONTROLLERS_TRIVIAL_H
 
+#include <iostream>
+
 #include <kdl/jntarray.hpp>
 
 #include <rtt/RTT.hpp>

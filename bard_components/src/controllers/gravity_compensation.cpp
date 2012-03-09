@@ -11,15 +11,15 @@
 #include <bard_components/util.h>
 #include <bard_components/controllers/gravity_compensation.h>
 
-using namespace bard_components;
+using namespace bard_components::controllers;
 
 GravityCompensation::GravityCompensation(string const& name) :
   TaskContext(name)
-  // Operation Callers
-  ,get_robot_properties_("get_robot_properties")
   // Properties
   ,root_joint_("")
   ,tip_joint_("")
+  // Operation Callers
+  ,get_robot_properties_("get_robot_properties")
   // Robot properties
   ,n_wam_dof_(7)
   ,robot_description_("")
@@ -28,11 +28,12 @@ GravityCompensation::GravityCompensation(string const& name) :
   ,kdl_tree_()
   ,kdl_chain_()
   ,id_solver_(NULL)
+  ,ext_wrenches_(n_wam_dof_)
   ,positions_(n_wam_dof_)
   ,velocities_(n_wam_dof_)
   ,accelerations_(n_wam_dof_)
   ,torques_(n_wam_dof_)
-  ,wrenches_(n_wam_dof_)
+  ,joint_state_()
 {
   // Declare properties
   this->addProperty("root_joint",root_joint_).doc("The root joint for the controller.");
@@ -88,7 +89,7 @@ bool GravityCompensation::configureHook()
   velocities_.resize(n_wam_dof_);
   accelerations_.resize(n_wam_dof_);
   torques_.resize(n_wam_dof_);
-  wrenches_.resize(kdl_chain_.getNrOfSegments());
+  ext_wrenches_.resize(kdl_chain_.getNrOfSegments());
 
   // Zero out torque data
   torques_.data.setZero();
@@ -96,7 +97,7 @@ bool GravityCompensation::configureHook()
   // Construct ros JointState message
   util::init_wam_joint_state(
       n_wam_dof_,
-      prefix_,
+      joint_prefix_,
       joint_state_);
 
   // Prepare ports for realtime processing

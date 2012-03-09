@@ -24,6 +24,5 @@ void util::init_wam_joint_state(
   // Resize joint vectors
   joint_state.position.resize(n_wam_dof);
   joint_state.velocity.resize(n_wam_dof);
-  joint_state.acceleration.resize(n_wam_dof);
   joint_state.effort.resize(n_wam_dof);
 }

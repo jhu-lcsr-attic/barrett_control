@@ -5,6 +5,12 @@
 
 #include <ros/ros.h>
 
+#include <kdl/jntarray.hpp>
+#include <rtt/RTT.hpp>
+#include <rtt/Port.hpp>
+
+#include <sensor_msgs/JointState.h>
+
 #include <bard_components/util.h>
 #include <bard_components/wam.h>
 
@@ -52,16 +58,16 @@ WAM::WAM(string const& name) :
     .arg("angles","The new joint angles.");
 
   // Add operations for setting warnings and faults
-  this->addOperation("setVelocityWarning", &barrett_direct::WAM::SetVelocityWarning, robot_, RTT::OwnThread)
+  this->addOperation("setVelocityWarning", &WAM::set_velocity_warn, this, RTT::OwnThread)
     .doc("Set the velocities above which the WAM pendant will illumiate a warning light.")
     .arg("thresh","Velocity Warning Threshold");
-  this->addOperation("setVelocityFault", &barrett_direct::WAM::SetVelocityFault, robot_, RTT::OwnThread)
+  this->addOperation("setVelocityFault", &WAM::set_velocity_fault, this, RTT::OwnThread)
     .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
     .arg("thresh","Velocity Fault Threshold");
-  this->addOperation("setTorqueWarning", &barrett_direct::WAM::SetTorqueWarning, robot_, RTT::OwnThread)
+  this->addOperation("setTorqueWarning", &WAM::set_torque_warn, this, RTT::OwnThread)
     .doc("Set the velocities above which the WAM pendant will illumiate a warning light.")
     .arg("thresh","Torque Warning Threshold");
-  this->addOperation("setTorqueFault", &barrett_direct::WAM::SetTorqueFault, robot_, RTT::OwnThread)
+  this->addOperation("setTorqueFault", &WAM::set_torque_fault, this, RTT::OwnThread)
     .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
     .arg("thresh","Torque Fault Threshold");
 
@@ -85,7 +91,7 @@ bool WAM::configureHook()
   positions_.data.setZero();
 
   // Construct ros JointState message
-  util::init_wam_joint_state(n_wam_dof_, prefix_, joint_state_);
+  util::init_wam_joint_state(n_wam_dof_, joint_prefix_, joint_state_);
 
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_);
@@ -103,7 +109,7 @@ bool WAM::configureHook()
     }
 
     // Construct WAM structure
-    robot_.reset(new barrett_direct::WAM(canbus_, (barrett_direct::WAM::Configuration)n_wam_dof_));
+    robot_.reset(new barrett_direct::WAM(canbus_.get(), (barrett_direct::WAM::Configuration)n_wam_dof_));
 
     // Initialize the WAM robot
     if( robot_->Initialize() != barrett_direct::WAM::ESUCCESS ){
@@ -230,3 +236,29 @@ void WAM::cleanup_internal()
   robot_.reset(NULL);
   canbus_.reset(NULL);
 }
+
+void WAM::set_velocity_warn(unsigned int thresh)
+{
+  if(!this->isConfigured() || robot_->SetVelocityWarning(thresh) != barrett_direct::WAM::ESUCCESS) {
+    std::cerr<<"ERROR: Could not set velocity warning threshold."<<std::endl;
+  }
+}
+void WAM::set_velocity_fault(unsigned int thresh)
+{
+  if(!this->isConfigured() || robot_->SetVelocityFault(thresh) != barrett_direct::WAM::ESUCCESS) {
+    std::cerr<<"ERROR: Could not set velocity fault threshold."<<std::endl;
+  }
+}
+void WAM::set_torque_warn(unsigned int thresh)
+{
+  if(!this->isConfigured() || robot_->SetTorqueWarning(thresh) != barrett_direct::WAM::ESUCCESS) {
+    std::cerr<<"ERROR: Could not set torque warning threshold."<<std::endl;
+  }
+}
+void WAM::set_torque_fault(unsigned int thresh)
+{
+  if(!this->isConfigured() || robot_->SetTorqueFault(thresh) != barrett_direct::WAM::ESUCCESS) {
+    std::cerr<<"ERROR: Could not set torque fault threshold."<<std::endl;
+  }
+}
+

@@ -49,8 +49,6 @@ namespace barrett_direct {
 
   public:
 
-    EIGEN_MAKE_ALINGED_OPERATOR_NEW
-
     enum Errno{ ESUCCESS, EFAILURE };
 
     enum Configuration{ WAM_4DOF=4, WAM_7DOF=7 };

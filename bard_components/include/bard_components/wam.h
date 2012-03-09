@@ -1,6 +1,8 @@
 #ifndef __BARD_COMPONENTS_WAM_H
 #define __BARD_COMPONENTS_WAM_H
 
+#include <iostream>
+
 #include <boost/scoped_ptr.hpp>
 
 #include <kdl/jntarray.hpp>
@@ -48,6 +50,11 @@ namespace bard_components {
         std::string &joint_prefix);
 
     void calibrate_position(std::vector<double> &actual_positions);
+
+    void set_velocity_warn(unsigned int thresh);
+    void set_velocity_fault(unsigned int thresh);
+    void set_torque_warn(unsigned int thresh);
+    void set_torque_fault(unsigned int thresh);
 
   private:
     void cleanup_internal();

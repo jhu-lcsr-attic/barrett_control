@@ -1,6 +1,7 @@
 #ifndef __BARD_COMPONENTS_UTIL_H
 #define __BARD_COMPONENTS_UTIL_H
 
+#include <iostream>
 #include <sensor_msgs/JointState.h>
 
 namespace bard_components {

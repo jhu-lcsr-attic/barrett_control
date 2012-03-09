@@ -37,8 +37,6 @@ namespace barrett_direct {
 
   public:
 
-    EIGEN_MAKE_ALINGED_OPERATOR_NEW
-
     //! Define the ID of a puck
     /**
       The ID of a puck is at most 5 bits. Hence we use 8 bits of which only the 5
