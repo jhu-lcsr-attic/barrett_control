@@ -25,25 +25,25 @@ http://www.cisst.org/cisst/license.txt.
 using namespace barrett_direct;
 
 Puck::ID operator++( Puck::ID& pid, int  ){
-  // pucks for the arm
-  if( pid==Puck::PUCK_ID1 ) { return pid = Puck::PUCK_ID2;}
-  if( pid==Puck::PUCK_ID2 ) { return pid = Puck::PUCK_ID3;}
-  if( pid==Puck::PUCK_ID3 ) { return pid = Puck::PUCK_ID4;}
-  if( pid==Puck::PUCK_ID4 ) { return pid = Puck::PUCK_ID5;}
-  if( pid==Puck::PUCK_ID5 ) { return pid = Puck::PUCK_ID6;}
-  if( pid==Puck::PUCK_ID6 ) { return pid = Puck::PUCK_ID7;}
-  if( pid==Puck::PUCK_ID7 ) { return pid = Puck::SAFETY_MODULE_ID;}
-  if( pid==Puck::SAFETY_MODULE_ID ) 
-    { return pid = Puck::SAFETY_MODULE_ID;}
-
-  // pucks for the hand
-  if( pid==Puck::PUCK_IDF1 ) { return pid = Puck::PUCK_IDF2;}
-  if( pid==Puck::PUCK_IDF2 ) { return pid = Puck::PUCK_IDF3;}
-  if( pid==Puck::PUCK_IDF3 ) { return pid = Puck::PUCK_IDF4;}
-  if( pid==Puck::PUCK_IDF4 ) { return pid = Puck::SAFETY_MODULE_ID;}
-  if( pid==Puck::SAFETY_MODULE_ID ) 
-    { return pid = Puck::SAFETY_MODULE_ID;}
-
+  switch(pid) {
+    case Puck::PUCK_ID1:
+    case Puck::PUCK_ID2:
+    case Puck::PUCK_ID3:
+    case Puck::PUCK_ID4:
+    case Puck::PUCK_ID5:
+    case Puck::PUCK_ID6:
+    case Puck::PUCK_IDF1:
+    case Puck::PUCK_IDF2:
+    case Puck::PUCK_IDF3:
+      return (Puck::ID)( pid + 1 );
+    case Puck::PUCK_ID7:
+    case Puck::SAFETY_MODULE_ID:
+    case Puck::PUCK_IDF4:
+      return Puck::SAFETY_MODULE_ID;
+    default:
+      std::cerr<<"WARNING: incrementing unknown Puck ID: "<<pid<<std::endl;
+      return Puck::SAFETY_MODULE_ID;
+  };
 }
 
 Puck::Puck(){}

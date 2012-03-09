@@ -131,7 +131,7 @@ void BH8_280::Hi(){
 BH8_280::Errno BH8_280::SetPositions( const Eigen::VectorXd& jq ){
 
   // sanity check
-  if( jq.size() != pucks.size() ){
+  if( jq.size() != (int)pucks.size() ){
     std::cerr << "Expected " << pucks.size() << " joint angles. "
 		      << "Got " << jq.size()
 		      << std::endl;
