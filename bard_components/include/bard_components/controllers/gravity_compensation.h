@@ -23,6 +23,7 @@ namespace bard_components {
       RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
+      RTT::InputPort<KDL::JntArray> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
       RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 

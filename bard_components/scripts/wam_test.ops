@@ -5,6 +5,7 @@ import("kdl_typekit")
 
 import("rtt_sensor_msgs")
 import("rtt_trajectory_msgs")
+import("rtt_geometry_msgs")
 
 //// Set up left WAM + Controller
 // Create WAM
@@ -27,15 +28,21 @@ connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
 wam_left_con_trivial.configure()
 
 // Create gravity controller
-//loadComponent(wam_name+"_con_grav","bard_components::controllers::Trivial")
-//setActivity(wam_name+"_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
-//connect(wam_name+".positions_out",wam_name+"_con_grav.positions_in",ConnPolicy())
-//connect(wam_name+".torques_in",wam_name+"_con_grav.torques_out",ConnPolicy())
-//stream(wam_name+".torques_out", ros.topic(wam_name+"/gravity_compensation/efforts")) 
-//wam_left_con_grav.configure()
+loadComponent("wam_left_con_grav","bard_components::controllers::GravityCompensation")
+setActivity("wam_left_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
+
+connectServices("wam_left", "wam_left_con_grav")
+connect("wam_left.positions_out","wam_left_con_grav.positions_in",ConnPolicy())
+connect("wam_left.torques_in","wam_left_con_grav.torques_out",ConnPolicy())
+stream("wam_left_con_grav.joint_state_out", ros.topic("wam_rtt/wam_left/con_grav/joint_states")) 
+loadService("wam_left_con_grav","rosparam")
+
+wam_left_con_grav.rosparam.refreshProperties()
+wam_left_con_grav.rosparam.storeProperties()
+wam_left_con_grav.configure()
 
 // Start controller
-wam_left_con_trivial.start()
+//wam_left_con_grav.start()
 
-wam_left.configure()
+//wam_left.configure()
 //wam_left.start()

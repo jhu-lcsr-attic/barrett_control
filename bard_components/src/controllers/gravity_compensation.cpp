@@ -18,6 +18,7 @@ GravityCompensation::GravityCompensation(string const& name) :
   // Properties
   ,root_joint_("")
   ,tip_joint_("")
+  ,joint_state_throttle_period_(0.01)
   // Operation Callers
   ,get_robot_properties_("get_robot_properties")
   // Robot properties
@@ -39,8 +40,10 @@ GravityCompensation::GravityCompensation(string const& name) :
   // Declare properties
   this->addProperty("root_joint",root_joint_).doc("The root joint for the controller.");
   this->addProperty("tip_joint",tip_joint_).doc("The tip joint for the controller.");
+  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure data ports
+  this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs/JointState of commanded joint state.");
 
@@ -74,10 +77,14 @@ bool GravityCompensation::configureHook()
   }
 
   // Populate the KDL chain
-  kdl_tree_.getChain(
-      joint_prefix_+"/YawJoint",
-      joint_prefix_+"/LowerWristYawJoint",
-      kdl_chain_);
+  if(!kdl_tree_.getChain(
+        joint_prefix_+"/"+root_joint_,
+        joint_prefix_+"/"+tip_joint_,
+        kdl_chain_))
+  {
+    ROS_ERROR("Failed to get KDL chain from tree");
+    return false;
+  }
 
   // Create chainsolver
   id_solver_.reset(
@@ -115,6 +122,9 @@ bool GravityCompensation::startHook()
 
 void GravityCompensation::updateHook()
 {
+  // Read in the current joint positions
+  positions_in_port_.read( positions_ );
+
   // Compute inverse dynamics
   // This computes the torques on each joint of the arm as a function of
   // the arm's joint-space position, velocities, accelerations, external
