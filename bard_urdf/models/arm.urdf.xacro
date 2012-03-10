@@ -39,10 +39,20 @@
     <xacro:UpperWristPitch prefix="${prefix}"/>
   </xacro:macro>
 
-  <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
-  <xacro:macro name="wam_arm_and_hand" params="prefix parentLink xyz rpy">
-    <xacro:wam_arm prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
+  <xacro:macro name="barret_palm" params="prefix">
+    <xacro:LowerWrist prefix="${prefix}"/>
+    <link name="${prefix}/PalmLink" />
 
+    <joint name="${prefix}/PalmJoint" type="fixed">
+      <parent link="${prefix}/LowerWristLink"/>
+      <child link="${prefix}/PalmLink"/>
+      <!--             <origin xyz="0 0 0.1293166" rpy="0 0 0"/> -->
+      <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
+  <xacro:macro name="barrett_ft_palm" params="prefix">
     <xacro:ForceTorque prefix="${prefix}"/>
     <xacro:LowerWristFTPalm prefix="${prefix}"/>
 

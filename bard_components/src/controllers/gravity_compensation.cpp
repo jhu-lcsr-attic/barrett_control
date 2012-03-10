@@ -81,8 +81,12 @@ bool GravityCompensation::configureHook()
   {
     ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
         <<joint_prefix_<<"/"<<root_joint_
-        <<"-->"
-        <<joint_prefix_<<"/"<<tip_joint_);
+        <<" --> "
+        <<joint_prefix_<<"/"<<tip_joint_
+        <<std::endl
+        <<"  Tree has "<<kdl_tree_.getNrOfJoints()<<" joints"
+        <<"  Tree has "<<kdl_tree_.getNrOfSegments()<<" segments"
+        );
     return false;
   }
 
