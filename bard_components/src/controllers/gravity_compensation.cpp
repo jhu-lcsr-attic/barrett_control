@@ -5,9 +5,6 @@
 
 #include <kdl_parser/kdl_parser.hpp>
 
-#include <leoCAN/RTSocketCAN.h>
-#include <barrett_direct/WAM.h>
-
 #include <bard_components/util.h>
 #include <bard_components/controllers/gravity_compensation.h>
 
@@ -82,7 +79,10 @@ bool GravityCompensation::configureHook()
         joint_prefix_+"/"+tip_joint_,
         kdl_chain_))
   {
-    ROS_ERROR("Failed to get KDL chain from tree");
+    ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
+        <<joint_prefix_<<"/"<<root_joint_
+        <<"-->"
+        <<joint_prefix_<<"/"<<tip_joint_);
     return false;
   }
 
