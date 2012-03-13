@@ -255,53 +255,9 @@
     </joint>
   </xacro:macro>
 
-  <xacro:macro name="LowerWrist" params="prefix">
-    <link name="${prefix}/LowerWristLink" >
-      <inertial>
-        <origin xyz="0.00035500 -0.00499005 0.04864979" />
-        <mass value="0.63352875" />
-        <inertia  ixx="0.00102103" ixy="0.00000775"  ixz="-0.00001230"
-          iyy="0.00080944"  iyz="-0.00014417"
-          izz="0.00068788" />
-      </inertial>
-      <visual>
-        <material name="WAMGrey" />
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.DAE"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.stl"/>
-        </geometry>
-      </collision>
-    </link>
-    <xacro:gazeboReferenceDAE name="${prefix}/LowerWristLink"/>
+  <!-- Palm without force-torque sensor -->
 
-    <joint name="${prefix}/LowerWristYawJoint" type="revolute">
-      <parent link="${prefix}/UpperWristPitchLink"/>
-      <child link="${prefix}/PalmLink"/>
-      <origin xyz="0 0 0.06713340" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit effort="5" lower="-2.95" upper="2.95" velocity="3.27"/><!-- 2.95 is a limit taken in from 3 due to saftey and differences between arms. -->
-      <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
-      <dynamics damping="1.0" friction="100.0"/>
-    </joint>
-
-    <joint name="${prefix}/PalmJoint" type="fixed">
-      <parent link="${prefix}/ForceTorqueLink"/>
-      <child link="${prefix}/LowerWristFTPalmLink"/>
-      <origin xyz="0 0 0.0048" rpy="0 0 -${0.5 * PI}"/>
-      <provideFeedback value="true"/>
-    </joint>
-
-    <gazebo reference="${prefix}/PalmJoint">
-      <provideFeedback value="true"/>
-    </gazebo>
-  </xacro:macro>
-
+  <!-- ForceTorque macros -->
   <xacro:macro name="ForceTorque" params="prefix">
     <link name="${prefix}/ForceTorqueLink" >
       <inertial>
@@ -401,6 +357,7 @@
     </gazebo>
   </xacro:macro>
 
+  <!-- Hand macros -->
   <xacro:macro name="KnuckleOne" params="prefix number xyz rpy axis">
     <link name="${prefix}/BHand/Finger${number}/KnuckleOneLink">
       <visual>
