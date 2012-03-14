@@ -16,6 +16,8 @@ using namespace bard_components::controllers;
 GravityCompensation::GravityCompensation(string const& name) :
   TaskContext(name)
   // Properties
+  ,disabled_(true)
+  ,gravity_(0.0,0.0,0.0)
   ,root_link_("")
   ,tip_link_("")
   ,joint_state_throttle_period_(0.01)
@@ -38,6 +40,8 @@ GravityCompensation::GravityCompensation(string const& name) :
   ,joint_state_pub_time_(0)
 {
   // Declare properties
+  this->addProperty("disabled",disabled_).doc("Disabled if true.");
+  this->addProperty("gravity",gravity_).doc("The gravity vector in the root frame.");
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
   this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
@@ -78,8 +82,8 @@ bool GravityCompensation::configureHook()
 
   // Populate the KDL chain
   if(!kdl_tree_.getChain(
-        joint_prefix_+"/"+root_link_,
-        joint_prefix_+"/"+tip_link_,
+        root_link_,
+        tip_link_,
         kdl_chain_))
   {
     ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
@@ -109,7 +113,7 @@ bool GravityCompensation::configureHook()
   id_solver_.reset(
       new KDL::ChainIdSolver_RNE(
         kdl_chain_,
-        KDL::Vector(0,0,-9.8)));
+        gravity_));
 
   // Resize working vectors
   positions_.resize(n_wam_dof_);
@@ -156,6 +160,10 @@ void GravityCompensation::updateHook()
         torques_) != 0)
   {
     std::cerr<<"ERROR: Could not compute joint torques!"<<std::endl;
+  }
+
+  if(disabled_) {
+    torques_.data.setZero();
   }
  
   // Send joint positions

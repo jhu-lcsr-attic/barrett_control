@@ -35,14 +35,16 @@ connectServices("wam_left", "wam_left_con_grav")
 connect("wam_left.positions_out","wam_left_con_grav.positions_in",ConnPolicy())
 connect("wam_left.torques_in","wam_left_con_grav.torques_out",ConnPolicy())
 stream("wam_left_con_grav.joint_state_out", ros.topic("wam_rtt/wam_left/con_grav/joint_states")) 
-loadService("wam_left_con_grav","rosparam")
 
+loadService("wam_left_con_grav","rosparam")
 wam_left_con_grav.rosparam.refreshProperties()
 wam_left_con_grav.rosparam.storeProperties()
+wam_left_con_grav.gravity = KDL.Vector(-9.8,0,0)
+
 wam_left_con_grav.configure()
 
 // Start controller
-//wam_left_con_grav.start()
+wam_left_con_grav.start()
 
-//wam_left.configure()
-//wam_left.start()
+wam_left.configure()
+wam_left.start()

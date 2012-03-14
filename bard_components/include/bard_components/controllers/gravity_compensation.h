@@ -18,6 +18,8 @@ namespace bard_components {
     class GravityCompensation : public RTT::TaskContext
     {
       // RTT Properties
+      bool disabled_;
+      KDL::Vector gravity_;
       std::string root_link_;
       std::string tip_link_;
       RTT::os::TimeService::Seconds joint_state_throttle_period_;

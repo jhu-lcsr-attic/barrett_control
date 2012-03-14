@@ -150,7 +150,7 @@
     <link name="${prefix}/ForeArmLink" >
       <inertial>
         <origin xyz="0 0 0" />
-        <mass value="2.40016804" />
+        <mass value="3.40016804" />
         <origin xyz="-0.04001488 -.00022942 .13271662" rpy="0 0 0" />
         <inertia  ixx="0.01491672" ixy="0.00001741"   ixz="-0.00150604"
           iyy="0.01482988"   iyz="-0.00002109"
@@ -187,7 +187,7 @@
     <link name="${prefix}/UpperWristYawLink" >
       <inertial>
         <origin xyz="0.00008921 0.00511217 0.00435824" />
-        <mass value="0.12376019" />
+        <mass value="1.12376019" />
         <inertia  ixx="0.00005029" ixy="0.00000020"  ixz="0.00007582"
           iyy="0.00007582"  iyz="-0.00000359"
           izz="0.00006270" />
