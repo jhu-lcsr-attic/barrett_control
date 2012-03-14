@@ -148,13 +148,16 @@ void GravityCompensation::updateHook()
   // This computes the torques on each joint of the arm as a function of
   // the arm's joint-space position, velocities, accelerations, external
   // forces/torques and gravity.
-  id_solver_->CartToJnt(
-      positions_,
-      velocities_,
-      accelerations_,
-      ext_wrenches_,
-      torques_);
-
+  if(id_solver_->CartToJnt(
+        positions_,
+        velocities_,
+        accelerations_,
+        ext_wrenches_,
+        torques_) != 0)
+  {
+    std::cerr<<"ERROR: Could not compute joint torques!"<<std::endl;
+  }
+ 
   // Send joint positions
   torques_out_port_.write( torques_ );
   
