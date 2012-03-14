@@ -1,7 +1,10 @@
 
 #include <iostream>
+#include <map>
 
 #include <Eigen/Dense>
+
+#include <kdl/tree.hpp>
 
 #include <kdl_parser/kdl_parser.hpp>
 
@@ -13,8 +16,8 @@ using namespace bard_components::controllers;
 GravityCompensation::GravityCompensation(string const& name) :
   TaskContext(name)
   // Properties
-  ,root_joint_("")
-  ,tip_joint_("")
+  ,root_link_("")
+  ,tip_link_("")
   ,joint_state_throttle_period_(0.01)
   // Operation Callers
   ,get_robot_properties_("get_robot_properties")
@@ -35,8 +38,8 @@ GravityCompensation::GravityCompensation(string const& name) :
   ,joint_state_pub_time_(0)
 {
   // Declare properties
-  this->addProperty("root_joint",root_joint_).doc("The root joint for the controller.");
-  this->addProperty("tip_joint",tip_joint_).doc("The tip joint for the controller.");
+  this->addProperty("root_link",root_link_).doc("The root link for the controller.");
+  this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
   this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure data ports
@@ -75,18 +78,30 @@ bool GravityCompensation::configureHook()
 
   // Populate the KDL chain
   if(!kdl_tree_.getChain(
-        joint_prefix_+"/"+root_joint_,
-        joint_prefix_+"/"+tip_joint_,
+        joint_prefix_+"/"+root_link_,
+        joint_prefix_+"/"+tip_link_,
         kdl_chain_))
   {
     ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
-        <<joint_prefix_<<"/"<<root_joint_
+        <<joint_prefix_<<"/"<<root_link_
         <<" --> "
-        <<joint_prefix_<<"/"<<tip_joint_
+        <<joint_prefix_<<"/"<<tip_link_
         <<std::endl
         <<"  Tree has "<<kdl_tree_.getNrOfJoints()<<" joints"
         <<"  Tree has "<<kdl_tree_.getNrOfSegments()<<" segments"
+        <<"  The segments are:"
         );
+
+    KDL::SegmentMap segment_map = kdl_tree_.getSegments();
+    KDL::SegmentMap::iterator it;
+
+    for( it=segment_map.begin();
+        it != segment_map.end();
+        it++ )
+    {
+      ROS_ERROR_STREAM( "    "<<(*it).first);
+    }
+  
     return false;
   }
 

@@ -39,7 +39,7 @@
     <xacro:UpperWristPitch prefix="${prefix}"/>
   </xacro:macro>
 
-  <xacro:macro name="barret_palm" params="prefix">
+  <xacro:macro name="barrett_palm" params="prefix">
     <xacro:LowerWrist prefix="${prefix}"/>
     <xacro:LowerWristPalm prefix="${prefix}"/>
 
