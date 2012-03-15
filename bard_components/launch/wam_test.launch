@@ -15,9 +15,8 @@
     </group>
 
     <!-- Parameters for controller mux -->
-    <group ns="wam_left_con_grav">
-      <rosparam param="gravity">{Element0: -9.8, Element1: 0, Element2: 0}</rosparam>
-      <param name="joint_state_throttle_period" value="0.01"/>
+    <group ns="wam_left_mux">
+      <param name="joint_state_throttle_period" value="0.1"/>
     </group>
 
     <!-- Parameters for WAM RTT gravity compensation controller -->

@@ -8,43 +8,64 @@ import("rtt_trajectory_msgs")
 import("rtt_geometry_msgs")
 
 //// Set up left WAM + Controller
-// Create WAM
-var string wam_name = "wam_left"
-loadComponent(wam_name,"bard_components::WAM")
-setActivity(wam_name,0.01,HighestPriority,ORO_SCHED_RT)
+///////////////////////////////////////////////////////////////////////////////
+// Create WAM /////////////////////////////////////////////////////////////////
+loadComponent("wam_left","bard_components::WAM")
+setActivity("wam_left",0.01,HighestPriority,ORO_SCHED_RT)
 
 // Load properties from rosparam
-loadService(wam_name,"rosparam")
+loadService("wam_left","rosparam")
 wam_left.rosparam.refreshProperties()
-wam_left.rosparam.storeProperties()
 
 // Connect WAM state to ROS topic
-stream(wam_name+".joint_state_out", ros.topic("wam_rtt/"+wam_name+"/joint_states")) 
+stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
 
-// Create trivial controller
-loadComponent(wam_name+"_con_trivial","bard_components::controllers::Trivial")
-setActivity(wam_name+"_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
-connect(wam_name+".torques_in",wam_name+"_con_trivial.torques_out",ConnPolicy())
+///////////////////////////////////////////////////////////////////////////////
+// Create multiplexer /////////////////////////////////////////////////////////
+loadComponent("wam_left_mux","bard_components::ControllerMux")
+setActivity("wam_left_mux",0.001,HighestPriority,ORO_SCHED_RT)
+stream("wam_left_mux.joint_state_out", ros.topic("wam_rtt/wam_left_mux/joint_states")) 
+
+// Configure parameters
+loadService("wam_left_mux","rosparam")
+wam_left_mux.rosparam.refreshProperties()
+wam_left_mux.configure()
+
+///////////////////////////////////////////////////////////////////////////////
+// Create trivial controller //////////////////////////////////////////////////
+loadComponent("wam_left_con_trivial","bard_components::controllers::Trivial")
+setActivity("wam_left_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
+
+// Configure parameters
+loadService("wam_left_con_trivial","rosparam")
+wam_left_con_trivial.rosparam.refreshProperties()
 wam_left_con_trivial.configure()
 
-// Create gravity controller
+// Connect controller to mux
+wam_left_mux.load("trivial",wam_left_con_trivial.n_arm_dof)
+connect("wam_left_mux.trivial","wam_left_con_trivial.torques_out",ConnPolicy())
+
+///////////////////////////////////////////////////////////////////////////////
+// Create gravity controller //////////////////////////////////////////////////
 loadComponent("wam_left_con_grav","bard_components::controllers::GravityCompensation")
 setActivity("wam_left_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
 
-connectServices("wam_left", "wam_left_con_grav")
 connect("wam_left.positions_out","wam_left_con_grav.positions_in",ConnPolicy())
-connect("wam_left.torques_in","wam_left_con_grav.torques_out",ConnPolicy())
-stream("wam_left_con_grav.joint_state_out", ros.topic("wam_rtt/wam_left/con_grav/joint_states")) 
 
+// Connect controller to mux
+wam_left_mux.load("gravity",wam_left_con_grav.n_arm_dof)
+connect("wam_left_mux.gravity","wam_left_con_grav.torques_out",ConnPolicy())
+
+// Configure parameters
 loadService("wam_left_con_grav","rosparam")
 wam_left_con_grav.rosparam.refreshProperties()
-wam_left_con_grav.rosparam.storeProperties()
-//wam_left_con_grav.gravity = KDL.Vector(-9.8,0,0)
-
 wam_left_con_grav.configure()
 
-// Start controller
+///////////////////////////////////////////////////////////////////////////////
+// Start Things ///////////////////////////////////////////////////////////////
+wam_left_mux.start()
+wam_left_con_trivial.start()
 wam_left_con_grav.start()
 
-wam_left.configure()
-wam_left.start()
+//wam_left.configure()
+//wam_left.start()

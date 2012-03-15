@@ -44,6 +44,7 @@ orocos_component(components
   src/bard_components.cpp
   src/wam.cpp
   src/util.cpp
+  src/controller_mux.cpp
   src/controllers/trivial.cpp
   src/controllers/gravity_compensation.cpp
   ) # ...you may add multiple source files
