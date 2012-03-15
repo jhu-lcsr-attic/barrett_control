@@ -31,11 +31,12 @@ ControllerMux::ControllerMux(std::string const& name) :
   this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure RTT ports
-  this->ports()->addEventPort("config_input_", config_input_).doc("Input Event port: nx1 vector of joint torques. (n joints)");
-  this->ports()->addPort("state_output_", state_output_).doc("Output port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addEventPort("config_input", config_input_).doc("Input Event port: nx1 vector of joint torques. (n joints)");
+  this->ports()->addPort("state_output", state_output_).doc("Output port: nx1 vector of joint positions. (n joints)");
 
   this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs/JointState of commanded joint state.");
+  this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 
   // Configure operations
   this->addOperation("load", &ControllerMux::load_controller, this, RTT::OwnThread)
@@ -63,7 +64,8 @@ ControllerMux::ControllerMux(std::string const& name) :
 bool ControllerMux::configureHook()
 {
   // Initialize output structure
-  torques_ = KDL::JntArray(n_arm_dof_);
+  torques_.resize(n_arm_dof_);
+  positions_.resize(n_arm_dof_);
   
   // Construct ros JointState message
   util::init_wam_joint_state(
@@ -79,6 +81,7 @@ bool ControllerMux::configureHook()
 
 bool ControllerMux::startHook()
 {
+  std::cerr<<"Starting controller mux!"<<std::endl;
   return true;
 }
 
@@ -88,21 +91,25 @@ void ControllerMux::updateHook()
   if( config_input_.read( config_cmd_ ) == RTT::NewData ) {
     // Update the properties of the controllers referenced in the command
   }
+  
+  // Read in the current joint positions
+  positions_in_port_.read( positions_ );
 
   // Zero out the output torques
   torques_.data.setZero();
  
   // Read in all control inputs
   for(ControllerInterface_iter it = controller_interfaces_.begin();
-      it != controller_interfaces_.end(); ++it) 
+      it != controller_interfaces_.end(); it++) 
   {
     // Combine control inputs based on gains
     if( it->second->enabled ) {
       // Read input from this controller
-      it->second->in_port.read(controller_torques_);
-      // Add this control input to the output torques
-      for(int i=0; i < it->second->dof && i < n_arm_dof_; i++) {
-        torques_(i) += controller_torques_(i);
+      if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
+        // Add this control input to the output torques
+        for(int i=0; i < it->second->dof && i < n_arm_dof_; i++) {
+          torques_(i) += controller_torques_(i);
+        }
       }
     }
   }
@@ -111,7 +118,9 @@ void ControllerMux::updateHook()
   if(enabled_) {
     torques_out_port_.write( torques_ );
   } else {
-    torques_out_port_.write( KDL::JntArray(n_arm_dof_) ); 
+    KDL::JntArray zero_array(n_arm_dof_);
+    zero_array.data.setZero();
+    torques_out_port_.write( zero_array ); 
   }
   
   // Copy the command into a sensor_msgs/JointState message
@@ -135,8 +144,11 @@ void ControllerMux::cleanupHook()
 {
   // Unload all controllers
   for(ControllerInterface_iter it = controller_interfaces_.begin();
-      it != controller_interfaces_.end(); ++it) 
+      it != controller_interfaces_.end(); it++) 
   {
+    std::cerr<<"Deleting controller interface port for "<<it->first<<std::endl;
+    it->second->in_port.disconnect();
+    this->ports()->removePort(it->first);
     delete it->second;
   }
   controller_interfaces_.clear();
@@ -178,7 +190,7 @@ void ControllerMux::toggle_controllers(
 {
   // Enable some controllers
   for(std::vector<std::string>::iterator it = enable_controllers.begin();
-      it != enable_controllers.end(); ++it) 
+      it != enable_controllers.end(); it++) 
   {
     if(controller_interfaces_.find(*it) != controller_interfaces_.end()) {
       controller_interfaces_.find(*it)->second->enabled = true;
@@ -187,7 +199,7 @@ void ControllerMux::toggle_controllers(
 
   // Disable some controllers
   for(std::vector<std::string>::iterator it = disable_controllers.begin();
-      it != disable_controllers.end(); ++it) 
+      it != disable_controllers.end(); it++) 
   {
     if(controller_interfaces_.find(*it) != controller_interfaces_.end()) {
       controller_interfaces_.find(*it)->second->enabled = false;

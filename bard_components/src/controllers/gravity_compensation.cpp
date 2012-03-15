@@ -64,8 +64,8 @@ bool GravityCompensation::configureHook()
 
   // Populate the KDL chain
   if(!kdl_tree_.getChain(
-        root_link_,
-        tip_link_,
+        joint_prefix_+"/"+root_link_,
+        joint_prefix_+"/"+tip_link_,
         kdl_chain_))
   {
     ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
