@@ -51,8 +51,6 @@
       <!--             <origin xyz="0 0 0.1293166" rpy="0 0 0"/> -->
       <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
     </joint>
-
-    <xacro:barrett_hand prefix="${prefix}" />
   </xacro:macro>
 
   <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
@@ -68,7 +66,5 @@
       <!--             <origin xyz="0 0 0.1293166" rpy="0 0 0"/> -->
       <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
     </joint>
-
-    <xacro:barrett_hand prefix="${prefix}" />
   </xacro:macro>
 </robot>

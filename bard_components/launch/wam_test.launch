@@ -5,7 +5,7 @@
   <group ns="wam_rtt">
     <group ns="wam_left">
       <param name="n_wam_dof" value="7"/>
-      <param name="can_dev_name" value="rtcan1"/>
+      <param name="can_dev_name" value="rtcan0"/>
       <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
       <param name="joint_prefix" value="LeftWAM"/>
       <param name="joint_state_throttle_period" value="0.01"/>
