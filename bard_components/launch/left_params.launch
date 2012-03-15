@@ -1,0 +1,5 @@
+<launch>
+  <param name="n_arm_dof" value="7"/>
+  <param name="joint_prefix" value="LeftWAM"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'"/>
+</launch>
