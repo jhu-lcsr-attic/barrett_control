@@ -25,7 +25,7 @@ namespace bard_components {
 
     private:
       // Configuration properties
-      int n_wam_dof_;
+      int n_arm_dof_;
       // Working variables
       KDL::JntArray torques_;
     };

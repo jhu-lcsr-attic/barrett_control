@@ -19,7 +19,7 @@ using namespace bard_components;
 WAM::WAM(string const& name) :
   TaskContext(name, RTT::base::TaskCore::PreOperational)
   // Properties
-  ,n_wam_dof_(0)
+  ,n_arm_dof_(0)
   ,can_dev_name_("")
   ,robot_description_("")
   ,joint_prefix_("")
@@ -35,7 +35,7 @@ WAM::WAM(string const& name) :
   ,joint_state_pub_time_(0)
 {
   // Declare properties (configuration variables)
-  this->addProperty("n_wam_dof",n_wam_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
+  this->addProperty("n_arm_dof",n_arm_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
   this->addProperty("can_dev_name",can_dev_name_).doc("The name of the RTCAN device to which this WAM robot is connected.");
   this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
   this->addProperty("joint_prefix",joint_prefix_).doc("The joint name prefix used in the WAM URDF.");
@@ -46,10 +46,6 @@ WAM::WAM(string const& name) :
   this->ports()->addEventPort("torques_in", torques_in_port_).doc("Input Event port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_).doc("Output port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs::JointState.");
-
-  // Add operation for getting robot properties
-  this->provides("robot_properties")
-    ->addOperation("get_robot_properties", &WAM::get_robot_properties, this, RTT::OwnThread);
 
   // Add operation for setting the encoder values
   this->provides("calibration")
@@ -83,15 +79,15 @@ bool WAM::configureHook()
   // TODO: get joint names from URDF
 
   // Resize joint arrays
-  torques_ = KDL::JntArray(n_wam_dof_);
-  positions_ = KDL::JntArray(n_wam_dof_);
+  torques_ = KDL::JntArray(n_arm_dof_);
+  positions_ = KDL::JntArray(n_arm_dof_);
 
   // Zero out torques and positions
   torques_.data.setZero();
   positions_.data.setZero();
 
   // Construct ros JointState message
-  util::init_wam_joint_state(n_wam_dof_, joint_prefix_, joint_state_);
+  util::init_wam_joint_state(n_arm_dof_, joint_prefix_, joint_state_);
 
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_);
@@ -109,7 +105,7 @@ bool WAM::configureHook()
     }
 
     // Construct WAM structure
-    robot_.reset(new barrett_direct::WAM(canbus_.get(), (barrett_direct::WAM::Configuration)n_wam_dof_));
+    robot_.reset(new barrett_direct::WAM(canbus_.get(), (barrett_direct::WAM::Configuration)n_arm_dof_));
 
     // Initialize the WAM robot
     if( robot_->Initialize() != barrett_direct::WAM::ESUCCESS ){
@@ -173,7 +169,7 @@ void WAM::updateHook()
   // Copy joint positions into joint state
   if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
     joint_state_.header.stamp = ros::Time::now();
-    for(int i=0; i<n_wam_dof_; i++) {
+    for(int i=0; i<n_arm_dof_; i++) {
       joint_state_.position[i] = positions_(i);
       joint_state_.effort[i] = torques_(i);
     }
@@ -202,16 +198,6 @@ void WAM::cleanupHook()
 
   // Free the device handles
   this->cleanup_internal();
-}
-
-void WAM::get_robot_properties(
-    int &n_wam_dof,
-    std::string &robot_description,
-    std::string &joint_prefix) 
-{
-  n_wam_dof = n_wam_dof_;
-  robot_description = robot_description_;
-  joint_prefix = joint_prefix_;
 }
 
 void WAM::calibrate_position(std::vector<double> &actual_positions)

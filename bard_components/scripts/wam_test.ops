@@ -39,7 +39,7 @@ stream("wam_left_con_grav.joint_state_out", ros.topic("wam_rtt/wam_left/con_grav
 loadService("wam_left_con_grav","rosparam")
 wam_left_con_grav.rosparam.refreshProperties()
 wam_left_con_grav.rosparam.storeProperties()
-wam_left_con_grav.gravity = KDL.Vector(-9.8,0,0)
+//wam_left_con_grav.gravity = KDL.Vector(-9.8,0,0)
 
 wam_left_con_grav.configure()
 

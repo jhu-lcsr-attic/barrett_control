@@ -16,57 +16,39 @@ using namespace bard_components::controllers;
 GravityCompensation::GravityCompensation(string const& name) :
   TaskContext(name)
   // Properties
-  ,disabled_(true)
-  ,gravity_(0.0,0.0,0.0)
+  ,n_arm_dof_(7)
+  ,robot_description_("")
+  ,joint_prefix_("")
+  ,gravity_(3,0.0)
   ,root_link_("")
   ,tip_link_("")
   ,joint_state_throttle_period_(0.01)
-  // Operation Callers
-  ,get_robot_properties_("get_robot_properties")
-  // Robot properties
-  ,n_wam_dof_(7)
-  ,robot_description_("")
-  ,joint_prefix_("")
   // Working variables
   ,kdl_tree_()
   ,kdl_chain_()
   ,id_solver_(NULL)
-  ,ext_wrenches_(n_wam_dof_)
-  ,positions_(n_wam_dof_)
-  ,velocities_(n_wam_dof_)
-  ,accelerations_(n_wam_dof_)
-  ,torques_(n_wam_dof_)
-  ,joint_state_()
-  ,joint_state_pub_time_(0)
+  ,ext_wrenches_(n_arm_dof_)
+  ,positions_(n_arm_dof_)
+  ,velocities_(n_arm_dof_)
+  ,accelerations_(n_arm_dof_)
+  ,torques_(n_arm_dof_)
 {
   // Declare properties
-  this->addProperty("disabled",disabled_).doc("Disabled if true.");
+  this->addProperty("n_arm_dof",n_arm_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
+  this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
+  this->addProperty("joint_prefix",joint_prefix_).doc("The joint name prefix used in the WAM URDF.");
+
   this->addProperty("gravity",gravity_).doc("The gravity vector in the root frame.");
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
-  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure data ports
   this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
-  this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs/JointState of commanded joint state.");
-
-  // Configure operations
-  this->requires("robot_properties")
-    ->addOperationCaller(get_robot_properties_);
 }
 
 bool GravityCompensation::configureHook()
 {
-  // Make sure this controller has been connected to a WAM robot
-  if(!this->requires("robot_properties")->ready()) {
-    std::cerr<<"WARNING: no connection to robot component, needed for robot properties"<<std::endl;
-    return false;
-  }
-
-  // Get properties from wam robot
-  get_robot_properties_(n_wam_dof_, robot_description_, joint_prefix_);
-
   // Construct an URDF model from the xml string
   urdf::Model urdf_model;
   urdf_model.initString(robot_description_);
@@ -113,27 +95,20 @@ bool GravityCompensation::configureHook()
   id_solver_.reset(
       new KDL::ChainIdSolver_RNE(
         kdl_chain_,
-        gravity_));
+        KDL::Vector(gravity_[0],gravity_[1],gravity_[2])));
 
   // Resize working vectors
-  positions_.resize(n_wam_dof_);
-  velocities_.resize(n_wam_dof_);
-  accelerations_.resize(n_wam_dof_);
-  torques_.resize(n_wam_dof_);
+  positions_.resize(n_arm_dof_);
+  velocities_.resize(n_arm_dof_);
+  accelerations_.resize(n_arm_dof_);
+  torques_.resize(n_arm_dof_);
   ext_wrenches_.resize(kdl_chain_.getNrOfSegments());
 
   // Zero out torque data
   torques_.data.setZero();
 
-  // Construct ros JointState message
-  util::init_wam_joint_state(
-      n_wam_dof_,
-      joint_prefix_,
-      joint_state_);
-
   // Prepare ports for realtime processing
   torques_out_port_.setDataSample(torques_);
-  joint_state_out_port_.setDataSample(joint_state_);
 
   return true;
 }
@@ -161,24 +136,9 @@ void GravityCompensation::updateHook()
   {
     std::cerr<<"ERROR: Could not compute joint torques!"<<std::endl;
   }
-
-  if(disabled_) {
-    torques_.data.setZero();
-  }
  
   // Send joint positions
   torques_out_port_.write( torques_ );
-  
-  // Copy the command into a sensor_msgs/JointState message
-  if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
-    joint_state_.header.stamp = ros::Time::now();
-    for(int i=0; i<n_wam_dof_; i++) {
-      joint_state_.position[i] = positions_(i);
-      joint_state_.effort[i] = torques_(i);
-    }
-    joint_state_out_port_.write( joint_state_ );
-    joint_state_pub_time_ = RTT::os::TimeService::Instance()->getTicks();
-  } 
 }
 
 void GravityCompensation::stopHook()

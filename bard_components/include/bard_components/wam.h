@@ -19,7 +19,7 @@ namespace bard_components {
   class WAM : public RTT::TaskContext
   {
     // RTT Properties
-    int n_wam_dof_;
+    int n_arm_dof_;
     std::string can_dev_name_;
     std::string robot_description_;
     std::string joint_prefix_;
@@ -36,7 +36,7 @@ namespace bard_components {
     // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   public:
-    WAM(string const& name);
+    WAM(std::string const& name);
     bool configureHook();
     bool startHook();
     void updateHook(); 
@@ -44,11 +44,6 @@ namespace bard_components {
     void cleanupHook();
 
     // Operations
-    void get_robot_properties(
-        int &n_wam_dof,
-        std::string &robot_description,
-        std::string &joint_prefix);
-
     void calibrate_position(std::vector<double> &actual_positions);
 
     void set_velocity_warn(unsigned int thresh);
