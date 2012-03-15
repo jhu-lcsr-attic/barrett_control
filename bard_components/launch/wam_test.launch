@@ -3,47 +3,37 @@
   <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops --" output="screen"/>
 
   <group ns="wam_rtt">
-    <param name="n_arm_dof" value="7"/>
+
+    <!-- Publish TF Frames for all the joints -->
     <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
-    <param name="joint_prefix" value="LeftWAM"/>
-    <param name="joint_state_throttle_period" value="0.01"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
 
     <!-- Parameters for WAM RTT device -->
     <group ns="wam_left">
-      <param name="can_dev_name" value="rtcan1"/>
+      <rosparam file="$(find bard_components)/launch/left_params.yaml"/>
       <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
-
-
-    <param name="n_arm_dof" value="7"/>
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
-    <param name="joint_prefix" value="LeftWAM"/>
-    <param name="joint_state_throttle_period" value="0.01"/>
+      <param name="can_dev_name" value="rtcan1"/>
+      <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'"/>
+      <param name="joint_state_throttle_period" value="0.01"/>
     </group>
 
     <!-- Parameters for controller mux -->
     <group ns="wam_left_mux">
+      <rosparam file="$(find bard_components)/launch/left_params.yaml"/>
       <param name="joint_state_throttle_period" value="0.1"/>
-    <param name="n_arm_dof" value="7"/>
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
-    <param name="joint_prefix" value="LeftWAM"/>
     </group>
 
     <group ns="wam_left_con_trivial">
-    <param name="n_arm_dof" value="7"/>
+      <rosparam file="$(find bard_components)/launch/left_params.yaml"/>
     </group>
 
     <!-- Parameters for WAM RTT gravity compensation controller -->
     <group ns="wam_left_con_grav">
+      <rosparam file="$(find bard_components)/launch/left_params.yaml"/>
       <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
       <param name="root_link" value="FixedLink"/>
       <param name="tip_link" value="LowerWristYawLink"/>
-    <param name="n_arm_dof" value="7"/>
-    <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
-    <param name="joint_prefix" value="LeftWAM"/>
-    <param name="joint_state_throttle_period" value="0.01"/>
+      <param name="robot_description" command="$(find xacro)/xacro.py '$(find popeye)/models/left_wam.urdf.xacro'" />
     </group>
-
-    <!-- Publish TF Frames for all the joints -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
   </group>
 </launch>
