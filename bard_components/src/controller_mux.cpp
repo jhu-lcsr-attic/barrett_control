@@ -13,10 +13,10 @@
 
 using namespace bard_components;
 
-ControllerMux::ControllerMux(std::String const& name) :
+ControllerMux::ControllerMux(std::string const& name) :
   RTT::TaskContext(name)
-  ,n_arm_dof(0)
-  ,joint_prefix("")
+  ,n_arm_dof_(0)
+  ,joint_prefix_("")
   ,joint_state_throttle_period_(0.1)
   ,controller_torques_()
   ,torques_()
@@ -74,11 +74,12 @@ bool ControllerMux::configureHook()
   // Prepare data sample
   joint_state_out_port_.setDataSample(joint_state_);
 
+  return true;
 }
 
 bool ControllerMux::startHook()
 {
-
+  return true;
 }
 
 void ControllerMux::updateHook()
@@ -91,26 +92,27 @@ void ControllerMux::updateHook()
   // Zero out the output torques
   torques_.data.setZero();
  
-  // Only compute non-zero torques if enabled
-  if(enabled_) {
-    // Read in all control inputs
-    for(ControllerInterface_iter it = controller_interfaces_.begin();
-        it != enable_controllers.end(); ++it) 
-    {
-      // Combine control inputs based on gains
-      if( it->second->enabled ) {
-        // Read input from this controller
-        it->second->in_port.read(controller_torques_);
-        // Add this control input to the output torques
-        for(int i=0; i < it->second->dof && i < dof_; i++) {
-          torques_(i) += controller_torques_(i);
-        }
+  // Read in all control inputs
+  for(ControllerInterface_iter it = controller_interfaces_.begin();
+      it != controller_interfaces_.end(); ++it) 
+  {
+    // Combine control inputs based on gains
+    if( it->second->enabled ) {
+      // Read input from this controller
+      it->second->in_port.read(controller_torques_);
+      // Add this control input to the output torques
+      for(int i=0; i < it->second->dof && i < n_arm_dof_; i++) {
+        torques_(i) += controller_torques_(i);
       }
     }
   }
 
-  // Send joint positions
-  torques_out_port_.write( torques_ );
+  // Only send non-zero torques if enabled
+  if(enabled_) {
+    torques_out_port_.write( torques_ );
+  } else {
+    torques_out_port_.write( KDL::JntArray(n_arm_dof_) ); 
+  }
   
   // Copy the command into a sensor_msgs/JointState message
   if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
@@ -133,7 +135,7 @@ void ControllerMux::cleanupHook()
 {
   // Unload all controllers
   for(ControllerInterface_iter it = controller_interfaces_.begin();
-      it != enable_controllers.end(); ++it) 
+      it != controller_interfaces_.end(); ++it) 
   {
     delete it->second;
   }
@@ -154,10 +156,10 @@ void ControllerMux::load_controller(std::string name, int dof)
 {
   // Create a controller interface
   ControllerInterface *interface  = new ControllerInterface();
-  interface.dof = dof;
-  interface.enabled = false;
+  interface->dof = dof;
+  interface->enabled = false;
   // Add this interface port to the task
-  this->ports()->addPort(name, interface.in_port).doc("Input torques from controller \""+name+"\"");
+  this->ports()->addPort(name, interface->in_port).doc("Input torques from controller \""+name+"\"");
   // Add interface to the map of controller interfaces
   controller_interfaces_[name]=interface;
 }
@@ -172,7 +174,7 @@ void ControllerMux::unload_controller(std::string name)
 
 void ControllerMux::toggle_controllers(
     std::vector<std::string> enable_controllers, 
-    std::vector<std::string> diable_controllers) 
+    std::vector<std::string> disable_controllers) 
 {
   // Enable some controllers
   for(std::vector<std::string>::iterator it = enable_controllers.begin();

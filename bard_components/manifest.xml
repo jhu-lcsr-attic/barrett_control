@@ -14,5 +14,7 @@
     <depend package="sensor_msgs"/>
     <depend package="barrett_direct" />
     <depend package="leoCAN" />
+    <depend package="bard_msgs" />
+    <depend package="rtt_bard_msgs" />
   </package>
 

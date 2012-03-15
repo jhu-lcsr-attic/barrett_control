@@ -6,6 +6,10 @@
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
+#include <kdl/jntarray.hpp>
+
+#include <bard_msgs/MuxState.h>
+
 // This class can be connected to multiple controllers, and performs
 // automatic validation to ensure that large impulses do not arise from
 // switching controllers at runtime.
@@ -35,7 +39,7 @@ namespace bard_components {
     RTT::InputPort<KDL::JntArray> positions_in_port_;
 
     // Output torque
-    RTT::OutputPort torque_out_port_;
+    RTT::OutputPort<KDL::JntArray> torques_out_port_;
     RTT::OutputPort<bard_msgs::MuxState> state_output_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
@@ -56,7 +60,7 @@ namespace bard_components {
     // Configuration of controllers
     void load_controller(std::string name, int dof);
 
-    void unload_controller(std::string name, int dof);
+    void unload_controller(std::string name);
 
     void toggle_controllers(
         std::vector<std::string> enable_controllers, 
@@ -68,6 +72,7 @@ namespace bard_components {
     KDL::JntArray torques_;
     bool enabled_;
 
+    bard_msgs::MuxState config_cmd_;
     sensor_msgs::JointState joint_state_;
     RTT::os::TimeService::ticks joint_state_pub_time_;
 
