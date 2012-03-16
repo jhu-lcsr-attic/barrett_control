@@ -47,6 +47,7 @@ orocos_component(components
   src/controller_mux.cpp
   src/controllers/trivial.cpp
   src/controllers/gravity_compensation.cpp
+  src/controllers/joint_pid.cpp
   ) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 

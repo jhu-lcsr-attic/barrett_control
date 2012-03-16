@@ -44,6 +44,7 @@ GravityCompensation::GravityCompensation(string const& name) :
 
   // Configure data ports
   this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addPort("velocities_in", velocities_in_port_).doc("Input port: nx1 vector of joint velocities. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 }
 
@@ -122,6 +123,7 @@ void GravityCompensation::updateHook()
 {
   // Read in the current joint positions
   positions_in_port_.read( positions_ );
+  velocities_in_port_.read( velocities_ );
 
   // Compute inverse dynamics
   // This computes the torques on each joint of the arm as a function of

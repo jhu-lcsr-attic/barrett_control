@@ -8,6 +8,12 @@ import("rtt_trajectory_msgs")
 import("rtt_geometry_msgs")
 import("rtt_bard_msgs")
 
+// Set up TF
+import("rtt_tf")
+loadComponent("tf","rtt_tf::RTT_TF")
+tf.configure()
+tf.start()
+
 //// Set up left WAM + Controller
 ///////////////////////////////////////////////////////////////////////////////
 // Create WAM /////////////////////////////////////////////////////////////////

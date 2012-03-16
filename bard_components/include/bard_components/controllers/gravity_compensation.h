@@ -28,10 +28,8 @@ namespace bard_components {
 
       // RTT Ports
       RTT::InputPort<KDL::JntArray> positions_in_port_;
+      RTT::InputPort<KDL::JntArray> velocities_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
-
-      // RTT Operations
-      RTT::OperationCaller<void(int&,std::string&,std::string&)> get_robot_properties_;
 
     public:
       GravityCompensation(std::string const& name);

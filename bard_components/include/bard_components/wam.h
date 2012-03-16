@@ -29,6 +29,7 @@ namespace bard_components {
     // RTT Ports
     RTT::InputPort<KDL::JntArray> torques_in_port_;
     RTT::OutputPort<KDL::JntArray> positions_out_port_;
+    RTT::OutputPort<KDL::JntArray> velocities_out_port_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
     // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
@@ -62,8 +63,11 @@ namespace bard_components {
     bool needs_calibration_;
     KDL::JntArray torques_;
     KDL::JntArray positions_;
+    KDL::JntArray positions_new_;
+    KDL::JntArray velocities_;
     sensor_msgs::JointState joint_state_;
     RTT::os::TimeService::ticks joint_state_pub_time_;
+    RTT::os::TimeService::ticks last_loop_time_;
   };
 }
 

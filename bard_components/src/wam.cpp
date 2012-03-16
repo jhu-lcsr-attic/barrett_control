@@ -31,6 +31,8 @@ WAM::WAM(string const& name) :
   ,needs_calibration_(true)
   ,torques_()
   ,positions_()
+  ,positions_new_()
+  ,velocities_()
   ,joint_state_()
   ,joint_state_pub_time_(0)
 {
@@ -45,6 +47,7 @@ WAM::WAM(string const& name) :
   // Configure data ports
   this->ports()->addEventPort("torques_in", torques_in_port_).doc("Input Event port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_).doc("Output port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addPort("velocities_out", velocities_out_port_).doc("Output port: nx1 vector of joint velocities. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs::JointState.");
 
   // Add operation for setting the encoder values
@@ -81,10 +84,14 @@ bool WAM::configureHook()
   // Resize joint arrays
   torques_ = KDL::JntArray(n_arm_dof_);
   positions_ = KDL::JntArray(n_arm_dof_);
+  positions_new_ = KDL::JntArray(n_arm_dof_);
+  velocities_ = KDL::JntArray(n_arm_dof_);
 
   // Zero out torques and positions
   torques_.data.setZero();
   positions_.data.setZero();
+  positions_new_.data.setZero();
+  velocities_.data.setZero();
 
   // Construct ros JointState message
   util::init_wam_joint_state(n_arm_dof_, joint_prefix_, joint_state_);
@@ -151,26 +158,39 @@ bool WAM::startHook()
 
 void WAM::updateHook()
 {
-  // Get joint positions
-  if( robot_->GetPositions( positions_.data ) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
-  }
-
   // Only send joint torques if new data is coming in
   if( torques_in_port_.read( torques_ ) == RTT::NewData ) {
     if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
       std::cerr<<"Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
     }
   }
+  
+  // Get joint positions
+  if( robot_->GetPositions( positions_new_.data ) != barrett_direct::WAM::ESUCCESS) {
+    std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+  }
+
+  // Get the actual loop period
+  RTT::os::TimeService::Seconds loop_period = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
+  // Compute joint velocities
+  for(int i=0; i<n_arm_dof_; i++) {
+    velocities_(i) = (positions_new_(i) - positions_(i))/loop_period;
+  }
+  last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
+
+  // Update positions
+  positions_ = positions_new_;
 
   // Send joint positions
   positions_out_port_.write( positions_ );
+  velocities_out_port_.write( velocities_ );
 
   // Copy joint positions into joint state
   if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
     joint_state_.header.stamp = ros::Time::now();
     for(int i=0; i<n_arm_dof_; i++) {
       joint_state_.position[i] = positions_(i);
+      joint_state_.velocity[i] = velocities_(i);
       joint_state_.effort[i] = torques_(i);
     }
     joint_state_out_port_.write( joint_state_ );

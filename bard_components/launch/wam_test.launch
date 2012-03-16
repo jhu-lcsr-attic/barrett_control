@@ -4,34 +4,39 @@
 
   <group ns="wam_rtt">
 
-    <!-- Publish TF Frames for all the joints -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
-    <include file="$(find bard_components)/launch/left_params.launch"/>
-
     <!-- Parameters for WAM RTT device -->
     <group ns="wam_left">
       <include file="$(find bard_components)/launch/left_params.launch"/>
-
       <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
       <param name="can_dev_name" value="rtcan1"/>
       <param name="joint_state_throttle_period" value="0.01"/>
+
+      <!-- Publish TF Frames for all the joints -->
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
     </group>
 
     <!-- Parameters for controller mux -->
     <group ns="wam_left_mux">
       <include file="$(find bard_components)/launch/left_params.launch"/>
-
       <param name="joint_state_throttle_period" value="0.1"/>
     </group>
 
+    <!-- Parameters for trivial controller -->
     <group ns="wam_left_con_trivial">
       <include file="$(find bard_components)/launch/left_params.launch"/>
     </group>
 
-    <!-- Parameters for WAM RTT gravity compensation controller -->
+    <!-- Parameters for gravity compensation controller -->
     <group ns="wam_left_con_grav">
       <include file="$(find bard_components)/launch/left_params.launch"/>
+      <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
+      <param name="root_link" value="FixedLink"/>
+      <param name="tip_link" value="LowerWristYawLink"/>
+    </group>
 
+    <!-- Parameters for cartesian wrench controller -->
+    <group ns="wam_left_con_grav">
+      <include file="$(find bard_components)/launch/left_params.launch"/>
       <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
       <param name="root_link" value="FixedLink"/>
       <param name="tip_link" value="LowerWristYawLink"/>
