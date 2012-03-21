@@ -66,11 +66,13 @@ bool GravityCompensation::configureHook()
 
   // Resize working vectors
   positions_.resize(n_dof_);
+  accelerations_.resize(n_dof_);
   torques_.resize(n_dof_);
   ext_wrenches_.resize(kdl_chain_.getNrOfSegments());
 
   // Zero out torque data
   torques_.data.setZero();
+  accelerations_.data.setZero();
 
   // Prepare ports for realtime processing
   torques_out_port_.setDataSample(torques_);

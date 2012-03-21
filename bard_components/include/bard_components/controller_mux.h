@@ -7,6 +7,9 @@
 #include <rtt/Port.hpp>
 
 #include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
+#include <kdl/tree.hpp>
+#include <kdl/chain.hpp>
 
 #include <bard_msgs/MuxState.h>
 
@@ -16,14 +19,16 @@
 
 namespace bard_components {
   class ControllerMux : public RTT::TaskContext {
-    // Properties
+    // RTT Properties
     std::string robot_description_;
+    std::string root_link_;
+    std::string tip_link_;
     RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
     // Structure to associte with each of the multiplexed controllers
     struct ControllerInterface {
       RTT::InputPort<KDL::JntArray> in_port;
-      int dof;
+      unsigned int dof;
       bool enabled;
       std::vector<int> dof_map;
       KDL::JntArray gains;
@@ -35,7 +40,7 @@ namespace bard_components {
 
     // Input port for configuring the controller mux over ros
     RTT::InputPort<bard_msgs::MuxState> config_input_;
-    RTT::InputPort<KDL::JntArray> positions_in_port_;
+    RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
 
     // Output torque
     RTT::OutputPort<KDL::JntArray> torques_out_port_;
@@ -67,6 +72,8 @@ namespace bard_components {
 
     // Working variables
     unsigned int n_dof_;
+    KDL::Tree kdl_tree_;
+    KDL::Chain kdl_chain_;
     KDL::JntArray controller_torques_;
     KDL::JntArrayVel positions_;
     KDL::JntArray torques_;

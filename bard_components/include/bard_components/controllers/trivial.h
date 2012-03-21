@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
 
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
@@ -13,7 +13,7 @@ namespace bard_components {
     class Trivial : public RTT::TaskContext
     {
       // RTT Ports
-      RTT::InputPort<KDL::JntArray> positions_in_port_;
+      RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
     public:
@@ -26,6 +26,7 @@ namespace bard_components {
 
     private:
       // Working variables
+      unsigned int n_dof_;
       KDL::JntArrayVel positions_;
       KDL::JntArray torques_;
     };

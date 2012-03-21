@@ -1,4 +1,3 @@
-
 #include <iostream>
 
 #include <Eigen/Dense>
@@ -6,6 +5,9 @@
 #include <ros/ros.h>
 
 #include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
+#include <kdl/tree.hpp>
+#include <kdl/chain.hpp>
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
@@ -21,6 +23,8 @@ WAM::WAM(string const& name) :
   // Properties
   ,can_dev_name_("")
   ,robot_description_("")
+  ,root_link_("")
+  ,tip_link_("")
   ,initial_positions_()
   ,joint_state_throttle_period_(0.01)
   // Internal variables
@@ -41,6 +45,10 @@ WAM::WAM(string const& name) :
      .doc("The WAM URDF xml string.");
   this->addProperty("initial_positions",initial_positions_)
      .doc("The calibration position of the robot.");
+  this->addProperty("root_link",root_link_)
+    .doc("The root link for the controller.");
+  this->addProperty("tip_link",tip_link_)
+    .doc("The tip link for the controller.");
   this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
      .doc("The period of the ROS sensor_msgs/JointState publisher.");
 
@@ -93,8 +101,8 @@ bool WAM::configureHook()
 
   // Zero out joint arrays
   KDL::SetToZero(torques_);
-  KDL::SetToZero(positions_);
-  KDL::SetToZero(positions_new_);
+  KDL::SetToZero(positions_.q); KDL::SetToZero(positions_.qdot);
+  KDL::SetToZero(positions_new_.q); KDL::SetToZero(positions_new_.qdot);
   
   // Construct ros JointState message with the appropriate joint names
   bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
@@ -128,7 +136,7 @@ bool WAM::configureHook()
     return false;
   }
 
-  ROS_INFO("WAM connected on CAN device \""<<can_dev_name_<<"\"!");
+  ROS_INFO_STREAM("WAM connected on CAN device \""<<can_dev_name_<<"\"!");
 
   return true;
 }
@@ -154,7 +162,7 @@ bool WAM::startHook()
     std::cerr<<"Failed to ACTIVATE WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
   }
 
-  ROS_INFO("WAM started on CAN device \""<<can_dev_name_<<"\"!");
+  ROS_INFO_STREAM("WAM started on CAN device \""<<can_dev_name_<<"\"!");
   return true;
 }
 
@@ -234,7 +242,7 @@ void WAM::calibrate_position(std::vector<double> &actual_positions)
 
     // Set the current positions to the initial positions
     for(size_t i=0; i<actual_positions.size(); i++) {
-      positions_.q(i) = actual_positions.q[i];
+      positions_.q(i) = actual_positions[i];
     }
 
     std::cerr<<"Calibrated encoders."<<std::endl;

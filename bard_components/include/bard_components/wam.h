@@ -6,6 +6,10 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
+#include <kdl/tree.hpp>
+#include <kdl/chain.hpp>
+
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
@@ -14,6 +18,7 @@
 #include <leoCAN/RTSocketCAN.h>
 #include <barrett_direct/WAM.h>
 
+#include <bard_components/util.h>
 
 namespace bard_components {
   class WAM : public RTT::TaskContext
@@ -21,12 +26,14 @@ namespace bard_components {
     // RTT Properties
     std::string can_dev_name_;
     std::string robot_description_;
+    std::string root_link_;
+    std::string tip_link_;
     std::vector<double> initial_positions_;
     RTT::os::TimeService::Seconds joint_state_throttle_period_;
     
     // RTT Ports
     RTT::InputPort<KDL::JntArray> torques_in_port_;
-    RTT::OutputPort<KDL::JntArray> positions_out_port_;
+    RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
     // RTT Operations

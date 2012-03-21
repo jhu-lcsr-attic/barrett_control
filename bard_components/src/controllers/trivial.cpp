@@ -1,11 +1,13 @@
 
+#include <ros/ros.h>
+
 #include <bard_components/controllers/trivial.h>
 
 using namespace bard_components::controllers;
 
 Trivial::Trivial(string const& name) :
   TaskContext(name),
-  n_arm_dof_(0),
+  n_dof_(0),
   positions_(),
   torques_()
 {
@@ -24,14 +26,14 @@ bool Trivial::startHook() {
   // Read in a sample to resize the torques appropriately
   if(!positions_in_port_.connected()) {
     positions_in_port_.read(positions_);
-    n_arm_dof_ = positions_.q.rows();
+    n_dof_ = positions_.q.rows();
   } else {
     ROS_ERROR("Port \"positions_in\" not connected. It is needed to appropriately allocate the controller torque command.");
     return false;
   }
 
   // Resize and zero out the torques
-  torques_.resize(n_arm_dof_);
+  torques_.resize(n_dof_);
   torques_.data.setZero();
 
   // Prepare ports for realtime processing

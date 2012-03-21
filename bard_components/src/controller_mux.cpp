@@ -4,7 +4,10 @@
 
 #include <Eigen/Dense>
 
+#include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
+#include <kdl/chain.hpp>
 
 #include <kdl_parser/kdl_parser.hpp>
 
@@ -17,6 +20,8 @@ ControllerMux::ControllerMux(std::string const& name) :
   RTT::TaskContext(name)
   // RTT properties
   ,robot_description_("")
+  ,root_link_("")
+  ,tip_link_("")
   ,joint_state_throttle_period_(0.1)
   // Internal members
   ,n_dof_(0)
@@ -32,6 +37,10 @@ ControllerMux::ControllerMux(std::string const& name) :
   // Declare properties
   this->addProperty("robot_description",robot_description_)
      .doc("The WAM URDF xml string.");
+  this->addProperty("root_link",root_link_)
+    .doc("The root link for the controller.");
+  this->addProperty("tip_link",tip_link_)
+    .doc("The tip link for the controller.");
   this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
     .doc("The period of the ROS sensor_msgs/JointState publisher.");
 
@@ -72,17 +81,12 @@ ControllerMux::ControllerMux(std::string const& name) :
 
 bool ControllerMux::configureHook()
 {
-  return true;
-}
-
-bool ControllerMux::startHook()
-{
-  // Read in a sample to resize the torques appropriately
-  if(!positions_in_port_.connected()) {
-    positions_in_port_.read(positions_);
-    n_arm_dof_ = positions_.q.rows();
-  } else {
-    ROS_ERROR("Port \"positions_in\" not connected. It is needed to appropriately allocate the controller torque command.");
+  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
+  if(!bard_components::util::initialize_kinematics_from_urdf(
+        robot_description_, root_link_, tip_link_,
+        kdl_tree_, kdl_chain_, n_dof_))
+  {
+    ROS_ERROR("Could not initialize robot kinematics!");
     return false;
   }
 
@@ -97,6 +101,11 @@ bool ControllerMux::startHook()
   torques_out_port_.setDataSample(torques_);
   joint_state_out_port_.setDataSample(joint_state_);
 
+  return true;
+}
+
+bool ControllerMux::startHook()
+{
   std::cerr<<"Starting controller mux!"<<std::endl;
   return true;
 }
@@ -124,7 +133,7 @@ void ControllerMux::updateHook()
       // Read input from this controller
       if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
         // Add this control input to the output torques
-        for(int i=0; i < it->second->dof && i < n_dof_; i++) {
+        for(unsigned int i=0; i < it->second->dof && i < n_dof_; i++) {
           torques_(i) += controller_torques_(i);
         }
       }

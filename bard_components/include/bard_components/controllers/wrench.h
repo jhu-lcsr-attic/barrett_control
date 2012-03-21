@@ -9,6 +9,7 @@
 #include <rtt/Port.hpp>
 
 #include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/frames.hpp>
 #include <kdl/jacobian.hpp>
@@ -34,7 +35,7 @@ namespace bard_components {
       std::vector<double> Kd_; // Derivative gains                                                                                                                               
 
       // RTT Ports
-      RTT::InputPort<KDL::JntArray> positions_in_port_;
+      RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
@@ -50,7 +51,7 @@ namespace bard_components {
     private:
 
       // Working variables
-      int n_dof_;
+      unsigned int n_dof_;
       KDL::Tree kdl_tree_;
       KDL::Chain kdl_chain_;
 

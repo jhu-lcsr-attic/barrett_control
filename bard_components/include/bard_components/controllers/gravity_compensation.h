@@ -8,7 +8,7 @@
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
-#include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
@@ -24,7 +24,7 @@ namespace bard_components {
       std::vector<double> gravity_;
 
       // RTT Ports
-      RTT::InputPort<KDL::JntArray> positions_in_port_;
+      RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
     public:
@@ -38,7 +38,7 @@ namespace bard_components {
     private:
 
       // Working variables
-      int n_dof_;
+      unsigned int n_dof_;
       KDL::Tree kdl_tree_;
       KDL::Chain kdl_chain_;
       boost::scoped_ptr<KDL::ChainIdSolver_RNE> id_solver_;
@@ -46,6 +46,7 @@ namespace bard_components {
       KDL::Wrenches ext_wrenches_;
 
       KDL::JntArrayVel positions_;
+      KDL::JntArray accelerations_;
       KDL::JntArray torques_;
     };
   }

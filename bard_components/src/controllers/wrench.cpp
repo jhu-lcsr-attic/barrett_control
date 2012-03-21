@@ -22,7 +22,6 @@ using namespace bard_components::controllers;
 CartesianWrench::CartesianWrench(string const& name) :
   TaskContext(name)
   // Properties
-  ,n_dof_(7)
   ,robot_description_("")
   ,root_link_("")
   ,tip_link_("")
@@ -30,6 +29,7 @@ CartesianWrench::CartesianWrench(string const& name) :
   ,Kp_(6,0.0)
   ,Kd_(6,0.0)
   // Working variables
+  ,n_dof_(0)
   ,kdl_tree_()
   ,kdl_chain_()
   ,positions_()
@@ -88,7 +88,7 @@ bool CartesianWrench::configureHook()
   // Resize working variables
   positions_.resize(n_dof_);
   torques_.resize(n_dof_);
-  jacobian_.resize(n_dof);
+  jacobian_.resize(n_dof_);
 
   // Zero out torque data
   torques_.data.setZero();

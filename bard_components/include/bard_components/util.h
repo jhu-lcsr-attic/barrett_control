@@ -4,14 +4,17 @@
 #include <iostream>
 
 #include <sensor_msgs/JointState.h>
+
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
+
+#include <rtt/RTT.hpp>
 
 namespace bard_components {
   namespace util {
     
     // Function to create some KDL structures and get the #DOF from an URDF
-    bool util::initialize_kinematics_from_urdf(
+    bool initialize_kinematics_from_urdf(
         const std::string &robot_description,
         const std::string &root_link,
         const std::string &tip_link,
@@ -32,7 +35,7 @@ namespace bard_components {
         last_time_(0)
       { }
 
-      inline void ready(double throttle_period = throttle_period_) {
+      inline bool ready(double throttle_period) {
         // Check timer
         if( throttle_period_ > 0.0
             && RTT::os::TimeService::Instance()->secondsSince(last_time_) > throttle_period  )
@@ -56,7 +59,7 @@ namespace bard_components {
         loop_count_(0)
       { }
 
-      inline void ready(size_t throttle_divider = throttle_divider_ ) {
+      inline bool ready(size_t throttle_divider) {
         // Check counter
         if( throttle_divider_ > 0 && loop_count_ > throttle_divider) {
           loop_count_ = 0;
