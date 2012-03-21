@@ -5,11 +5,12 @@ using namespace bard_components::controllers;
 
 Trivial::Trivial(string const& name) :
   TaskContext(name),
-  n_arm_dof_(7),
-  torques_(n_arm_dof_)
+  n_arm_dof_(0),
+  torques_()
 {
   // Configure properties
-  this->addProperty("n_arm_dof",n_arm_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
+  this->addProperty("n_arm_dof",n_arm_dof_)
+    .doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
   // Configure data ports
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 }

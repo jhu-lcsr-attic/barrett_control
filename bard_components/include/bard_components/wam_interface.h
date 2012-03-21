@@ -1,5 +1,5 @@
-#ifndef __BARD_COMPONENTS_WAM_H
-#define __BARD_COMPONENTS_WAM_H
+#ifndef __BARD_COMPONENTS_WAM_INTERFACE_H
+#define __BARD_COMPONENTS_WAM_INTERFACE_H
 
 #include <iostream>
 
@@ -16,11 +16,13 @@
 
 
 namespace bard_components {
-  class WAM : public RTT::TaskContext
+  class WAMInterface : public RTT::TaskContext
   {
     // RTT Properties
     std::string can_dev_name_;
     std::string robot_description_;
+    std::string root_link_;
+    std::string tip_link_;
     std::vector<double> initial_positions_;
     RTT::os::TimeService::Seconds joint_state_throttle_period_;
     
@@ -30,36 +32,21 @@ namespace bard_components {
     RTT::OutputPort<KDL::JntArray> velocities_out_port_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
-    // RTT Operations
-    void calibrate_position(std::vector<double> &actual_positions);
-    void set_velocity_warn(unsigned int thresh);
-    void set_velocity_fault(unsigned int thresh);
-    void set_torque_warn(unsigned int thresh);
-    void set_torque_fault(unsigned int thresh);
-
     // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
     // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
     // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   public:
-    WAM(std::string const& name);
-    bool configureHook();
-    bool startHook();
-    void updateHook(); 
-    void stopHook();
-    void cleanupHook();
+    // RTT Operations
+    virtual void calibrate_position(std::vector<double> &actual_positions) = 0; 
+    virtual void set_velocity_warn(unsigned int thresh) = 0;
+    virtual void set_velocity_fault(unsigned int thresh) = 0;
+    virtual void set_torque_warn(unsigned int thresh) = 0;
+    virtual void set_torque_fault(unsigned int thresh) = 0; 
 
-  private:
-    void cleanup_internal();
-
-    // Hardware hooks
-    boost::scoped_ptr<leoCAN::RTSocketCAN> canbus_;
-    boost::scoped_ptr<barrett_direct::WAM> robot_;
-
+  protected:
     // Working variables
-    bool needs_calibration_;
-    unsigned int n_dof_;
-    KDL::Tree kdl_tree_;
+    int n_dof_;
     KDL::Chain kdl_chain_;
     KDL::JntArray torques_;
     KDL::JntArray positions_;
@@ -67,8 +54,6 @@ namespace bard_components {
     KDL::JntArray velocities_;
     sensor_msgs::JointState joint_state_;
     RTT::os::TimeService::ticks last_loop_time_;
-
-    bard_components::util::PeriodicThrottle joint_state_throttle_;
   };
 }
 

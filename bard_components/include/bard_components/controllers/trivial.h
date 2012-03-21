@@ -12,6 +12,8 @@ namespace bard_components {
   namespace controllers {
     class Trivial : public RTT::TaskContext
     {
+      // RTT properties
+      int n_arm_dof_;
       // RTT Ports
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
@@ -24,8 +26,6 @@ namespace bard_components {
       void cleanupHook();
 
     private:
-      // Configuration properties
-      int n_arm_dof_;
       // Working variables
       KDL::JntArray torques_;
     };

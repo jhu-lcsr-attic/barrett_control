@@ -17,8 +17,7 @@
 namespace bard_components {
   class ControllerMux : public RTT::TaskContext {
     // Properties
-    int n_arm_dof_;
-    std::string joint_prefix_;
+    std::string robot_description_;
     RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
     // Structure to associte with each of the multiplexed controllers
@@ -67,6 +66,7 @@ namespace bard_components {
         std::vector<std::string> diable_controllers);
 
     // Working variables
+    unsigned int n_dof_;
     KDL::JntArray controller_torques_;
     KDL::JntArray positions_;
     KDL::JntArray torques_;
@@ -74,8 +74,8 @@ namespace bard_components {
 
     bard_msgs::MuxState config_cmd_;
     sensor_msgs::JointState joint_state_;
-    RTT::os::TimeService::ticks joint_state_pub_time_;
 
+    bard_components::util::PeriodicThrottle joint_state_throttle_;
   };
 }
 

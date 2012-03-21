@@ -107,10 +107,11 @@ bool CartesianWrench::configureHook()
   kdl_fk_solver_pos_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
   kdl_jacobian_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
 
-  // Resize working vectors
+  // Resize working variables
   positions_.resize(n_arm_dof_);
   velocities_.resize(n_arm_dof_);
   torques_.resize(n_arm_dof_);
+  jacobian_.resize(n_arm_dof);
 
   // Zero out torque data
   torques_.data.setZero();

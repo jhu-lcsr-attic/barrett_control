@@ -15,28 +15,38 @@ using namespace bard_components;
 
 ControllerMux::ControllerMux(std::string const& name) :
   RTT::TaskContext(name)
-  ,n_arm_dof_(0)
-  ,joint_prefix_("")
+  // RTT properties
+  ,robot_description_("")
   ,joint_state_throttle_period_(0.1)
+  // Internal members
+  ,n_dof_(0)
   ,controller_torques_()
+  ,positions_()
   ,torques_()
   ,enabled_(true)
+  ,config_cmd_()
   ,joint_state_()
-  ,joint_state_pub_time_(0)
+  ,joint_state_throttle_(joint_state_throttle_period_)
 {
 
   // Declare properties
-  this->addProperty("n_arm_dof",n_arm_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
-  this->addProperty("joint_prefix",joint_prefix_).doc("The joint name prefix used in the WAM URDF.");
-  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_).doc("The period of the ROS sensor_msgs/JointState publisher.");
+  this->addProperty("robot_description",robot_description_)
+     .doc("The WAM URDF xml string.");
+  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
+    .doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure RTT ports
-  this->ports()->addEventPort("config_input", config_input_).doc("Input Event port: nx1 vector of joint torques. (n joints)");
-  this->ports()->addPort("state_output", state_output_).doc("Output port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addEventPort("config_input", config_input_)
+    .doc("Input Event port: nx1 vector of joint torques. (n joints)");
+  this->ports()->addPort("state_output", state_output_)
+    .doc("Output port: nx1 vector of joint positions. (n joints)");
 
-  this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
-  this->ports()->addPort("joint_state_out", joint_state_out_port_).doc("Output port: sensor_msgs/JointState of commanded joint state.");
-  this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
+  this->ports()->addPort("positions_in", positions_in_port_)
+    .doc("Input port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addPort("joint_state_out", joint_state_out_port_)
+    .doc("Output port: sensor_msgs/JointState of commanded joint state.");
+  this->ports()->addPort("torques_out", torques_out_port_)
+    .doc("Output port: nx1 vector of joint torques. (n joints)");
 
   // Configure operations
   this->addOperation("load", &ControllerMux::load_controller, this, RTT::OwnThread)
@@ -58,22 +68,27 @@ ControllerMux::ControllerMux(std::string const& name) :
     .doc("Enable and disable controllers by name.")
     .arg("enable_controllers","Array of names of controllers to enable.")
     .arg("disable_controllers","Array of names of controllers to disable.");
-
 }
 
 bool ControllerMux::configureHook()
 {
-  // Initialize output structure
-  torques_.resize(n_arm_dof_);
-  positions_.resize(n_arm_dof_);
+  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
+  if(!bard_components::util::initialize_kinematics_from_urdf(
+        robot_description_, root_link_, tip_link_,
+        KDL::Tree(), KDL::Chain(), n_dof_))
+  {
+    ROS_ERROR("Could not initialize robot kinematics!");
+    return false;
+  }
   
-  // Construct ros JointState message
-  util::init_wam_joint_state(
-      n_arm_dof_,
-      joint_prefix_,
-      joint_state_);
+  // Initialize joint arrays
+  torques_.resize(n_dof_);
+  positions_.resize(n_dof_);
+  
+  // Construct ros JointState message with the appropriate joint names
+  bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
-  // Prepare data sample
+  // Prepare data samples
   joint_state_out_port_.setDataSample(joint_state_);
 
   return true;
@@ -107,7 +122,7 @@ void ControllerMux::updateHook()
       // Read input from this controller
       if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
         // Add this control input to the output torques
-        for(int i=0; i < it->second->dof && i < n_arm_dof_; i++) {
+        for(int i=0; i < it->second->dof && i < n_dof_; i++) {
           torques_(i) += controller_torques_(i);
         }
       }
@@ -118,20 +133,19 @@ void ControllerMux::updateHook()
   if(enabled_) {
     torques_out_port_.write( torques_ );
   } else {
-    KDL::JntArray zero_array(n_arm_dof_);
+    KDL::JntArray zero_array(n_dof_);
     zero_array.data.setZero();
     torques_out_port_.write( zero_array ); 
   }
   
   // Copy the command into a sensor_msgs/JointState message
-  if( RTT::os::TimeService::Instance()->secondsSince(joint_state_pub_time_) > joint_state_throttle_period_ ) {
+  if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
     joint_state_.header.stamp = ros::Time::now();
-    for(int i=0; i<n_arm_dof_; i++) {
+    for(unsigned int i=0; i<n_dof_; i++) {
       joint_state_.position[i] = positions_(i);
       joint_state_.effort[i] = torques_(i);
     }
     joint_state_out_port_.write( joint_state_ );
-    joint_state_pub_time_ = RTT::os::TimeService::Instance()->getTicks();
   } 
 }
 

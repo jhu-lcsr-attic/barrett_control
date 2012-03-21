@@ -18,13 +18,10 @@ namespace bard_components {
     class GravityCompensation : public RTT::TaskContext
     {
       // RTT Properties
-      int n_arm_dof_;
       std::string robot_description_;
-      std::string joint_prefix_;
       std::vector<double> gravity_;
       std::string root_link_;
       std::string tip_link_;
-      RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArray> positions_in_port_;
@@ -42,6 +39,7 @@ namespace bard_components {
     private:
 
       // Working variables
+      int n_dof_;
       KDL::Tree kdl_tree_;
       KDL::Chain kdl_chain_;
       boost::scoped_ptr<KDL::ChainIdSolver_RNE> id_solver_;
