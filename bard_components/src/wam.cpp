@@ -88,7 +88,7 @@ bool WAM::configureHook()
   // Initialize kinematics (KDL tree, KDL chain, and #DOF)
   if(!bard_components::util::initialize_kinematics_from_urdf(
         robot_description_, root_link_, tip_link_,
-        n_dof_, kdl_chain_, kdl_tree_))
+        n_dof_, kdl_chain_, kdl_tree_, urdf_model_))
   {
     ROS_ERROR("Could not initialize robot kinematics!");
     return false;

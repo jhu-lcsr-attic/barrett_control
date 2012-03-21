@@ -17,10 +17,9 @@ bool util::initialize_kinematics_from_urdf(
     const std::string &root_link,
     const std::string &tip_link,
     unsigned int &n_dof,
-    KDL::Chain &kdl_chain = KDL::Chain(),
-    KDL::Tree &kdl_tree = KDL::Tree(),
-    urdf::Model &urdf_model = urdf::Model()
-    )
+    KDL::Chain &kdl_chain,
+    KDL::Tree &kdl_tree,
+    urdf::Model &urdf_model)
 {
   // Construct an URDF model from the xml string
   urdf_model.initString(robot_description);

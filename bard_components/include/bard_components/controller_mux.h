@@ -77,6 +77,7 @@ namespace bard_components {
     unsigned int n_dof_;
     KDL::Tree kdl_tree_;
     KDL::Chain kdl_chain_;
+    urdf::Model urdf_model_;
     KDL::JntArray controller_torques_;
     KDL::JntArrayVel positions_;
     KDL::JntArray torques_;

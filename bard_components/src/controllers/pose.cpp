@@ -6,7 +6,6 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/frames.hpp>
-#include <kdl/jacobian.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
@@ -15,7 +14,7 @@
 #include <tf_conversions/tf_kdl.h>
 
 #include <bard_components/util.h>
-#include <bard_components/controllers/wrench.h>
+#include <bard_components/controllers/pose.h>
 
 using namespace bard_components::controllers;
 
@@ -30,8 +29,8 @@ CartesianPose::CartesianPose(string const& name) :
   ,Kd_(7,0.0)
   // Working variables
   ,n_dof_(0)
-  ,kdl_tree_()
   ,kdl_chain_()
+  ,kdl_tree_()
   ,positions_()
   ,torques_()
 {
@@ -87,22 +86,25 @@ bool CartesianPose::configureHook()
   joint_limits_min_.resize(n_dof_);
   joint_limits_max_.resize(n_dof_);
   torques_.resize(n_dof_);
-  jacobian_.resize(n_dof_);
 
   // Get joint limits from URDF model
-  for(std::map<urdf::Joint*>::iterator it=urdf_model_.joints_.begin();
-      it != urdf_model_.end();
-      it++)
   {
-    joint_limits_min_(i) = it->second->limits->lower;
-    joint_limits_max_(i) = it->second->limits->upper;
+    unsigned int i=0;
+    for(std::map<std::string, boost::shared_ptr<urdf::Joint> >::iterator it=urdf_model_.joints_.begin();
+        it != urdf_model_.joints_.end();
+        it++)
+    {
+      joint_limits_min_(i) = it->second->limits->lower;
+      joint_limits_max_(i) = it->second->limits->upper;
+      i++;
+    }
   }
 
   // Initialize IK solver
   kdl_fk_solver_pos_.reset(
       new KDL::ChainFkSolverPos_recursive(kdl_chain_));
   kdl_ik_solver_vel_.reset(
-      new KDL::ChainIKSolverVel_pinv(
+      new KDL::ChainIkSolverVel_pinv(
         kdl_chain_,
         1.0E-6,
         150));
@@ -111,8 +113,8 @@ bool CartesianPose::configureHook()
         kdl_chain_,
         joint_limits_min_,
         joint_limits_max_,
-        kdl_fk_solver_pos_,
-        kdl_ik_solver_vel_,
+        *kdl_fk_solver_pos_,
+        *kdl_ik_solver_vel_,
         100,
         1.0E-6));
 
@@ -152,7 +154,7 @@ void CartesianPose::updateHook()
   tf::TransformTFToKDL(tip_frame_tf_,tip_frame_des_);
 
   // Compute joint coordinates of the target tip frame
-  kdl_ik_solver_pos_->CartToJnt(positions_.q, tip_frame_des_, positions_des_.q);
+  kdl_ik_solver_top_->CartToJnt(positions_.q, tip_frame_des_, positions_des_.q);
 
   // Servo in jointspace to the appropriate joint coordinates
   //torques_.data = 

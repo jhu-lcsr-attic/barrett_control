@@ -12,10 +12,11 @@
 #include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/frames.hpp>
-#include <kdl/jacobian.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainiksolverpos_nr_jl.hpp>
+#include <kdl/chainiksolvervel_pinv.hpp>
 
 #include <tf/tf.h>
 
@@ -72,7 +73,6 @@ namespace bard_components {
 
       // KDL FK solver
       boost::scoped_ptr<KDL::ChainFkSolverPos> kdl_fk_solver_pos_;
-      boost::scoped_ptr<KDL::ChainJntToJacSolver> kdl_jacobian_solver_;
 
       geometry_msgs::TransformStamped tip_frame_msg_;
       tf::Transform tip_frame_tf_;
