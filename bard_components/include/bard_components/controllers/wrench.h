@@ -25,18 +25,16 @@ namespace bard_components {
     class CartesianWrench : public RTT::TaskContext
     {
       // RTT Properties
-      int n_arm_dof_;
       std::string robot_description_;
       std::string joint_prefix_;
       std::string root_link_;
       std::string tip_link_;
       std::string target_frame_;
-      std::vector<double>     Kp_;           // Proportional gains                                                                                                                             
-      std::vector<double>     Kd_;           // Derivative gains                                                                                                                               
+      std::vector<double> Kp_; // Proportional gains                                                                                                                             
+      std::vector<double> Kd_; // Derivative gains                                                                                                                               
 
       // RTT Ports
       RTT::InputPort<KDL::JntArray> positions_in_port_;
-      RTT::InputPort<KDL::JntArray> velocities_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
@@ -52,25 +50,25 @@ namespace bard_components {
     private:
 
       // Working variables
+      int n_dof_;
       KDL::Tree kdl_tree_;
       KDL::Chain kdl_chain_;
 
-      KDL::JntArray positions_;
-      KDL::JntArray velocities_;
+      KDL::JntArrayVel positions_;
       KDL::JntArray torques_;
 
       boost::scoped_ptr<KDL::ChainFkSolverPos> kdl_fk_solver_pos_;
       boost::scoped_ptr<KDL::ChainJntToJacSolver> kdl_jacobian_solver_;
 
-      KDL::Frame     tip_frame_;
-      KDL::Frame     tip_frame_des_;
+      KDL::Frame tip_frame_;
+      KDL::Frame tip_frame_des_;
 
-      KDL::Twist     cart_twist_err_;
-      KDL::Twist     cart_vel_;
-      KDL::Twist     cart_vel_err_;
+      KDL::Twist cart_twist_err_;
+      KDL::Twist cart_vel_;
+      KDL::Twist cart_vel_err_;
 
-      KDL::Wrench    cart_effort_;
-      KDL::Jacobian  jacobian_;
+      KDL::Wrench cart_effort_;
+      KDL::Jacobian jacobian_;
 
       geometry_msgs::TransformStamped tip_frame_msg_;
       tf::Transform tip_frame_tf_;

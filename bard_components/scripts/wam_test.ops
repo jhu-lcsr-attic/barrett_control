@@ -48,6 +48,8 @@ connect("wam_left_mux.torques_out","wam_left.torques_in",ConnPolicy())
 loadComponent("wam_left_con_trivial","bard_components::controllers::Trivial")
 setActivity("wam_left_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
 
+connect("wam_left.positions_out","wam_left_con_trivial.positions_in",ConnPolicy())
+
 // Configure parameters
 loadService("wam_left_con_trivial","rosparam")
 wam_left_con_trivial.rosparam.refreshProperties()
@@ -63,7 +65,6 @@ loadComponent("wam_left_con_grav","bard_components::controllers::GravityCompensa
 setActivity("wam_left_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
 
 connect("wam_left.positions_out","wam_left_con_grav.positions_in",ConnPolicy())
-connect("wam_left.velocities_out","wam_left_con_grav.velocities_in",ConnPolicy())
 
 // Configure parameters
 loadService("wam_left_con_grav","rosparam")
@@ -81,7 +82,6 @@ setActivity("wam_left_con_wrench",0.001,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_left_con_wrench")
 
 connect("wam_left.positions_out","wam_left_con_wrench.positions_in",ConnPolicy())
-connect("wam_left.velocities_out","wam_left_con_wrench.velocities_in",ConnPolicy())
 
 // Configure parameters
 loadService("wam_left_con_wrench","rosparam")

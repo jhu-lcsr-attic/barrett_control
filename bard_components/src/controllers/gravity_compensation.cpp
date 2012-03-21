@@ -17,9 +17,9 @@ GravityCompensation::GravityCompensation(string const& name) :
   TaskContext(name)
   // Properties
   ,robot_description_("")
-  ,gravity_(3,0.0)
   ,root_link_("")
   ,tip_link_("")
+  ,gravity_(3,0.0)
   // Working variables
   ,n_dof_(0)
   ,kdl_tree_()
@@ -27,7 +27,6 @@ GravityCompensation::GravityCompensation(string const& name) :
   ,id_solver_(NULL)
   ,ext_wrenches_()
   ,positions_()
-  ,velocities_()
   ,accelerations_()
   ,torques_()
 {
@@ -44,8 +43,6 @@ GravityCompensation::GravityCompensation(string const& name) :
   // Configure data ports
   this->ports()->addPort("positions_in", positions_in_port_)
     .doc("Input port: nx1 vector of joint positions. (n joints)");
-  this->ports()->addPort("velocities_in", velocities_in_port_)
-    .doc("Input port: nx1 vector of joint velocities. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_)
     .doc("Output port: nx1 vector of joint torques. (n joints)");
 }
@@ -69,8 +66,6 @@ bool GravityCompensation::configureHook()
 
   // Resize working vectors
   positions_.resize(n_dof_);
-  velocities_.resize(n_dof_);
-  accelerations_.resize(n_dof_);
   torques_.resize(n_dof_);
   ext_wrenches_.resize(kdl_chain_.getNrOfSegments());
 
@@ -92,15 +87,14 @@ void GravityCompensation::updateHook()
 {
   // Read in the current joint positions & velocities
   positions_in_port_.read( positions_ );
-  velocities_in_port_.read( velocities_ );
 
   // Compute inverse dynamics
   // This computes the torques on each joint of the arm as a function of
   // the arm's joint-space position, velocities, accelerations, external
   // forces/torques and gravity.
   if(id_solver_->CartToJnt(
-        positions_,
-        velocities_,
+        positions_.q,
+        positions_.qdot,
         accelerations_,
         ext_wrenches_,
         torques_) != 0)

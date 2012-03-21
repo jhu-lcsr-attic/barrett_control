@@ -33,7 +33,7 @@ namespace bard_components {
     std::map<std::string, ControllerInterface*> controller_interfaces_;
     typedef std::map<std::string, ControllerInterface*>::iterator ControllerInterface_iter;
 
-    // Input port for controlling the controller mux over ros
+    // Input port for configuring the controller mux over ros
     RTT::InputPort<bard_msgs::MuxState> config_input_;
     RTT::InputPort<KDL::JntArray> positions_in_port_;
 
@@ -68,7 +68,7 @@ namespace bard_components {
     // Working variables
     unsigned int n_dof_;
     KDL::JntArray controller_torques_;
-    KDL::JntArray positions_;
+    KDL::JntArrayVel positions_;
     KDL::JntArray torques_;
     bool enabled_;
 

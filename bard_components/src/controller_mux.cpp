@@ -72,15 +72,20 @@ ControllerMux::ControllerMux(std::string const& name) :
 
 bool ControllerMux::configureHook()
 {
-  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
-  if(!bard_components::util::initialize_kinematics_from_urdf(
-        robot_description_, root_link_, tip_link_,
-        KDL::Tree(), KDL::Chain(), n_dof_))
-  {
-    ROS_ERROR("Could not initialize robot kinematics!");
+  return true;
+}
+
+bool ControllerMux::startHook()
+{
+  // Read in a sample to resize the torques appropriately
+  if(!positions_in_port_.connected()) {
+    positions_in_port_.read(positions_);
+    n_arm_dof_ = positions_.q.rows();
+  } else {
+    ROS_ERROR("Port \"positions_in\" not connected. It is needed to appropriately allocate the controller torque command.");
     return false;
   }
-  
+
   // Initialize joint arrays
   torques_.resize(n_dof_);
   positions_.resize(n_dof_);
@@ -89,13 +94,9 @@ bool ControllerMux::configureHook()
   bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
   // Prepare data samples
+  torques_out_port_.setDataSample(torques_);
   joint_state_out_port_.setDataSample(joint_state_);
 
-  return true;
-}
-
-bool ControllerMux::startHook()
-{
   std::cerr<<"Starting controller mux!"<<std::endl;
   return true;
 }
@@ -115,7 +116,8 @@ void ControllerMux::updateHook()
  
   // Read in all control inputs
   for(ControllerInterface_iter it = controller_interfaces_.begin();
-      it != controller_interfaces_.end(); it++) 
+      it != controller_interfaces_.end();
+      it++) 
   {
     // Combine control inputs based on gains
     if( it->second->enabled ) {
@@ -142,7 +144,8 @@ void ControllerMux::updateHook()
   if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
     joint_state_.header.stamp = ros::Time::now();
     for(unsigned int i=0; i<n_dof_; i++) {
-      joint_state_.position[i] = positions_(i);
+      joint_state_.position[i] = positions_.q(i);
+      joint_state_.velocity[i] = positions_.qdot(i);
       joint_state_.effort[i] = torques_(i);
     }
     joint_state_out_port_.write( joint_state_ );

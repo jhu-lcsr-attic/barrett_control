@@ -19,13 +19,12 @@ namespace bard_components {
     {
       // RTT Properties
       std::string robot_description_;
-      std::vector<double> gravity_;
       std::string root_link_;
       std::string tip_link_;
+      std::vector<double> gravity_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArray> positions_in_port_;
-      RTT::InputPort<KDL::JntArray> velocities_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
     public:
@@ -46,9 +45,7 @@ namespace bard_components {
 
       KDL::Wrenches ext_wrenches_;
 
-      KDL::JntArray positions_;
-      KDL::JntArray velocities_;
-      KDL::JntArray accelerations_;
+      KDL::JntArrayVel positions_;
       KDL::JntArray torques_;
     };
   }

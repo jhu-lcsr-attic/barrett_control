@@ -27,7 +27,6 @@ namespace bard_components {
     // RTT Ports
     RTT::InputPort<KDL::JntArray> torques_in_port_;
     RTT::OutputPort<KDL::JntArray> positions_out_port_;
-    RTT::OutputPort<KDL::JntArray> velocities_out_port_;
     RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
     // RTT Operations
@@ -62,9 +61,8 @@ namespace bard_components {
     KDL::Tree kdl_tree_;
     KDL::Chain kdl_chain_;
     KDL::JntArray torques_;
-    KDL::JntArray positions_;
-    KDL::JntArray positions_new_;
-    KDL::JntArray velocities_;
+    KDL::JntArrayVel positions_;
+    KDL::JntArrayVel positions_new_;
     sensor_msgs::JointState joint_state_;
     RTT::os::TimeService::ticks last_loop_time_;
 

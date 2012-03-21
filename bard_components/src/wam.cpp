@@ -31,7 +31,6 @@ WAM::WAM(string const& name) :
   ,torques_()
   ,positions_()
   ,positions_new_()
-  ,velocities_()
   ,joint_state_()
   ,joint_state_throttle_(joint_state_throttle_period_)
 {
@@ -49,9 +48,7 @@ WAM::WAM(string const& name) :
   this->ports()->addEventPort("torques_in", torques_in_port_)
    .doc("Input Event port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_)
-   .doc("Output port: nx1 vector of joint positions. (n joints)");
-  this->ports()->addPort("velocities_out", velocities_out_port_)
-   .doc("Output port: nx1 vector of joint velocities. (n joints)");
+   .doc("Output port: nx1 vector of joint positions & velocities. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_)
    .doc("Output port: sensor_msgs::JointState.");
 
@@ -69,10 +66,10 @@ WAM::WAM(string const& name) :
     .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
     .arg("thresh","Velocity Fault Threshold");
   this->addOperation("setTorqueWarning", &WAM::set_torque_warn, this, RTT::OwnThread)
-    .doc("Set the velocities above which the WAM pendant will illumiate a warning light.")
+    .doc("Set the torques above which the WAM pendant will illumiate a warning light.")
     .arg("thresh","Torque Warning Threshold");
   this->addOperation("setTorqueFault", &WAM::set_torque_fault, this, RTT::OwnThread)
-    .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
+    .doc("Set the torques above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
     .arg("thresh","Torque Fault Threshold");
 
   ROS_INFO_STREAM("WAM \""<<name<<"\" constructed !");
@@ -91,22 +88,19 @@ bool WAM::configureHook()
 
   // Resize joint arrays
   torques_ = KDL::JntArray(n_dof_);
-  positions_ = KDL::JntArray(n_dof_);
-  positions_new_ = KDL::JntArray(n_dof_);
-  velocities_ = KDL::JntArray(n_dof_);
+  positions_ = KDL::JntArrayVel(n_dof_);
+  positions_new_ = KDL::JntArrayVel(n_dof_);
 
   // Zero out joint arrays
-  torques_.data.setZero();
-  positions_.data.setZero();
-  positions_new_.data.setZero();
-  velocities_.data.setZero();
+  KDL::SetToZero(torques_);
+  KDL::SetToZero(positions_);
+  KDL::SetToZero(positions_new_);
   
   // Construct ros JointState message with the appropriate joint names
   bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_);
-  velocities_out_port_.setDataSample(velocities_);
   joint_state_out_port_.setDataSample(joint_state_);
 
   // Try to connect and initialize hardware
@@ -148,9 +142,6 @@ bool WAM::startHook()
   if ( !positions_out_port_.connected() ) {
     ROS_WARN_STREAM("WARNING: No connection to \"positions_out\" for WAM on \""<<can_dev_name_<<"\"!");
   }
-  if ( !velocities_out_port_.connected() ) {
-    ROS_WARN_STREAM("WARNING: No connection to \"velocities_out\" for WAM on \""<<can_dev_name_<<"\"!");
-  }
 
   if(needs_calibration_) {
     // Set the joints to the calibration position
@@ -177,7 +168,7 @@ void WAM::updateHook()
   }
   
   // Get joint positions
-  if( robot_->GetPositions( positions_new_.data ) != barrett_direct::WAM::ESUCCESS) {
+  if( robot_->GetPositions( positions_new_.q.data ) != barrett_direct::WAM::ESUCCESS) {
     std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
   }
 
@@ -185,7 +176,7 @@ void WAM::updateHook()
   RTT::os::TimeService::Seconds loop_period = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
   // Compute joint velocities
   for(unsigned int i=0; i<n_dof_; i++) {
-    velocities_(i) = (positions_new_(i) - positions_(i))/loop_period;
+    positions_.qdot(i) = (positions_new_.q(i) - positions_.q(i))/loop_period;
   }
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
 
@@ -194,14 +185,13 @@ void WAM::updateHook()
 
   // Send joint positions
   positions_out_port_.write( positions_ );
-  velocities_out_port_.write( velocities_ );
 
   // Copy joint positions into joint state
   if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
     joint_state_.header.stamp = ros::Time::now();
     for(unsigned int i=0; i<n_dof_; i++) {
-      joint_state_.position[i] = positions_(i);
-      joint_state_.velocity[i] = velocities_(i);
+      joint_state_.position[i] = positions_.q(i);
+      joint_state_.velocity[i] = positions_.qdot(i);
       joint_state_.effort[i] = torques_(i);
     }
     joint_state_out_port_.write( joint_state_ );
@@ -244,7 +234,7 @@ void WAM::calibrate_position(std::vector<double> &actual_positions)
 
     // Set the current positions to the initial positions
     for(size_t i=0; i<actual_positions.size(); i++) {
-      positions_(i) = actual_positions(i);
+      positions_.q(i) = actual_positions.q[i];
     }
 
     std::cerr<<"Calibrated encoders."<<std::endl;
