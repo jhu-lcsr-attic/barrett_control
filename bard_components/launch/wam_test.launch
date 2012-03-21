@@ -40,5 +40,13 @@
       <param name="target_frame" value="/wam_target"/>
     </group>
 
+    <!-- parameters for joint pose controller -->
+    <group ns="wam_left_con_pose">
+      <include file="$(find bard_components)/launch/left_params.launch"/>
+      <rosparam param="Kp">{Element0: 0.01, Element1: 0.01, Element2: 0.01, Element3: 0.01, Element4: 0.01, Element5: 0.01, Element6: 0.01}</rosparam>
+      <rosparam param="Kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
+      <param name="target_frame" value="/wam_target"/>
+    </group>
+
   </group>
 </launch>

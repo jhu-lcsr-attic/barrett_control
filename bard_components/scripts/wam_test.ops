@@ -76,7 +76,7 @@ wam_left_mux.load("gravity")
 connect("wam_left_con_grav.torques_out","wam_left_mux.gravity",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
-// Create cartesian wrench controller //////////////////////////////////////////////////
+// Create cartesian wrench controller /////////////////////////////////////////
 loadComponent("wam_left_con_wrench","bard_components::controllers::CartesianWrench")
 setActivity("wam_left_con_wrench",0.001,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_left_con_wrench")
@@ -93,16 +93,35 @@ wam_left_mux.load("wrench")
 connect("wam_left_con_wrench.torques_out","wam_left_mux.wrench",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
+// Create cartesian pose  controller //////////////////////////////////////////
+loadComponent("wam_left_con_pose","bard_components::controllers::CartesianPose")
+setActivity("wam_left_con_pose",0.001,HighestPriority,ORO_SCHED_RT)
+connectPeers("tf","wam_left_con_pose")
+
+connect("wam_left.positions_out","wam_left_con_pose.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("wam_left_con_pose","rosparam")
+wam_left_con_pose.rosparam.refreshProperties()
+wam_left_con_pose.configure()
+
+// Connect controller to mux
+wam_left_mux.load("pose")
+connect("wam_left_con_pose.torques_out","wam_left_mux.pose",ConnPolicy())
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Start Things ///////////////////////////////////////////////////////////////
 wam_left_mux.start()
 wam_left_con_trivial.start()
 wam_left_con_grav.start()
 wam_left_con_wrench.start()
+wam_left_con_pose.start()
 
 wam_left.configure()
 wam_left.start()
 
 wam_left_mux.disable()
-wam_left_mux.toggleControllers(strings("wrench"),strings())
+wam_left_mux.toggleControllers(strings("gravity"),strings())
 //wam_left_mux.toggleControllers(strings("trivial"),strings("gravity"))
 //wam_left_mux.toggleControllers(strings("gravity"),strings("trivial"))
