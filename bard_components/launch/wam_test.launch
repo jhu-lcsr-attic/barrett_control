@@ -30,8 +30,6 @@
     <group ns="wam_left_con_grav">
       <include file="$(find bard_components)/launch/left_params.launch"/>
       <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
-      <param name="root_link" value="FixedLink"/>
-      <param name="tip_link" value="LowerWristYawLink"/>
     </group>
 
     <!-- Parameters for cartesian wrench controller -->

@@ -147,7 +147,7 @@
   </xacro:macro>
 
   <!-- Hollow forearm macros -->
-  <xacro macro name="HollowForeArm" params="prefix">
+  <xacro:macro name="HollowForeArm" params="prefix">
     <joint name="${prefix}/ElbowJoint" type="revolute">
       <parent link="${prefix}/UpperArmLink"/>
       <child link="${prefix}/ForeArmLink"/>

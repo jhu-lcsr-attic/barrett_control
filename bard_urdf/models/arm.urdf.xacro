@@ -33,18 +33,15 @@
   <xacro:macro name="wam_4dof" params="prefix parentLink xyz rpy">
     <xacro:wam_upper_arm prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
     <xacro:hollow_forearm prefix="${prefix}"/>
+    <xacro:barrett_palm prefix="${prefix}"/>
   </xacro:macro>
 
   <xacro:macro name="wam_7dof" params="prefix parentLink xyz rpy">
     <xacro:wam_upper_arm prefix="${prefix}" parentLink="${parentLink}" xyz="${xyz}" rpy="${rpy}"/>
     <xacro:actuated_forearm prefix="${prefix}"/>
+    <xacro:barrett_palm prefix="${prefix}"/>
   </xacro:macro>
 
-  <xacro:macro name="wam_4dof_hand" params="prefix parentLink xyz rpy">
-  </xacro:macro>
-
-  <xacro:macro name="wam_7dof_hand" params="prefix parentLink xyz rpy">
-  </xacro:macro>
 
   <!-- Define a macro to construct the arm -->
   <xacro:macro name="wam_upper_arm" params="prefix parentLink xyz rpy">
@@ -53,12 +50,12 @@
     <xacro:UpperArm prefix="${prefix}"/>
   </xacro:macro>
 
-  <xacro macro name="hollow_forearm" params="prefix"/>
+  <xacro:macro name="hollow_forearm" params="prefix">
     <xacro:HollowForeArm prefix="${prefix}"/>
     <xacro:HollowWrist prefix="${prefix}"/>
   </xacro:macro>
 
-  <xacro macro name="actuated_forearm" params="prefix"/>
+  <xacro:macro name="actuated_forearm" params="prefix">
     <xacro:ForeArm prefix="${prefix}"/>
     <xacro:UpperWristYaw prefix="${prefix}"/>
     <xacro:UpperWristPitch prefix="${prefix}"/>
