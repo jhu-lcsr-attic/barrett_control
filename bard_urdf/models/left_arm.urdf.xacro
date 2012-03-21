@@ -52,7 +52,6 @@
     <origin xyz="0.356 0.46 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
   </joint>
   <xacro:wam_7dof prefix="LeftWAM" parentLink="LeftWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
-  <xacro:barrett_palm prefix="LeftWAM"/>
   <!--xacro:barrett_hand prefix="LeftWAM" /-->
 
   <!-- Simulation stuff -->

@@ -376,7 +376,6 @@
       <origin xyz="0 0 0" rpy="0 0 -${0.5 * PI}"/>
       <provideFeedback value="true"/>
     </joint>
-
     <link name="${prefix}/LowerWristPalmLink" >
       <inertial>
         <origin xyz="0.00035500 -0.00499005 0.04864979" />
@@ -400,7 +399,6 @@
       </collision>
     </link>
     <xacro:gazeboReferenceDAE name="${prefix}/LowerWristPalmLink"/>
-
 
     <gazebo reference="${prefix}/LowerWristPalmJoint">
       <provideFeedback value="true"/>
@@ -477,7 +475,6 @@
       <origin xyz="0 0 0.0048" rpy="0 0 -${0.5 * PI}"/>
       <provideFeedback value="true"/>
     </joint>
-
     <link name="${prefix}/LowerWristPalmLink" >
       <inertial>
         <origin xyz="0.00035500 -0.00499005 0.04864979" />
@@ -534,6 +531,18 @@
     </gazebo>
   </xacro:macro>
 
+  <!-- Palm -->
+  <xacro:macro name="Palm" params="prefix">
+    <link name="${prefix}/PalmLink" />
+
+    <joint name="${prefix}/PalmJoint" type="fixed">
+      <parent link="${prefix}/LowerWristPalmLink"/>
+      <child link="${prefix}/PalmLink"/>
+      <!--             <origin xyz="0 0 0.1293166" rpy="0 0 0"/> -->
+      <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
+    </joint>
+  </xacro:macro>
+
   <!-- Hand macros -->
   <xacro:macro name="KnuckleOne" params="prefix number xyz rpy axis">
     <joint name="${prefix}/BHand/Finger${number}/KnuckleOneJoint" type="revolute">
@@ -544,7 +553,6 @@
       <limit effort="1" lower="0" upper="${PI}" velocity="3.27"/>
       <dynamics damping="0.005" friction="100.0"/>
     </joint>
-
     <link name="${prefix}/BHand/Finger${number}/KnuckleOneLink">
       <visual>
         <material name="WAMGrey" />
