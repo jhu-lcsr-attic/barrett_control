@@ -32,6 +32,7 @@ namespace bard_components {
       bool enabled;
       std::vector<int> dof_map;
       KDL::JntArray gains;
+      KDL::JntArray last_torques;
     };
     
     // Vector of RTT input ports (torques)
@@ -69,6 +70,8 @@ namespace bard_components {
     void toggle_controllers(
         std::vector<std::string> enable_controllers, 
         std::vector<std::string> diable_controllers);
+
+    void list_controllers();
 
     // Working variables
     unsigned int n_dof_;

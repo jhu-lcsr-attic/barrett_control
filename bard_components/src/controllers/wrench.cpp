@@ -101,6 +101,12 @@ bool CartesianWrench::configureHook()
 
 bool CartesianWrench::startHook()
 {
+  try{
+    tip_frame_msg_ = tf_lookup_transform_(root_link_,target_frame_);
+  } catch (std::exception &ex) {
+    ROS_ERROR_STREAM("Could not look up transform from \""<<root_link_<<"\" to \""<<target_frame_<<"\": "<<ex.what());
+    return false;
+  }
   return true;
 }
 
@@ -124,7 +130,12 @@ void CartesianWrench::updateHook()
   }
 
   // Get transform from the root link frame to the target frame
-  tip_frame_msg_ = tf_lookup_transform_(joint_prefix_+"/"+root_link_,target_frame_);
+  try{
+    tip_frame_msg_ = tf_lookup_transform_("/"+root_link_,target_frame_);
+  } catch (std::exception &ex) {
+    ROS_ERROR_STREAM("Could not look up transform from \""<<root_link_<<"\" to \""<<target_frame_<<"\": "<<ex.what());
+    this->stop();
+  }
   tf::transformMsgToTF(tip_frame_msg_.transform,tip_frame_tf_);
   tf::TransformTFToKDL(tip_frame_tf_,tip_frame_des_);
   
@@ -150,7 +161,7 @@ void CartesianWrench::updateHook()
     }
   }
 
-  // Send joint positions
+  // Send joint torques 
   torques_out_port_.write( torques_ );
 }
 

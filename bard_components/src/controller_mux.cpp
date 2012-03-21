@@ -76,6 +76,9 @@ ControllerMux::ControllerMux(std::string const& name) :
     .doc("Enable and disable controllers by name.")
     .arg("enable_controllers","Array of names of controllers to enable.")
     .arg("disable_controllers","Array of names of controllers to disable.");
+
+  this->addOperation("listControllers", &ControllerMux::list_controllers, this, RTT::OwnThread)
+    .doc("List the currently enabled and disabled controllers.");
 }
 
 bool ControllerMux::configureHook()
@@ -131,6 +134,8 @@ void ControllerMux::updateHook()
     if( it->second->enabled ) {
       // Read input from this controller
       if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
+        // Store this control input
+        it->second->last_torques.data = controller_torques_.data;
         // Add this control input to the output torques
         for(unsigned int i=0; i < it->second->dof && i < n_dof_; i++) {
           torques_(i) += controller_torques_(i);
@@ -228,6 +233,26 @@ void ControllerMux::toggle_controllers(
   {
     if(controller_interfaces_.find(*it) != controller_interfaces_.end()) {
       controller_interfaces_.find(*it)->second->enabled = false;
+    }
+  }
+}
+
+void ControllerMux::list_controllers()
+{
+  ROS_INFO("Enabled controllers:");
+  for(ControllerInterface_iter it = controller_interfaces_.begin();
+      it != controller_interfaces_.end(); it++) 
+  {
+    if(it->second->enabled) {
+      ROS_INFO_STREAM("  "<<it->first<<": "<<it->second->last_torques.data.transpose());
+    }
+  }
+  ROS_INFO("Disabled controllers:");
+  for(ControllerInterface_iter it = controller_interfaces_.begin();
+      it != controller_interfaces_.end(); it++) 
+  {
+    if(!it->second->enabled) {
+      ROS_INFO_STREAM("  "<<it->first<<": "<<it->second->last_torques.data.transpose());
     }
   }
 }

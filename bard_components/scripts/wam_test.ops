@@ -102,5 +102,7 @@ wam_left_con_wrench.start()
 wam_left.configure()
 wam_left.start()
 
-wam_left_mux.toggleControllers(strings("trivial"),strings("gravity"))
+wam_left_mux.disable()
+wam_left_mux.toggleControllers(strings("wrench"),strings())
+//wam_left_mux.toggleControllers(strings("trivial"),strings("gravity"))
 //wam_left_mux.toggleControllers(strings("gravity"),strings("trivial"))

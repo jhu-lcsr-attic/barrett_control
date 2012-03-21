@@ -189,7 +189,7 @@ void WAM::updateHook()
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
 
   // Update positions
-  positions_ = positions_new_;
+  positions_.q = positions_new_.q;
 
   // Send joint positions
   positions_out_port_.write( positions_ );
