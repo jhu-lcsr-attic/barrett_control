@@ -52,7 +52,7 @@ bool GravityCompensation::configureHook()
   // Initialize kinematics (KDL tree, KDL chain, and #DOF)
   if(!bard_components::util::initialize_kinematics_from_urdf(
         robot_description_, root_link_, tip_link_,
-        kdl_tree_, kdl_chain_, n_dof_))
+        n_dof_, kdl_chain_, kdl_tree_))
   {
     ROS_ERROR("Could not initialize robot kinematics!");
     return false;

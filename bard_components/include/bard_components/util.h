@@ -18,9 +18,10 @@ namespace bard_components {
         const std::string &robot_description,
         const std::string &root_link,
         const std::string &tip_link,
-        KDL::Tree &kdl_tree,
+        unsigned int &n_dof,
         KDL::Chain &kdl_chain,
-        unsigned int &n_dof);
+        KDL::Tree &kdl_tree,
+        urdf::Model &urdf_model);
 
     // Function to construct a sensor_msgs::JointState message from a kdl chain
     void joint_state_from_kdl_chain(

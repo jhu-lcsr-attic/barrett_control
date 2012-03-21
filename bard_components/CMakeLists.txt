@@ -49,6 +49,7 @@ orocos_component(components
   src/controllers/gravity_compensation.cpp
   src/controllers/joint_pid.cpp
   src/controllers/wrench.cpp
+  src/controllers/pose.cpp
   ) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 

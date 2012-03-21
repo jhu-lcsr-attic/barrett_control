@@ -1,5 +1,5 @@
-#ifndef __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_WRENCH_H
-#define __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_WRENCH_H
+#ifndef __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_POSE_H
+#define __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_POSE_H
 
 #include <iostream>
 
@@ -23,7 +23,7 @@
 
 namespace bard_components {
   namespace controllers {
-    class CartesianWrench : public RTT::TaskContext
+    class CartesianPose : public RTT::TaskContext
     {
       // RTT Properties
       std::string robot_description_;
@@ -41,7 +41,7 @@ namespace bard_components {
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
 
     public:
-      CartesianWrench(std::string const& name);
+      CartesianPose(std::string const& name);
       bool configureHook();
       bool startHook();
       void updateHook();
@@ -50,35 +50,41 @@ namespace bard_components {
 
     private:
 
-      // Working variables
+      // Kinematic properties
       unsigned int n_dof_;
-      KDL::Tree kdl_tree_;
       KDL::Chain kdl_chain_;
+      KDL::Tree kdl_tree_;
+      urdf::Model urdf_model_;
 
+
+      // Working variables
       KDL::JntArrayVel positions_;
+      KDL::JntArrayVel positions_des_;
       KDL::JntArray torques_;
 
+      // Joint limits
+      KDL::JntArray joint_limits_min_;
+      KDL::JntArray joint_limits_max_;
+
+      // KDL IK solver which accounts for joint limits
+      boost::scoped_ptr<KDL::ChainIkSolverPos> kdl_ik_solver_top_;
+      boost::scoped_ptr<KDL::ChainIkSolverVel> kdl_ik_solver_vel_;
+
+      // KDL FK solver
       boost::scoped_ptr<KDL::ChainFkSolverPos> kdl_fk_solver_pos_;
       boost::scoped_ptr<KDL::ChainJntToJacSolver> kdl_jacobian_solver_;
 
+      geometry_msgs::TransformStamped tip_frame_msg_;
+      tf::Transform tip_frame_tf_;
       KDL::Frame tip_frame_;
       KDL::Frame tip_frame_des_;
 
-      KDL::Twist cart_twist_err_;
-      KDL::Twist cart_vel_;
-      KDL::Twist cart_vel_err_;
-
-      KDL::Wrench cart_effort_;
-      KDL::Jacobian jacobian_;
-
-      geometry_msgs::TransformStamped tip_frame_msg_;
-      tf::Transform tip_frame_tf_;
           
     };
   }
 }
 
 
-#endif // ifndef __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_WRENCH_H
+#endif // ifndef __BARD_COMPONENTS_CONTROLLERS_CARTESIAN_POSE_H
 
 

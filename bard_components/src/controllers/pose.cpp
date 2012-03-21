@@ -19,15 +19,15 @@
 
 using namespace bard_components::controllers;
 
-CartesianWrench::CartesianWrench(string const& name) :
+CartesianPose::CartesianPose(string const& name) :
   TaskContext(name)
   // Properties
   ,robot_description_("")
   ,root_link_("")
   ,tip_link_("")
   ,target_frame_("")
-  ,Kp_(6,0.0)
-  ,Kd_(6,0.0)
+  ,Kp_(7,0.0)
+  ,Kd_(7,0.0)
   // Working variables
   ,n_dof_(0)
   ,kdl_tree_()
@@ -55,14 +55,14 @@ CartesianWrench::CartesianWrench(string const& name) :
     .doc("Output port: nx1 vector of joint torques. (n joints)");
 }
 
-bool CartesianWrench::configureHook()
+bool CartesianPose::configureHook()
 {
   // Connect to tf
   if(this->hasPeer("tf")) {
     TaskContext* tf_task = this->getPeer("tf");
     tf_lookup_transform_ = tf_task->getOperation("lookupTransform"); // void reset(void)
   } else {
-    ROS_ERROR("CartesianWrench controller is not connected to tf!");
+    ROS_ERROR("CartesianPose controller is not connected to tf!");
     return false;
   }
 
@@ -75,20 +75,46 @@ bool CartesianWrench::configureHook()
   // Initialize kinematics (KDL tree, KDL chain, and #DOF)
   if(!bard_components::util::initialize_kinematics_from_urdf(
         robot_description_, root_link_, tip_link_,
-        n_dof_, kdl_chain_, kdl_tree_))
+        n_dof_, kdl_chain_, kdl_tree_, urdf_model_))
   {
     ROS_ERROR("Could not initialize robot kinematics!");
     return false;
   }
-
-  // Initialize cartesian position solver
-  kdl_fk_solver_pos_.reset(new KDL::ChainFkSolverPos_recursive(kdl_chain_));
-  kdl_jacobian_solver_.reset(new KDL::ChainJntToJacSolver(kdl_chain_));
-
+  
   // Resize working variables
   positions_.resize(n_dof_);
+  positions_des_.resize(n_dof_);
+  joint_limits_min_.resize(n_dof_);
+  joint_limits_max_.resize(n_dof_);
   torques_.resize(n_dof_);
   jacobian_.resize(n_dof_);
+
+  // Get joint limits from URDF model
+  for(std::map<urdf::Joint*>::iterator it=urdf_model_.joints_.begin();
+      it != urdf_model_.end();
+      it++)
+  {
+    joint_limits_min_(i) = it->second->limits->lower;
+    joint_limits_max_(i) = it->second->limits->upper;
+  }
+
+  // Initialize IK solver
+  kdl_fk_solver_pos_.reset(
+      new KDL::ChainFkSolverPos_recursive(kdl_chain_));
+  kdl_ik_solver_vel_.reset(
+      new KDL::ChainIKSolverVel_pinv(
+        kdl_chain_,
+        1.0E-6,
+        150));
+  kdl_ik_solver_top_.reset(
+      new KDL::ChainIkSolverPos_NR_JL(
+        kdl_chain_,
+        joint_limits_min_,
+        joint_limits_max_,
+        kdl_fk_solver_pos_,
+        kdl_ik_solver_vel_,
+        100,
+        1.0E-6));
 
   // Zero out torque data
   torques_.data.setZero();
@@ -99,7 +125,7 @@ bool CartesianWrench::configureHook()
   return true;
 }
 
-bool CartesianWrench::startHook()
+bool CartesianPose::startHook()
 {
   try{
     tip_frame_msg_ = tf_lookup_transform_(root_link_,target_frame_);
@@ -110,26 +136,10 @@ bool CartesianWrench::startHook()
   return true;
 }
 
-void CartesianWrench::updateHook()
+void CartesianPose::updateHook()
 {
-
   // Read in the current joint positions
   positions_in_port_.read( positions_ );
-
-  // Compute the forward kinematics and Jacobian (at this location).                                                                                                              
-  kdl_fk_solver_pos_->JntToCart(positions_.q, tip_frame_);
-  kdl_jacobian_solver_->JntToJac(positions_.q, jacobian_);
-
-  // Compute cartesia velocity
-  // FIXME: this is really gross... seriously, KDL?
-  // TODO: jacobian_.data is an Eigen dynamic matrix, so we should be able to just multiply these things out
-  // TODO: fix all the matrix arithmetic here so they drop down to eigen types
-  for (unsigned int i = 0 ; i < 6 ; i++) {
-    cart_vel_(i) = 0;
-    for (unsigned int j = 0 ; j < kdl_chain_.getNrOfJoints() ; j++) {
-      cart_vel_(i) += jacobian_(i,j) * positions_.qdot(j);
-    }
-  }
 
   // Get transform from the root link frame to the target frame
   try{
@@ -138,40 +148,32 @@ void CartesianWrench::updateHook()
     ROS_ERROR_STREAM("Could not look up transform from \""<<root_link_<<"\" to \""<<target_frame_<<"\": "<<ex.what());
     this->stop();
   }
-  tf::transformMsgToTF(tip_frame_msg_.transform,tip_frame_tf_);
+  tf::transformMsgToTF(tip_frame_msg_.transform, tip_frame_tf_);
   tf::TransformTFToKDL(tip_frame_tf_,tip_frame_des_);
+
+  // Compute joint coordinates of the target tip frame
+  kdl_ik_solver_pos_->CartToJnt(positions_.q, tip_frame_des_, positions_des_.q);
+
+  // Servo in jointspace to the appropriate joint coordinates
+  //torques_.data = 
+  //  Eigen::Map<Eigen::VectorXd>(&Kp_[0],Kp_.size()).cwiseProduct(positions_des_.q.data - positions_.q.data)
+  //  + Eigen::Map<Eigen::VectorXd>(&Kd_[0],Kd_.size()).cwiseProduct(positions_des_.qdot.data - positions_.qdot.data);
+
+  for(unsigned int i=0; i<n_dof_; i++) {
+    torques_(i) =
+      Kp_[i]*(positions_des_.q(i) - positions_.q(i))
+      + Kd_[i]*(positions_des_.qdot(i) - positions_.qdot(i));
+  }
   
-  // Construct twist for position error
-  cart_twist_err_.vel = tip_frame_des_.p - tip_frame_.p;
-  cart_twist_err_.rot = -0.5 * (
-      tip_frame_des_.M.UnitX() * tip_frame_.M.UnitX() +
-      tip_frame_des_.M.UnitY() * tip_frame_.M.UnitY() +
-      tip_frame_des_.M.UnitZ() * tip_frame_.M.UnitZ());
-
-  // TODO: Construct twist for velocity error
-
-  // Apply gains to position and velocity error
-  for (unsigned int i = 0 ; i < 6 ; i++) {
-    cart_effort_(i) =  Kp_[i] * cart_twist_err_(i) + Kd_[i] * (0.0 - cart_vel_(i));
-  }
-
-  // Convert the force into a set of joint torques.                                                                                                                               
-  for (unsigned int i = 0 ; i < kdl_chain_.getNrOfJoints() ; i++) {
-    torques_(i) = 0;
-    for (unsigned int j = 0 ; j < 6 ; j++) {
-      torques_(i) += jacobian_(j,i) * cart_effort_(j);
-    }
-  }
-
   // Send joint torques 
   torques_out_port_.write( torques_ );
 }
 
-void CartesianWrench::stopHook()
+void CartesianPose::stopHook()
 {
 }
 
-void CartesianWrench::cleanupHook()
+void CartesianPose::cleanupHook()
 {
 }
 

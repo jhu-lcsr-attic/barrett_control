@@ -39,7 +39,7 @@ bool Trivial::startHook() {
   KDL::Chain kdl_chain;
   if(!bard_components::util::initialize_kinematics_from_urdf(
         robot_description_, root_link_, tip_link_,
-        kdl_tree, kdl_chain, n_dof_))
+        n_dof_, kdl_chain, kdl_tree))
   {
     ROS_ERROR("Could not initialize robot kinematics!");
     return false;
