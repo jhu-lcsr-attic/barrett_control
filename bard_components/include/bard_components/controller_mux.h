@@ -62,7 +62,7 @@ namespace bard_components {
     void disable();
 
     // Configuration of controllers
-    void load_controller(std::string name, int dof);
+    void load_controller(std::string name);
 
     void unload_controller(std::string name);
 

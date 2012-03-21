@@ -1,16 +1,27 @@
 
 #include <ros/ros.h>
 
+#include <bard_components/util.h>
 #include <bard_components/controllers/trivial.h>
 
 using namespace bard_components::controllers;
 
 Trivial::Trivial(string const& name) :
   TaskContext(name),
+  root_link_(""),
+  tip_link_(""),
   n_dof_(0),
   positions_(),
   torques_()
 {
+  // Configure properties
+  this->addProperty("robot_description",robot_description_)
+     .doc("The WAM URDF xml string.");
+  this->addProperty("root_link",root_link_)
+    .doc("The root link for the controller.");
+  this->addProperty("tip_link",tip_link_)
+    .doc("The tip link for the controller.");
+
   // Configure data ports
   this->ports()->addPort("positions_in", positions_in_port_)
     .doc("Input port: nx1 vector of joint positions. (n joints)");
@@ -23,12 +34,14 @@ bool Trivial::configureHook() {
 }
 
 bool Trivial::startHook() {
-  // Read in a sample to resize the torques appropriately
-  if(!positions_in_port_.connected()) {
-    positions_in_port_.read(positions_);
-    n_dof_ = positions_.q.rows();
-  } else {
-    ROS_ERROR("Port \"positions_in\" not connected. It is needed to appropriately allocate the controller torque command.");
+  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
+  KDL::Tree kdl_tree;
+  KDL::Chain kdl_chain;
+  if(!bard_components::util::initialize_kinematics_from_urdf(
+        robot_description_, root_link_, tip_link_,
+        kdl_tree, kdl_chain, n_dof_))
+  {
+    ROS_ERROR("Could not initialize robot kinematics!");
     return false;
   }
 

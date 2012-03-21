@@ -60,8 +60,7 @@ ControllerMux::ControllerMux(std::string const& name) :
   // Configure operations
   this->addOperation("load", &ControllerMux::load_controller, this, RTT::OwnThread)
     .doc("Add a controller to the controller mux.")
-    .arg("name","Name of controller to load.")
-    .arg("dof","Number of degrees-of-freedom that the control outputs");
+    .arg("name","Name of controller to load.");
 
   this->addOperation("unload", &ControllerMux::unload_controller, this, RTT::OwnThread)
     .doc("Remove a controller from the controller mux.")
@@ -190,11 +189,11 @@ void ControllerMux::disable()
   enabled_ = false;
 }
 
-void ControllerMux::load_controller(std::string name, int dof)
+void ControllerMux::load_controller(std::string name)
 {
   // Create a controller interface
   ControllerInterface *interface  = new ControllerInterface();
-  interface->dof = dof;
+  interface->dof = n_dof_;
   interface->enabled = false;
   // Add this interface port to the task
   this->ports()->addPort(name, interface->in_port).doc("Input torques from controller \""+name+"\"");

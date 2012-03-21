@@ -56,7 +56,7 @@ wam_left_con_trivial.rosparam.refreshProperties()
 wam_left_con_trivial.configure()
 
 // Connect controller to mux
-wam_left_mux.load("trivial",wam_left_con_trivial.n_arm_dof)
+wam_left_mux.load("trivial")
 connect("wam_left_con_trivial.torques_out","wam_left_mux.trivial",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ wam_left_con_grav.rosparam.refreshProperties()
 wam_left_con_grav.configure()
 
 // Connect controller to mux
-wam_left_mux.load("gravity",wam_left_con_grav.n_arm_dof)
+wam_left_mux.load("gravity")
 connect("wam_left_con_grav.torques_out","wam_left_mux.gravity",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ wam_left_con_wrench.rosparam.refreshProperties()
 wam_left_con_wrench.configure()
 
 // Connect controller to mux
-wam_left_mux.load("wrench",wam_left_con_wrench.n_arm_dof)
+wam_left_mux.load("wrench")
 connect("wam_left_con_wrench.torques_out","wam_left_mux.wrench",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////

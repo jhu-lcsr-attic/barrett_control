@@ -37,8 +37,6 @@
       <include file="$(find bard_components)/launch/left_params.launch"/>
       <rosparam param="Kp">{Element0: 1.0, Element1: 1.0, Element2: 1.0, Element3: 1.0, Element4: 1.0, Element5: 1.0}</rosparam>
       <rosparam param="Kd">{Element0: 1.0, Element1: 1.0, Element2: 1.0, Element3: 1.0, Element4: 1.0, Element5: 1.0}</rosparam>
-      <param name="root_link" value="FixedLink"/>
-      <param name="tip_link" value="LowerWristYawLink"/>
       <param name="target_frame" value="wam_target"/>
     </group>
 

@@ -25,7 +25,7 @@ WAM::WAM(string const& name) :
   ,robot_description_("")
   ,root_link_("")
   ,tip_link_("")
-  ,initial_positions_()
+  ,initial_positions_(7,0.0)
   ,joint_state_throttle_period_(0.01)
   // Internal variables
   ,canbus_(NULL)
@@ -159,7 +159,7 @@ bool WAM::startHook()
 
   // Set the robot to Activated
   if( robot_->SetMode(barrett_direct::WAM::MODE_ACTIVATED) != barrett_direct::WAM::ESUCCESS ){
-    std::cerr<<"Failed to ACTIVATE WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+    ROS_ERROR_STREAM("Failed to ACTIVATE WAM Robot on CAN device \""<<can_dev_name_<<"\"");
   }
 
   ROS_INFO_STREAM("WAM started on CAN device \""<<can_dev_name_<<"\"!");
@@ -171,13 +171,13 @@ void WAM::updateHook()
   // Only send joint torques if new data is coming in
   if( torques_in_port_.read( torques_ ) == RTT::NewData ) {
     if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
-      std::cerr<<"Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+      ROS_ERROR_STREAM("Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }
   }
   
   // Get joint positions
   if( robot_->GetPositions( positions_new_.q.data ) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+    ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
   }
 
   // Get the actual loop period
@@ -210,7 +210,7 @@ void WAM::stopHook()
 {
   // Set the robot to IDLE
   if( robot_->SetMode(barrett_direct::WAM::MODE_IDLE) != barrett_direct::WAM::ESUCCESS ){
-    std::cerr<<"Failed to IDLE WAM Robot on CAN device \""<<can_dev_name_<<"\""<<std::endl;
+    ROS_ERROR_STREAM("Failed to IDLE WAM Robot on CAN device \""<<can_dev_name_<<"\"");
   }
 }
 
@@ -218,7 +218,7 @@ void WAM::cleanupHook()
 {
   // Close the CANBus
   if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
-    std::cerr<<"Failed to close CAN device \""<<can_dev_name_<<"\""<<std::endl;
+    ROS_ERROR_STREAM("Failed to close CAN device \""<<can_dev_name_<<"\"");
   }
 
   // Reset calibration flag
@@ -236,7 +236,7 @@ void WAM::calibrate_position(std::vector<double> &actual_positions)
     if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0],actual_positions.size()))
         != barrett_direct::WAM::ESUCCESS)
     {
-      std::cerr<<"Failed to calibrate encoders!"<<std::endl;
+      ROS_ERROR_STREAM("Failed to calibrate encoders!");
       return;
     }
 
@@ -245,9 +245,9 @@ void WAM::calibrate_position(std::vector<double> &actual_positions)
       positions_.q(i) = actual_positions[i];
     }
 
-    std::cerr<<"Calibrated encoders."<<std::endl;
+    ROS_INFO("Calibrated encoders.");
   } else {
-    std::cerr<<"Cannot calibrate encoders! The WAM control task on device "<<can_dev_name_<<" is not configured."<<std::endl;
+    ROS_ERROR_STREAM("Cannot calibrate encoders! The WAM control task on device "<<can_dev_name_<<" is not configured.");
   }
 }
 
@@ -261,25 +261,25 @@ void WAM::cleanup_internal()
 void WAM::set_velocity_warn(unsigned int thresh)
 {
   if(!this->isConfigured() || robot_->SetVelocityWarning(thresh) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"ERROR: Could not set velocity warning threshold."<<std::endl;
+    ROS_ERROR_STREAM("Could not set velocity warning threshold.");
   }
 }
 void WAM::set_velocity_fault(unsigned int thresh)
 {
   if(!this->isConfigured() || robot_->SetVelocityFault(thresh) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"ERROR: Could not set velocity fault threshold."<<std::endl;
+    ROS_ERROR_STREAM("Could not set velocity fault threshold.");
   }
 }
 void WAM::set_torque_warn(unsigned int thresh)
 {
   if(!this->isConfigured() || robot_->SetTorqueWarning(thresh) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"ERROR: Could not set torque warning threshold."<<std::endl;
+    ROS_ERROR_STREAM("Could not set torque warning threshold.");
   }
 }
 void WAM::set_torque_fault(unsigned int thresh)
 {
   if(!this->isConfigured() || robot_->SetTorqueFault(thresh) != barrett_direct::WAM::ESUCCESS) {
-    std::cerr<<"ERROR: Could not set torque fault threshold."<<std::endl;
+    ROS_ERROR_STREAM("Could not set torque fault threshold.");
   }
 }
 
