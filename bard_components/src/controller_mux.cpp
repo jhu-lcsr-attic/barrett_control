@@ -131,11 +131,11 @@ void ControllerMux::updateHook()
       it++) 
   {
     // Combine control inputs based on gains
-    if( it->second->enabled ) {
-      // Read input from this controller
-      if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
-        // Store this control input
-        it->second->last_torques.data = controller_torques_.data;
+    // Read input from this controller
+    if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
+      // Store this control input
+      it->second->last_torques.data = controller_torques_.data;
+      if( it->second->enabled ) {
         // Add this control input to the output torques
         for(unsigned int i=0; i < it->second->dof && i < n_dof_; i++) {
           torques_(i) += controller_torques_(i);

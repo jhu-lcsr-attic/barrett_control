@@ -69,7 +69,7 @@ bool CartesianPose::configureHook()
   }
 
   // Make sure we have enough gains
-  if(Kp_.size() < 6 || Kd_.size() < 6) {
+  if(Kp_.size() < 7 || Kd_.size() < 7) {
     ROS_ERROR("Not enough gains!");
     return false;
   }
@@ -110,27 +110,21 @@ bool CartesianPose::configureHook()
       new KDL::ChainIkSolverVel_pinv(
         kdl_chain_,
         1.0E-4,
-        100));
+        50));
   kdl_ik_solver_top_.reset(
-      new KDL::ChainIkSolverPos_NR(
+      new KDL::ChainIkSolverPos_NR_JL(
         kdl_chain_,
+        joint_limits_min_,
+        joint_limits_max_,
         *kdl_fk_solver_pos_,
         *kdl_ik_solver_vel_,
-        100,
+        50,
         1.0E-4));
 
   // Zero out torque data
   torques_.data.setZero();
   positions_.q.data.setZero();
   positions_des_.q.data.setZero();
-
-  // Test solver
-  KDL::JntArray ik_hint(7);
-  ik_hint.data.setZero();
-  tip_frame_des_ = KDL::Frame(KDL::Vector(0.0,-0.5,0.0));
-
-  kdl_ik_solver_top_->CartToJnt(ik_hint, tip_frame_des_, positions_des_.q);
-  std::cerr<<positions_des_.q.data<<std::endl;
 
   // Prepare ports for realtime processing
   torques_out_port_.setDataSample(torques_);
@@ -141,18 +135,30 @@ bool CartesianPose::configureHook()
 void CartesianPose::test_ik()
 {
   KDL::JntArray res_pos(7);
-  KDL::JntArray init_pos(7);
-  init_pos.data.setZero();
-  init_pos(0) = 0.1;
-  init_pos(1) = 0.1;
-  init_pos(2) = 0.1;
-  init_pos(3) = 0.1;
-  init_pos(4) = 0.1;
-  init_pos(5) = 0.1;
-  init_pos(6) = 0.1;
-  KDL::Frame frm(KDL::Vector(-0.8,0.0,0.0));
-  kdl_ik_solver_top_->CartToJnt(init_pos, frm, res_pos);
+  
+  // Read in the current joint positions
+  positions_in_port_.read( positions_ );
+
+  KDL::JntArray init_pos(n_dof_);
+  init_pos.data = positions_.q.data;
+
+  // Get transform from the root link frame to the target frame
+  try{
+    tip_frame_msg_ = tf_lookup_transform_("/"+root_link_,target_frame_);
+  } catch (std::exception &ex) {
+    ROS_ERROR_STREAM("Could not look up transform from \""<<root_link_<<"\" to \""<<target_frame_<<"\": "<<ex.what());
+    this->stop();
+  }
+  tf::transformMsgToTF(tip_frame_msg_.transform, tip_frame_tf_);
+  tf::TransformTFToKDL(tip_frame_tf_,tip_frame_des_);
+  kdl_ik_solver_top_->CartToJnt(init_pos, tip_frame_des_, res_pos);
   ROS_INFO_STREAM("IK result: "<<res_pos.data.transpose());
+  /*
+  for(int i=0; i<n_dof_; i++) {
+    res_pos(i) = res_pos(i)-2*M_PI*floor(res_pos(i)/2.0/M_PI);
+  }
+  ROS_INFO_STREAM("IK result: "<<res_pos.data.transpose());
+  */
 }
 
 bool CartesianPose::startHook()
@@ -183,9 +189,7 @@ void CartesianPose::updateHook()
 
   // Compute joint coordinates of the target tip frame
   KDL::JntArray ik_hint(n_dof_);
-  ik_hint.data.setZero();
-  ik_hint(2) = -1.56;
-  ik_hint(3) = 1.56;
+  ik_hint.data = positions_.q.data;
 
   kdl_ik_solver_top_->CartToJnt(ik_hint, tip_frame_des_, positions_des_.q);
 
