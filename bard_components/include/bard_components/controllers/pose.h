@@ -15,7 +15,9 @@
 #include <kdl/chain.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/chainfksolverpos_recursive.hpp>
+#include <kdl/chainiksolverpos_nr.hpp>
 #include <kdl/chainiksolverpos_nr_jl.hpp>
+#include <kdl/chainiksolvervel_wdls.hpp>
 #include <kdl/chainiksolvervel_pinv.hpp>
 
 #include <tf/tf.h>
@@ -49,6 +51,7 @@ namespace bard_components {
       void stopHook();
       void cleanupHook();
 
+      void test_ik();
     private:
 
       // Kinematic properties

@@ -52,6 +52,9 @@ CartesianPose::CartesianPose(string const& name) :
     .doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_)
     .doc("Output port: nx1 vector of joint torques. (n joints)");
+
+  this->addOperation("testIK", &CartesianPose::test_ik, this, RTT::OwnThread)
+    .doc("Test the IK computation.");
 }
 
 bool CartesianPose::configureHook()
@@ -90,12 +93,12 @@ bool CartesianPose::configureHook()
   // Get joint limits from URDF model
   {
     unsigned int i=0;
-    for(std::map<std::string, boost::shared_ptr<urdf::Joint> >::iterator it=urdf_model_.joints_.begin();
-        it != urdf_model_.joints_.end();
+    for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
+        it != kdl_chain_.segments.end();
         it++)
     {
-      joint_limits_min_(i) = it->second->limits->lower;
-      joint_limits_max_(i) = it->second->limits->upper;
+      joint_limits_min_(i) = urdf_model_.joints_[it->getJoint().getName()]->limits->lower;
+      joint_limits_max_(i) = urdf_model_.joints_[it->getJoint().getName()]->limits->upper;
       i++;
     }
   }
@@ -106,25 +109,50 @@ bool CartesianPose::configureHook()
   kdl_ik_solver_vel_.reset(
       new KDL::ChainIkSolverVel_pinv(
         kdl_chain_,
-        1.0E-6,
-        150));
+        1.0E-4,
+        100));
   kdl_ik_solver_top_.reset(
-      new KDL::ChainIkSolverPos_NR_JL(
+      new KDL::ChainIkSolverPos_NR(
         kdl_chain_,
-        joint_limits_min_,
-        joint_limits_max_,
         *kdl_fk_solver_pos_,
         *kdl_ik_solver_vel_,
         100,
-        1.0E-6));
+        1.0E-4));
 
   // Zero out torque data
   torques_.data.setZero();
+  positions_.q.data.setZero();
+  positions_des_.q.data.setZero();
+
+  // Test solver
+  KDL::JntArray ik_hint(7);
+  ik_hint.data.setZero();
+  tip_frame_des_ = KDL::Frame(KDL::Vector(0.0,-0.5,0.0));
+
+  kdl_ik_solver_top_->CartToJnt(ik_hint, tip_frame_des_, positions_des_.q);
+  std::cerr<<positions_des_.q.data<<std::endl;
 
   // Prepare ports for realtime processing
   torques_out_port_.setDataSample(torques_);
 
   return true;
+}
+
+void CartesianPose::test_ik()
+{
+  KDL::JntArray res_pos(7);
+  KDL::JntArray init_pos(7);
+  init_pos.data.setZero();
+  init_pos(0) = 0.1;
+  init_pos(1) = 0.1;
+  init_pos(2) = 0.1;
+  init_pos(3) = 0.1;
+  init_pos(4) = 0.1;
+  init_pos(5) = 0.1;
+  init_pos(6) = 0.1;
+  KDL::Frame frm(KDL::Vector(-0.8,0.0,0.0));
+  kdl_ik_solver_top_->CartToJnt(init_pos, frm, res_pos);
+  ROS_INFO_STREAM("IK result: "<<res_pos.data.transpose());
 }
 
 bool CartesianPose::startHook()
@@ -154,13 +182,14 @@ void CartesianPose::updateHook()
   tf::TransformTFToKDL(tip_frame_tf_,tip_frame_des_);
 
   // Compute joint coordinates of the target tip frame
-  kdl_ik_solver_top_->CartToJnt(positions_.q, tip_frame_des_, positions_des_.q);
+  KDL::JntArray ik_hint(n_dof_);
+  ik_hint.data.setZero();
+  ik_hint(2) = -1.56;
+  ik_hint(3) = 1.56;
+
+  kdl_ik_solver_top_->CartToJnt(ik_hint, tip_frame_des_, positions_des_.q);
 
   // Servo in jointspace to the appropriate joint coordinates
-  //torques_.data = 
-  //  Eigen::Map<Eigen::VectorXd>(&Kp_[0],Kp_.size()).cwiseProduct(positions_des_.q.data - positions_.q.data)
-  //  + Eigen::Map<Eigen::VectorXd>(&Kd_[0],Kd_.size()).cwiseProduct(positions_des_.qdot.data - positions_.qdot.data);
-
   for(unsigned int i=0; i<n_dof_; i++) {
     torques_(i) =
       Kp_[i]*(positions_des_.q(i) - positions_.q(i))

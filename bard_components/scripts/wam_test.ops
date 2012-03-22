@@ -45,6 +45,7 @@ connect("wam_left_mux.torques_out","wam_left.torques_in",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create trivial controller //////////////////////////////////////////////////
+/*
 loadComponent("wam_left_con_trivial","bard_components::controllers::Trivial")
 setActivity("wam_left_con_trivial",0.001,HighestPriority,ORO_SCHED_RT)
 
@@ -58,6 +59,7 @@ wam_left_con_trivial.configure()
 // Connect controller to mux
 wam_left_mux.load("trivial")
 connect("wam_left_con_trivial.torques_out","wam_left_mux.trivial",ConnPolicy())
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create gravity controller //////////////////////////////////////////////////
@@ -77,6 +79,7 @@ connect("wam_left_con_grav.torques_out","wam_left_mux.gravity",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create cartesian wrench controller /////////////////////////////////////////
+/*
 loadComponent("wam_left_con_wrench","bard_components::controllers::CartesianWrench")
 setActivity("wam_left_con_wrench",0.001,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_left_con_wrench")
@@ -91,6 +94,7 @@ wam_left_con_wrench.configure()
 // Connect controller to mux
 wam_left_mux.load("wrench")
 connect("wam_left_con_wrench.torques_out","wam_left_mux.wrench",ConnPolicy())
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create cartesian pose  controller //////////////////////////////////////////
@@ -112,16 +116,17 @@ connect("wam_left_con_pose.torques_out","wam_left_mux.pose",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start Things ///////////////////////////////////////////////////////////////
-wam_left_mux.start()
-wam_left_con_trivial.start()
-wam_left_con_grav.start()
-wam_left_con_wrench.start()
-wam_left_con_pose.start()
-
 wam_left.configure()
 wam_left.start()
 
+wam_left_mux.start()
+//wam_left_con_trivial.start()
+wam_left_con_grav.start()
+//wam_left_con_wrench.start()
+//wam_left_con_pose.start()
+
 wam_left_mux.disable()
 wam_left_mux.toggleControllers(strings("gravity"),strings())
+wam_left_mux.toggleControllers(strings("pose"),strings())
 //wam_left_mux.toggleControllers(strings("trivial"),strings("gravity"))
 //wam_left_mux.toggleControllers(strings("gravity"),strings("trivial"))
