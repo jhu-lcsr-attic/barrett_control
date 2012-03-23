@@ -37,12 +37,13 @@ namespace bard_components {
       std::string root_link_;
       std::string tip_link_;
       std::string target_frame_;
-      std::vector<double> Kp_; // Proportional gains                                                                                                                             
-      std::vector<double> Kd_; // Derivative gains                                                                                                                               
+      std::vector<double> kp_; // Proportional gains                                                                                                                             
+      std::vector<double> kd_; // Derivative gains                                                                                                                               
       RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
+      RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
       RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 

@@ -242,21 +242,22 @@ void ControllerMux::toggle_controllers(
 
 void ControllerMux::list_controllers()
 {
-  ROS_INFO("Enabled controllers:");
+  ROS_INFO_STREAM("Controller multiplexer is "<<(enabled_)?("ENABLED"):("DISABLED"));
+  ROS_INFO("  Enabled controllers:");
   for(ControllerInterface_iter it = controller_interfaces_.begin();
       it != controller_interfaces_.end(); it++) 
   {
     if(it->second->enabled) {
-      ROS_INFO_STREAM("  "<<it->first<<": "<<it->second->last_torques.data.transpose());
+      ROS_INFO_STREAM("      "<<it->first<<": "<<it->second->last_torques.data.transpose());
     }
   }
-  ROS_INFO("Disabled controllers:");
+  ROS_INFO("  Disabled controllers:");
   for(ControllerInterface_iter it = controller_interfaces_.begin();
       it != controller_interfaces_.end(); it++) 
   {
     if(!it->second->enabled) {
-      ROS_INFO_STREAM("  "<<it->first<<": "<<it->second->last_torques.data.transpose());
+      ROS_INFO_STREAM("      "<<it->first<<": "<<it->second->last_torques.data.transpose());
     }
   }
-  ROS_INFO_STREAM("Controller command: "<<torques_.data.transpose());
+  ROS_INFO_STREAM("  Controller command: "<<torques_.data.transpose());
 }

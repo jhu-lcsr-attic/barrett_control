@@ -25,8 +25,8 @@ CartesianPose::CartesianPose(string const& name) :
   ,root_link_("")
   ,tip_link_("")
   ,target_frame_("")
-  ,Kp_(7,0.0)
-  ,Kd_(7,0.0)
+  ,kp_(7,0.0)
+  ,kd_(7,0.0)
   ,joint_state_throttle_period_(0.01)
   // Working variables
   ,n_dof_(0)
@@ -40,8 +40,8 @@ CartesianPose::CartesianPose(string const& name) :
   // Declare properties
   this->addProperty("robot_description",robot_description_)
     .doc("The WAM URDF xml string.");
-  this->addProperty("Kd",Kd_);
-  this->addProperty("Kp",Kp_);
+  this->addProperty("kd",kd_);
+  this->addProperty("kp",kp_);
 
   this->addProperty("root_link",root_link_)
     .doc("The root link for the controller.");
@@ -55,6 +55,8 @@ CartesianPose::CartesianPose(string const& name) :
   // Configure data ports
   this->ports()->addEventPort("positions_in", positions_in_port_)
     .doc("Input port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addPort("positions_out", positions_out_port_)
+    .doc("Output port: nx1 vector of desired joint positins. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_)
     .doc("Output port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_)
@@ -75,12 +77,6 @@ bool CartesianPose::configureHook()
     return false;
   }
 
-  // Make sure we have enough gains
-  if(Kp_.size() < 7 || Kd_.size() < 7) {
-    ROS_ERROR("Not enough gains!");
-    return false;
-  }
-
   // Initialize kinematics (KDL tree, KDL chain, and #DOF)
   if(!bard_components::util::initialize_kinematics_from_urdf(
         robot_description_, root_link_, tip_link_,
@@ -89,6 +85,13 @@ bool CartesianPose::configureHook()
     ROS_ERROR("Could not initialize robot kinematics!");
     return false;
   }
+  
+  // Make sure we have enough gains
+  if(kp_.size() < n_dof_ || kd_.size() < n_dof_) {
+    ROS_ERROR("Not enough gains!");
+    return false;
+  }
+
   
   // Resize working variables
   positions_.resize(n_dof_);
@@ -137,6 +140,7 @@ bool CartesianPose::configureHook()
   bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
   // Prepare ports for realtime processing
+  positions_out_port_.setDataSample(positions_des_);
   torques_out_port_.setDataSample(torques_);
   joint_state_out_port_.setDataSample(joint_state_);
 
@@ -174,8 +178,8 @@ void CartesianPose::compute_ik(bool debug)
   // Servo in jointspace to the appropriate joint coordinates
   for(unsigned int i=0; i<n_dof_; i++) {
     torques_(i) =
-      Kp_[i]*(positions_des_.q(i) - positions_.q(i))
-      + Kd_[i]*(positions_des_.qdot(i) - positions_.qdot(i));
+      kp_[i]*(positions_des_.q(i) - positions_.q(i))
+      + kd_[i]*(positions_des_.qdot(i) - positions_.qdot(i));
   }
 
   if(debug) {
@@ -210,7 +214,11 @@ bool CartesianPose::startHook()
 
 void CartesianPose::updateHook()
 {
+  // Compute the inverse kinematics solution
   this->compute_ik(false);
+
+  // Send position target
+  positions_out_port_.write( positions_des_ );
   
   // Send joint torques 
   torques_out_port_.write( torques_ );

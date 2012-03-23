@@ -15,85 +15,67 @@ using namespace bard_components::controllers;
 JointPID::JointPID(string const& name) :
   TaskContext(name)
   // Properties
-  ,n_arm_dof_(7)
   ,robot_description_("")
-  ,joint_prefix_("")
   ,root_link_("")
   ,tip_link_("")
+  ,kp_(7,0.0)
+  ,ki_(7,0.0)
+  ,i_clamp_(7,0.0)
+  ,kd_(7,0.0)
   // Working variables
-  ,kdl_tree_()
+  ,n_dof_(0)
   ,kdl_chain_()
-  ,des_positions_()
-  ,des_velocities_()
+  ,kdl_tree_()
   ,positions_()
-  ,velocities_()
-  ,torques_(n_arm_dof_)
+  ,positions_des_()
+  ,torques_()
 {
   // Declare properties
-  this->addProperty("n_arm_dof",n_arm_dof_).doc("The number of degrees-of-freedom of the WAM robot (4 or 7).");
   this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
-  this->addProperty("joint_prefix",joint_prefix_).doc("The joint name prefix used in the WAM URDF.");
-  this->addProperty("kp",kp_).doc("The joint position gains.");
-  this->addProperty("kd",kd_).doc("The joint velocitiy gains.");
+  this->addProperty("kp",kp_).doc("The joint proportional gains.");
+  this->addProperty("ki",ki_).doc("The joint integral gains.");
+  this->addProperty("i_clamp",i_clamp_).doc("The joint integral error clamp. This limits integral wind-up.");
+  this->addProperty("kd",kd_).doc("The joint derivative gains.");
 
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
 
   // Configure data ports
-  this->ports()->addPort("des_positions_in", des_positions_in_port_).doc("Input port: nx1 vector of desired joint positions. (n joints)");
-  this->ports()->addPort("des_velocities_in", des_velocities_in_port_).doc("Input port: nx1 vector of desired joint velocities. (n joints)");
-  this->ports()->addPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
-  this->ports()->addPort("velocities_in", velocities_in_port_).doc("Input port: nx1 vector of joint velocities. (n joints)");
+  this->ports()->addEventPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addPort("positions_des_in", positions_des_in_port_).doc("Input port: nx1 vector of desired joint positions. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
 }
 
 bool JointPID::configureHook()
 {
   // Construct an URDF model from the xml string
-  urdf::Model urdf_model;
-  urdf_model.initString(robot_description_);
-
-  // Get root link
-  std::string root_name = urdf_model.getRoot()->name;
-
-  // Get a KDL tree from the robot URDF
-  if (!kdl_parser::treeFromUrdfModel(urdf_model, kdl_tree_)){
-    ROS_ERROR("Failed to construct kdl tree");
-    return false;
-  }
-
-  // Populate the KDL chain
-  if(!kdl_tree_.getChain(
-        joint_prefix_+"/"+root_link_,
-        joint_prefix_+"/"+tip_link_,
-        kdl_chain_))
+  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
+  if(!bard_components::util::initialize_kinematics_from_urdf(
+        robot_description_, root_link_, tip_link_,
+        n_dof_, kdl_chain_, kdl_tree_, urdf_model_))
   {
-    ROS_ERROR_STREAM("Failed to get KDL chain from tree: "
-        <<joint_prefix_<<"/"<<root_link_
-        <<" --> "
-        <<joint_prefix_<<"/"<<tip_link_
-        <<std::endl
-        <<"  Tree has "<<kdl_tree_.getNrOfJoints()<<" joints"
-        <<"  Tree has "<<kdl_tree_.getNrOfSegments()<<" segments"
-        <<"  The segments are:"
-        );
+    ROS_ERROR("Could not initialize robot kinematics!");
     return false;
   }
 
   // Check gains
-  if(kp_.size() < n_arm_dof_ || kd_.size() < n_arm_dof_) {
+  if(kp_.size() < n_dof_ || kd_.size() < n_dof_) {
     ROS_ERROR("Not enough gains for controller.");
     return false;
   }
 
   // Resize working vectors
-  des_positions_.resize(n_arm_dof_);
-  des_velocities_.resize(n_arm_dof_);
-  positions_.resize(n_arm_dof_);
-  velocities_.resize(n_arm_dof_);
-  torques_.resize(n_arm_dof_);
+  positions_.resize(n_dof_);
+  positions_des_.resize(n_dof_);
+  p_error_.resize(n_dof_);
+  i_error_.resize(n_dof_);
+  d_error_.resize(n_dof_);
+  torques_.resize(n_dof_);
 
   // Zero out torque data
+  p_error_.data.setZero();
+  i_error_.data.setZero();
+  d_error_.data.setZero();
   torques_.data.setZero();
 
   // Prepare ports for realtime processing
@@ -109,22 +91,23 @@ bool JointPID::startHook()
 
 void JointPID::updateHook()
 {
+  // Read in the current joint positions & velocities
+  positions_in_port_.readNewest( positions_ );
+
   // Read in the goal joint positions & velocities
-  if(des_positions_in_port_.readNewest( des_positions_new_ ) == RTT::NewData) {
-    des_positions_ = des_positions_new_;
-  }
-  if(des_velocities_in_port_.readNewest( des_velocities_new_ ) == RTT::NewData) {
-    des_velocities_ = des_velocities_new_;
-  }
+  positions_des_in_port_.readNewest( positions_des_ );
 
-  // Read in the current joint positions
-  positions_in_port_.read( positions_ );
-  velocities_in_port_.read( velocities_ );
-
-  for(int i=0; i<n_arm_dof_; i++) {
-    torques_(i) =
-      kp_[i]*(des_positions_(i) - positions_(i))
-      + kd_[i]*(des_velocities_(i) - velocities_(i));
+  // Compute torques
+  for(unsigned int i=0; i<n_dof_; i++) {
+    // Compute proportional and derivative error
+    p_error_(i) = positions_des_.q(i) - positions_.q(i);
+    d_error_(i) = positions_des_.qdot(i) - positions_.qdot(i);
+    // Integrate proportional error if it is below the integral clamp
+    if(fabs(i_error(i)) < fabs(i_clamp_[i])) {
+      i_error_(i) += p_error_(i);
+    }
+    // Compute pid joint torque
+    torques_(i) = kp_[i]*p_error_(i) + ki_[i]*i_error_(i) + kd_[i]*d_error_(i) ;
   }
  
   // Send joint positions

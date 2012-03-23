@@ -26,8 +26,8 @@ CartesianWrench::CartesianWrench(string const& name) :
   ,root_link_("")
   ,tip_link_("")
   ,target_frame_("")
-  ,Kp_(6,0.0)
-  ,Kd_(6,0.0)
+  ,kp_(6,0.0)
+  ,kd_(6,0.0)
   // Working variables
   ,n_dof_(0)
   ,kdl_tree_()
@@ -38,8 +38,8 @@ CartesianWrench::CartesianWrench(string const& name) :
   // Declare properties
   this->addProperty("robot_description",robot_description_)
     .doc("The WAM URDF xml string.");
-  this->addProperty("Kd",Kd_);
-  this->addProperty("Kp",Kp_);
+  this->addProperty("kd",kd_);
+  this->addProperty("kp",kp_);
 
   this->addProperty("root_link",root_link_)
     .doc("The root link for the controller.");
@@ -67,7 +67,7 @@ bool CartesianWrench::configureHook()
   }
 
   // Make sure we have enough gains
-  if(Kp_.size() < 6 || Kd_.size() < 6) {
+  if(kp_.size() < 6 || kd_.size() < 6) {
     ROS_ERROR("Not enough gains!");
     return false;
   }
@@ -153,7 +153,7 @@ void CartesianWrench::updateHook()
 
   // Apply gains to position and velocity error
   for (unsigned int i = 0 ; i < 6 ; i++) {
-    cart_effort_(i) =  Kp_[i] * cart_twist_err_(i) + Kd_[i] * (0.0 - cart_vel_(i));
+    cart_effort_(i) =  kp_[i] * cart_twist_err_(i) + kd_[i] * (0.0 - cart_vel_(i));
   }
 
   // Convert the force into a set of joint torques.                                                                                                                               

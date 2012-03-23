@@ -53,7 +53,7 @@ WAM::WAM(string const& name) :
      .doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure data ports
-  this->ports()->addEventPort("torques_in", torques_in_port_)
+  this->ports()->addPort("torques_in", torques_in_port_)
    .doc("Input Event port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_)
    .doc("Output port: nx1 vector of joint positions & velocities. (n joints)");
