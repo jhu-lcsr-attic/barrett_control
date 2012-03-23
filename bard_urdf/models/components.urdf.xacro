@@ -299,7 +299,7 @@
     <joint name="${prefix}/UpperWristPitchJoint" type="revolute">
       <parent link="${prefix}/UpperWristYawLink"/>
       <child link="${prefix}/UpperWristPitchLink"/>
-      <origin xyz="0 0 0" rpy="${0.5 * PI} ${0.5 * PI} 0"/>
+      <origin xyz="0 0 0" rpy="${0.5 * PI} ${PI} 0"/>
       <axis xyz="0 1 0"/>
       <limit effort="5" lower="-1.45" upper="1.45" velocity="3.27"/><!-- 1.45 is a limit taken in from 1.5 due to saftey and differences between arms. -->
       <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
@@ -308,7 +308,7 @@
     <link name="${prefix}/UpperWristPitchLink" >
       <inertial>
         <origin xyz="-0.00012262 -0.01703194 0.02468336" rpy="0 0 0" />
-        <mass value="0.41797364" />
+        <mass value="0.51797364" />
         <inertia  ixx="0.00055516" ixy="0.00000061"  ixz="-0.00000074"
           iyy="0.00024367"  iyz="-0.00004590"
           izz="0.00045358" />
@@ -346,7 +346,7 @@
     <link name="${prefix}/LowerWristYawLink" >
       <inertial>
         <origin xyz="-0.00000134 -0.00228167 -0.00000141" rpy="0 0 0" />
-        <mass value="0.17286134" />
+        <mass value="0.08286134" />
         <inertia  ixx="0.00010859" ixy="0.00000000"  ixz="-0.00000000"
           iyy="0.00020683"  iyz="-0.0000000"
           izz="0.00010851" />
@@ -367,68 +367,6 @@
     </link>
     <xacro:gazeboReferenceDAE name="${prefix}/LowerWristYawLink"/>
     <xacro:control topicName="${prefix}/LowerWristYaw" name="DarmSim_${prefix}Arm_WAM_LowerWristYaw" linkName="${prefix}/LowerWristYawLink" jointName="${prefix}/LowerWristYawJoint" />
-  </xacro:macro>
-
-  <xacro:macro name="LowerWristPalm" params="prefix">
-    <joint name="${prefix}/LowerWristPalmJoint" type="fixed">
-      <parent link="${prefix}/LowerWristYawLink"/>
-      <child link="${prefix}/LowerWristPalmLink"/>
-      <origin xyz="0 0 0" rpy="0 0 -${0.5 * PI}"/>
-      <provideFeedback value="true"/>
-    </joint>
-    <link name="${prefix}/LowerWristPalmLink" >
-      <inertial>
-        <origin xyz="0.00035500 -0.00499005 0.04864979" />
-        <mass value="0.63352875" />
-        <inertia  ixx="0.00102103" ixy="0.00000775"  ixz="-0.00001230"
-          iyy="0.00080944"  iyz="-0.00014417"
-          izz="0.00068788" />
-      </inertial>
-      <visual>
-        <material name="WAMGrey" />
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.DAE"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.stl"/>
-        </geometry>
-      </collision>
-    </link>
-    <xacro:gazeboReferenceDAE name="${prefix}/LowerWristPalmLink"/>
-
-    <gazebo reference="${prefix}/LowerWristPalmJoint">
-      <provideFeedback value="true"/>
-    </gazebo>
-
-    <gazebo>
-      <controller:gazebo_ros_jointFeedback name="${prefix}_JointFTsensor" plugin="libgazebo_ros_jointFeedback.so">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>100.0</updateRate>
-        <jointName>${prefix}/LowerWristPalmJoint</jointName>
-        <topicName>${prefix}/BHand/ForceTorqueSensor</topicName>
-        <bodyRelation>child</bodyRelation>
-        <frameName>${prefix}/LowerWristPalmLink</frameName>
-        <interface:position name="${prefix}_JointFTsensor_force_iface" />
-      </controller:gazebo_ros_jointFeedback>
-    </gazebo>
-
-    <gazebo reference="${prefix}/LowerWristPalmLink">
-      <sensor:contact name="${prefix}Palm_contact_sensor">
-        <geom>${prefix}/LowerWristPalmLink_geom</geom>
-        <updateRate>100.0</updateRate>
-        <controller:gazebo_ros_bumper name="${prefix}/LowerWristPalmLink/bumperController" plugin="libgazebo_ros_bumper.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>100.0</updateRate>
-          <frameName>${prefix}/LowerWristPalmLink</frameName>
-          <bumperTopicName>${prefix}/BHand/Palm/bumper</bumperTopicName>
-          <interface:bumper name="DarmSim${prefix}ArmWAMLowerWristPalmLink_bumper_iface" />
-        </controller:gazebo_ros_bumper>
-      </sensor:contact>
-    </gazebo>
   </xacro:macro>
 
   <!-- Palm with ForceTorque macros -->
@@ -468,80 +406,6 @@
     <xacro:control topicName="${prefix}/LowerWristYaw" name="DarmSim_${prefix}Arm_WAM_LowerWristYaw" linkName="${prefix}/LowerWristYawLink" jointName="${prefix}/LowerWristYawJoint" />
   </xacro:macro>
 
-  <xacro:macro name="LowerWristPalmFT" params="prefix">
-    <joint name="${prefix}/LowerWristPalmJoint" type="fixed">
-      <parent link="${prefix}/LowerWristYawLink"/>
-      <child link="${prefix}/LowerWristPalmLink"/>
-      <origin xyz="0 0 0.0048" rpy="0 0 -${0.5 * PI}"/>
-      <provideFeedback value="true"/>
-    </joint>
-    <link name="${prefix}/LowerWristPalmLink" >
-      <inertial>
-        <origin xyz="0.00035500 -0.00499005 0.04864979" />
-        <mass value="0.63352875" />
-        <inertia  ixx="0.00102103" ixy="0.00000775"  ixz="-0.00001230"
-          iyy="0.00080944"  iyz="-0.00014417"
-          izz="0.00068788" />
-      </inertial>
-      <visual>
-        <material name="WAMGrey" />
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.DAE"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/palm.stl"/>
-        </geometry>
-      </collision>
-    </link>
-    <xacro:gazeboReferenceDAE name="${prefix}/LowerWristPalmLink"/>
-
-
-    <gazebo reference="${prefix}/LowerWristPalmJoint">
-      <provideFeedback value="true"/>
-    </gazebo>
-
-    <gazebo>
-      <controller:gazebo_ros_jointFeedback name="${prefix}_JointFTsensor" plugin="libgazebo_ros_jointFeedback.so">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>100.0</updateRate>
-        <jointName>${prefix}/LowerWristPalmJoint</jointName>
-        <topicName>${prefix}/BHand/ForceTorqueSensor</topicName>
-        <bodyRelation>child</bodyRelation>
-        <frameName>${prefix}/LowerWristPalmLink</frameName>
-        <interface:position name="${prefix}_JointFTsensor_force_iface" />
-      </controller:gazebo_ros_jointFeedback>
-    </gazebo>
-
-    <gazebo reference="${prefix}/LowerWristPalmLink">
-      <sensor:contact name="${prefix}Palm_contact_sensor">
-        <geom>${prefix}/LowerWristPalmLink_geom</geom>
-        <updateRate>100.0</updateRate>
-        <controller:gazebo_ros_bumper name="${prefix}/LowerWristPalmLink/bumperController" plugin="libgazebo_ros_bumper.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>100.0</updateRate>
-          <frameName>${prefix}/LowerWristPalmLink</frameName>
-          <bumperTopicName>${prefix}/BHand/Palm/bumper</bumperTopicName>
-          <interface:bumper name="DarmSim${prefix}ArmWAMLowerWristPalmLink_bumper_iface" />
-        </controller:gazebo_ros_bumper>
-      </sensor:contact>
-    </gazebo>
-  </xacro:macro>
-
-  <!-- Palm -->
-  <xacro:macro name="Palm" params="prefix">
-    <link name="${prefix}/PalmLink" />
-
-    <joint name="${prefix}/PalmJoint" type="fixed">
-      <parent link="${prefix}/LowerWristPalmLink"/>
-      <child link="${prefix}/PalmLink"/>
-      <!--             <origin xyz="0 0 0.1293166" rpy="0 0 0"/> -->
-      <origin xyz="0 0 0.0793166" rpy="0 0 ${PI/2}"/>
-    </joint>
-  </xacro:macro>
 
   <!-- Hand macros -->
   <xacro:macro name="KnuckleOne" params="prefix number xyz rpy axis">

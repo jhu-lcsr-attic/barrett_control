@@ -14,6 +14,8 @@
 #include <bard_components/util.h>
 #include <bard_components/controller_mux.h>
 
+#include <boost/math/special_functions/fpclassify.hpp>
+
 using namespace bard_components;
 
 ControllerMux::ControllerMux(std::string const& name) :
@@ -50,7 +52,7 @@ ControllerMux::ControllerMux(std::string const& name) :
   this->ports()->addPort("state_output", state_output_)
     .doc("Output port: nx1 vector of joint positions. (n joints)");
 
-  this->ports()->addPort("positions_in", positions_in_port_)
+  this->ports()->addEventPort("positions_in", positions_in_port_)
     .doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_)
     .doc("Output port: sensor_msgs/JointState of commanded joint state.");
@@ -72,12 +74,12 @@ ControllerMux::ControllerMux(std::string const& name) :
   this->addOperation("disable", &ControllerMux::disable, this, RTT::OwnThread)
     .doc("Disable multiplexer (output zero torques).");
 
-  this->addOperation("toggleControllers", &ControllerMux::toggle_controllers, this, RTT::OwnThread)
+  this->addOperation("toggleControllers", &ControllerMux::toggle_controllers, this, RTT::ClientThread)
     .doc("Enable and disable controllers by name.")
     .arg("enable_controllers","Array of names of controllers to enable.")
     .arg("disable_controllers","Array of names of controllers to disable.");
 
-  this->addOperation("listControllers", &ControllerMux::list_controllers, this, RTT::OwnThread)
+  this->addOperation("listControllers", &ControllerMux::list_controllers, this, RTT::ClientThread)
     .doc("List the currently enabled and disabled controllers.");
 }
 
@@ -120,7 +122,7 @@ void ControllerMux::updateHook()
   }
   
   // Read in the current joint positions
-  positions_in_port_.read( positions_ );
+  positions_in_port_.readNewest( positions_ );
 
   // Zero out the output torques
   torques_.data.setZero();
@@ -130,15 +132,16 @@ void ControllerMux::updateHook()
       it != controller_interfaces_.end();
       it++) 
   {
-    // Combine control inputs based on gains
     // Read input from this controller
-    if(it->second->in_port.read(controller_torques_) == RTT::NewData) {
+    if(it->second->in_port.readNewest(controller_torques_)) {
       // Store this control input
       it->second->last_torques.data = controller_torques_.data;
       if( it->second->enabled ) {
         // Add this control input to the output torques
         for(unsigned int i=0; i < it->second->dof && i < n_dof_; i++) {
-          torques_(i) += controller_torques_(i);
+          if(boost::math::isfinite(controller_torques_(i)) && !boost::math::isnan(controller_torques_(i))) {
+            torques_(i) += controller_torques_(i);
+          }
         }
       }
     }
@@ -255,4 +258,5 @@ void ControllerMux::list_controllers()
       ROS_INFO_STREAM("  "<<it->first<<": "<<it->second->last_torques.data.transpose());
     }
   }
+  ROS_INFO_STREAM("Controller command: "<<torques_.data.transpose());
 }

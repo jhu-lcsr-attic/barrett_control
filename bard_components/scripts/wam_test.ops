@@ -30,7 +30,7 @@ stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states"))
 ///////////////////////////////////////////////////////////////////////////////
 // Create multiplexer /////////////////////////////////////////////////////////
 loadComponent("wam_left_mux","bard_components::ControllerMux")
-setActivity("wam_left_mux",0.001,HighestPriority,ORO_SCHED_RT)
+setActivity("wam_left_mux",0,HighestPriority,ORO_SCHED_RT)
 stream("wam_left_mux.joint_state_out", ros.topic("wam_rtt/wam_left_mux/joint_states")) 
 
 // Configure parameters
@@ -64,7 +64,7 @@ connect("wam_left_con_trivial.torques_out","wam_left_mux.trivial",ConnPolicy())
 ///////////////////////////////////////////////////////////////////////////////
 // Create gravity controller //////////////////////////////////////////////////
 loadComponent("wam_left_con_grav","bard_components::controllers::GravityCompensation")
-setActivity("wam_left_con_grav",0.001,HighestPriority,ORO_SCHED_RT)
+setActivity("wam_left_con_grav",0,HighestPriority,ORO_SCHED_RT)
 
 connect("wam_left.positions_out","wam_left_con_grav.positions_in",ConnPolicy())
 
@@ -99,7 +99,7 @@ connect("wam_left_con_wrench.torques_out","wam_left_mux.wrench",ConnPolicy())
 ///////////////////////////////////////////////////////////////////////////////
 // Create cartesian pose  controller //////////////////////////////////////////
 loadComponent("wam_left_con_pose","bard_components::controllers::CartesianPose")
-setActivity("wam_left_con_pose",0.001,HighestPriority,ORO_SCHED_RT)
+setActivity("wam_left_con_pose",0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_left_con_pose")
 
 connect("wam_left.positions_out","wam_left_con_pose.positions_in",ConnPolicy())
@@ -113,6 +113,8 @@ wam_left_con_pose.configure()
 wam_left_mux.load("pose")
 connect("wam_left_con_pose.torques_out","wam_left_mux.pose",ConnPolicy())
 
+// Connect WAM state to ROS topic
+stream("wam_left_con_pose.joint_state_out", ros.topic("wam_rtt/wam_left_con_pose/joint_states")) 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start Things ///////////////////////////////////////////////////////////////
@@ -127,6 +129,6 @@ wam_left_con_grav.start()
 
 wam_left_mux.disable()
 wam_left_mux.toggleControllers(strings("gravity"),strings())
-wam_left_mux.toggleControllers(strings("pose"),strings())
+//wam_left_mux.toggleControllers(strings("pose"),strings())
 //wam_left_mux.toggleControllers(strings("trivial"),strings("gravity"))
 //wam_left_mux.toggleControllers(strings("gravity"),strings("trivial"))

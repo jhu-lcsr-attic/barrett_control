@@ -46,6 +46,11 @@
       <rosparam param="Kp">{Element0: 1.0, Element1: 1.0, Element2: 1.0, Element3: 1.0, Element4: 0.5, Element5: 0.5, Element6: 0.2}</rosparam>
       <rosparam param="Kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
       <param name="target_frame" value="/wam_target"/>
+      <param name="joint_state_throttle_period" value="0.1"/>
+      <!-- Publish TF Frames for all the joints -->
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+        <param name="tf_prefix" value="pose_ik"/>
+      </node>
     </group>
 
   </group>

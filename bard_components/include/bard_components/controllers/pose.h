@@ -19,9 +19,12 @@
 #include <kdl/chainiksolverpos_nr_jl.hpp>
 #include <kdl/chainiksolvervel_wdls.hpp>
 #include <kdl/chainiksolvervel_pinv.hpp>
+#include <kdl/chainiksolvervel_pinv_nso.hpp>
+#include <kdl/chainiksolvervel_pinv_givens.hpp>
 
 #include <tf/tf.h>
 
+#include <sensor_msgs/JointState.h>
 #include <geometry_msgs/TransformStamped.h>
 
 namespace bard_components {
@@ -36,10 +39,12 @@ namespace bard_components {
       std::string target_frame_;
       std::vector<double> Kp_; // Proportional gains                                                                                                                             
       std::vector<double> Kd_; // Derivative gains                                                                                                                               
+      RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
+      RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
 
@@ -52,6 +57,7 @@ namespace bard_components {
       void cleanupHook();
 
       void test_ik();
+      void compute_ik(bool debug);
     private:
 
       // Kinematic properties
@@ -82,6 +88,8 @@ namespace bard_components {
       KDL::Frame tip_frame_;
       KDL::Frame tip_frame_des_;
 
+      sensor_msgs::JointState joint_state_;
+      bard_components::util::PeriodicThrottle joint_state_throttle_;
           
     };
   }

@@ -56,7 +56,6 @@
   <xacro:macro name="hollow_forearm" params="prefix">
     <xacro:HollowForeArm prefix="${prefix}"/>
     <xacro:HollowWrist prefix="${prefix}"/>
-    <xacro:Palm prefix="${prefix}"/>
   </xacro:macro>
 
   <!-- forearm with actuation "wrist" -->
@@ -65,8 +64,6 @@
     <xacro:UpperWristYaw prefix="${prefix}"/>
     <xacro:UpperWristPitch prefix="${prefix}"/>
     <xacro:LowerWrist prefix="${prefix}"/>
-    <xacro:LowerWristPalm prefix="${prefix}"/>
-    <xacro:Palm prefix="${prefix}"/>
   </xacro:macro>
 
   <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
@@ -75,7 +72,5 @@
     <xacro:UpperWristYaw prefix="${prefix}"/>
     <xacro:UpperWristPitch prefix="${prefix}"/>
     <xacro:LowerWristFT prefix="${prefix}"/>
-    <xacro:LowerWristPalmFT prefix="${prefix}"/>
-    <xacro:Palm prefix="${prefix}"/>
   </xacro:macro>
 </robot>
