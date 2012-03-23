@@ -18,7 +18,7 @@ tf.start()
 ///////////////////////////////////////////////////////////////////////////////
 // Create WAM /////////////////////////////////////////////////////////////////
 loadComponent("wam_left","bard_components::WAM")
-setActivity("wam_left",0.01,HighestPriority,ORO_SCHED_RT)
+setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
 
 // Load properties from rosparam
 loadService("wam_left","rosparam")

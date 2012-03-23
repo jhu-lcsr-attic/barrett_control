@@ -42,6 +42,7 @@ namespace bard_components {
     void set_velocity_fault(unsigned int thresh);
     void set_torque_warn(unsigned int thresh);
     void set_torque_fault(unsigned int thresh);
+    double get_loop_rate();
 
     // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
     // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
@@ -73,6 +74,7 @@ namespace bard_components {
     KDL::JntArrayVel positions_new_;
     sensor_msgs::JointState joint_state_;
     RTT::os::TimeService::ticks last_loop_time_;
+    RTT::os::TimeService::Seconds loop_period_;
 
     bard_components::util::PeriodicThrottle joint_state_throttle_;
   };

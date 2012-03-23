@@ -35,7 +35,7 @@
     <!-- Parameters for cartesian wrench controller -->
     <group ns="wam_left_con_wrench">
       <include file="$(find bard_components)/launch/left_params.launch"/>
-      <rosparam param="Kp">{Element0: 70.0, Element1: 70.0, Element2: 70.0, Element3: 0.2, Element4: 0.2, Element5: 0.2}</rosparam>
+      <rosparam param="Kp">{Element0: 200.0, Element1: 200.0, Element2: 200.0, Element3: 4.0, Element4: 4.0, Element5: 1.0}</rosparam>
       <rosparam param="Kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0}</rosparam>
       <param name="target_frame" value="/wam_target"/>
     </group>

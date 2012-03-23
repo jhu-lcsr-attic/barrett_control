@@ -80,6 +80,9 @@ WAM::WAM(string const& name) :
     .doc("Set the torques above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
     .arg("thresh","Torque Fault Threshold");
 
+  this->addOperation("getLoopRate", &WAM::get_loop_rate, this, RTT::OwnThread)
+    .doc("Get the loop rate (Hz)");
+
   ROS_INFO_STREAM("WAM \""<<name<<"\" constructed !");
 }
 
@@ -181,10 +184,10 @@ void WAM::updateHook()
   }
 
   // Get the actual loop period
-  RTT::os::TimeService::Seconds loop_period = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
+  loop_period_ = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
   // Compute joint velocities
   for(unsigned int i=0; i<n_dof_; i++) {
-    positions_.qdot(i) = (positions_new_.q(i) - positions_.q(i))/loop_period;
+    positions_.qdot(i) = (positions_new_.q(i) - positions_.q(i))/loop_period_;
   }
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
 
@@ -283,3 +286,7 @@ void WAM::set_torque_fault(unsigned int thresh)
   }
 }
 
+
+double WAM::get_loop_rate() {
+  return 1.0/loop_period_;
+}
