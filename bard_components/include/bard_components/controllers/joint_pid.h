@@ -9,6 +9,7 @@
 #include <rtt/Port.hpp>
 
 #include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
@@ -19,13 +20,13 @@ namespace bard_components {
     {
       // RTT Properties
       std::string robot_description_;
-      std::string joint_prefix_;
       std::string root_link_;
       std::string tip_link_;
+      std::vector<double> kp_, ki_, i_clamp_, kd_;
 
       // RTT Ports
-      RTT::InputPort<KDL::JntArray> positions_in_port_;
-      RTT::InputPort<KDL::JntArray> positions_des_in_port_;
+      RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
+      RTT::InputPort<KDL::JntArrayVel> positions_des_in_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
 
     public:
@@ -44,13 +45,11 @@ namespace bard_components {
       KDL::Tree kdl_tree_;
       urdf::Model urdf_model_;
 
-      std::vector<double> kp_, ki_, i_clamp_, kd_;
-
-      KDL::JntArray positions_;
+      KDL::JntArrayVel positions_;
+      KDL::JntArrayVel positions_des_;
       KDL::JntArray p_error_;
       KDL::JntArray i_error_;
       KDL::JntArray d_error_;
-      KDL::JntArray positions_des_;
       KDL::JntArray torques_;
     };
   }

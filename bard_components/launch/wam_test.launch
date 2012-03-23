@@ -16,7 +16,7 @@
     </group>
 
     <!-- Parameters for controller mux -->
-    <group ns="wam_left_mux">
+    <group ns="left_mux">
       <include file="$(find bard_components)/launch/left_params.launch"/>
       <param name="joint_state_throttle_period" value="0.1"/>
     </group>
@@ -31,10 +31,10 @@
     <!-- Parameters for jointspace PID controller -->
     <group ns="left_joint_pid">
       <include file="$(find bard_components)/launch/left_params.launch"/>
-      <rosparam param="kp">{Element0: 200.0, Element1: 200.0, Element2: 200.0, Element3: 4.0, Element4: 4.0, Element5: 1.0}</rosparam>
-      <rosparam param="ki">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0}</rosparam>
-      <rosparam param="i_clamp">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0}</rosparam>
-      <rosparam param="kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0}</rosparam>
+      <rosparam param="kp">{Element0: 200.0, Element1: 200.0, Element2: 200.0, Element3: 200.0, Element4: 4.0, Element5: 1.0, Element6: 0.2}</rosparam>
+      <rosparam param="ki">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
+      <rosparam param="i_clamp">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
+      <rosparam param="kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
     </group>
 
     <!-- Parameters for gravity compensation controller -->

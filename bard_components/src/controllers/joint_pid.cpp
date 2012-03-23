@@ -103,7 +103,7 @@ void JointPID::updateHook()
     p_error_(i) = positions_des_.q(i) - positions_.q(i);
     d_error_(i) = positions_des_.qdot(i) - positions_.qdot(i);
     // Integrate proportional error if it is below the integral clamp
-    if(fabs(i_error(i)) < fabs(i_clamp_[i])) {
+    if(fabs(i_error_(i)) < fabs(i_clamp_[i])) {
       i_error_(i) += p_error_(i);
     }
     // Compute pid joint torque

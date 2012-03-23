@@ -242,7 +242,7 @@ void ControllerMux::toggle_controllers(
 
 void ControllerMux::list_controllers()
 {
-  ROS_INFO_STREAM("Controller multiplexer is "<<(enabled_)?("ENABLED"):("DISABLED"));
+  ROS_INFO_STREAM("Controller multiplexer is "<<((enabled_)?("ENABLED"):("DISABLED")));
   ROS_INFO("  Enabled controllers:");
   for(ControllerInterface_iter it = controller_interfaces_.begin();
       it != controller_interfaces_.end(); it++) 

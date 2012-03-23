@@ -64,7 +64,7 @@ connect("left_trivial.torques_out","left_mux.trivial",ConnPolicy())
 ///////////////////////////////////////////////////////////////////////////////
 // Create joint PID controller ////////////////////////////////////////////////
 
-loadComponent("left_joint_pid","bard_components::controllers::Trivial")
+loadComponent("left_joint_pid","bard_components::controllers::JointPID")
 setActivity("left_joint_pid",0.001,HighestPriority,ORO_SCHED_RT)
 
 connect("wam_left.positions_out","left_joint_pid.positions_in",ConnPolicy())
@@ -76,7 +76,7 @@ left_joint_pid.configure()
 
 // Connect controller to mux
 left_mux.load("joint_pid")
-connect("left_joint_pid.torques_out","left_mux.trivial",ConnPolicy())
+connect("left_joint_pid.torques_out","left_mux.joint_pid",ConnPolicy())
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create gravity controller //////////////////////////////////////////////////
