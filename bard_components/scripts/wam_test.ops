@@ -153,7 +153,7 @@ left_mux.load("joint_traj")
 connect("left_joint_traj.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
 
 // Connect WAM state to ROS topic
-stream(ros.topic("wam_rtt/left_joint_traj/trajectories"),"left_joint_traj.trajectories_in", ) 
+stream("left_joint_traj.trajectories_in",ros.topic("wam_rtt/left_joint_traj/trajectories")) 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start Things ///////////////////////////////////////////////////////////////

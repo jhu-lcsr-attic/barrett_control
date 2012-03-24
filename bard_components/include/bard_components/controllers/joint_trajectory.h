@@ -25,7 +25,6 @@ namespace bard_components {
       std::string robot_description_;
       std::string root_link_;
       std::string tip_link_;
-      std::vector<double> kp_, ki_, i_clamp_, kd_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
