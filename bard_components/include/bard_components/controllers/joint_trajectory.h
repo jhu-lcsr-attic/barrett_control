@@ -1,5 +1,5 @@
-#ifndef __BARD_COMPONENTS_CONTROLLERS_JOINT_PID
-#define __BARD_COMPONENTS_CONTROLLERS_JOINT_PID
+#ifndef __BARD_COMPONENTS_CONTROLLERS_JOINT_TRAJECTORY
+#define __BARD_COMPONENTS_CONTROLLERS_JOINT_TRAJECTORY
 
 #include <iostream>
 
@@ -14,27 +14,23 @@
 #include <kdl/chain.hpp>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
 
-#include <sensor_msgs/JointState.h>
-
 namespace bard_components {
   namespace controllers {
-    class JointPID : public RTT::TaskContext
+    class JointTrajectory : public RTT::TaskContext
     {
       // RTT Properties
       std::string robot_description_;
       std::string root_link_;
       std::string tip_link_;
       std::vector<double> kp_, ki_, i_clamp_, kd_;
-      RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
-      RTT::InputPort<KDL::JntArrayVel> positions_des_in_port_;
-      RTT::OutputPort<KDL::JntArray> torques_out_port_;
-      RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
+      RTT::InputPort<trajectory_msgs::JointTrajectory> trajectories_in_port_;
+      RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
 
     public:
-      JointPID(std::string const& name);
+      JointTrajectory(std::string const& name);
       bool configureHook();
       bool startHook();
       void updateHook();
@@ -51,17 +47,14 @@ namespace bard_components {
 
       KDL::JntArrayVel positions_;
       KDL::JntArrayVel positions_des_;
-      KDL::JntArray p_error_;
-      KDL::JntArray i_error_;
-      KDL::JntArray d_error_;
-      KDL::JntArray torques_;
 
-      sensor_msgs::JointState joint_state_;
-      bard_components::util::PeriodicThrottle joint_state_throttle_;
+      trajectory_msgs::JointTrajectory new_trajectory_;
+      trajectory_msgs::JointTrajectoryPoint last_point_;
+      std::list<trajectory_msgs::JointTrajectoryPoint> traj_points_;
     };
   }
 }
 
 
-#endif // ifndef __BARD_COMPONENTS_CONTROLLERS_JOINT_PID
+#endif // ifndef __BARD_COMPONENTS_CONTROLLERS_JOINT_TRAJECTORY
 

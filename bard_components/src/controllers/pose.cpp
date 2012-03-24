@@ -27,15 +27,12 @@ CartesianPose::CartesianPose(string const& name) :
   ,target_frame_("")
   ,kp_(7,0.0)
   ,kd_(7,0.0)
-  ,joint_state_throttle_period_(0.01)
   // Working variables
   ,n_dof_(0)
   ,kdl_chain_()
   ,kdl_tree_()
   ,positions_()
   ,torques_()
-  ,joint_state_()
-  ,joint_state_throttle_(joint_state_throttle_period_)
 {
   // Declare properties
   this->addProperty("robot_description",robot_description_)
@@ -49,8 +46,6 @@ CartesianPose::CartesianPose(string const& name) :
     .doc("The tip link for the controller.");
   this->addProperty("target_frame",target_frame_)
     .doc("The target frame to track with tip_link.");
-  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
-     .doc("The period of the ROS sensor_msgs/JointState publisher.");
 
   // Configure data ports
   this->ports()->addEventPort("positions_in", positions_in_port_)
@@ -59,8 +54,6 @@ CartesianPose::CartesianPose(string const& name) :
     .doc("Output port: nx1 vector of desired joint positins. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_)
     .doc("Output port: nx1 vector of joint torques. (n joints)");
-  this->ports()->addPort("joint_state_out", joint_state_out_port_)
-   .doc("Output port: sensor_msgs::JointState.");
 
   this->addOperation("testIK", &CartesianPose::test_ik, this, RTT::OwnThread)
     .doc("Test the IK computation.");
@@ -135,14 +128,10 @@ bool CartesianPose::configureHook()
   torques_.data.setZero();
   positions_.q.data.setZero();
   positions_des_.q.data.setZero();
-  
-  // Construct ros JointState message with the appropriate joint names
-  bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_des_);
   torques_out_port_.setDataSample(torques_);
-  joint_state_out_port_.setDataSample(joint_state_);
 
   return true;
 }
@@ -189,16 +178,6 @@ void CartesianPose::compute_ik(bool debug)
     ROS_INFO_STREAM("Displacement:     "<<(positions_des_.q.data-positions_.q.data).transpose());
     ROS_INFO_STREAM("Torques:          "<<torques_.data.transpose());
   }
-  
-  // Copy desired joint positions into joint state
-  if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
-    joint_state_.header.stamp = ros::Time::now();
-    for(unsigned int i=0; i<n_dof_; i++) {
-      joint_state_.position[i] = positions_des_.q(i);
-      joint_state_.effort[i] = torques_(i);
-    }
-    joint_state_out_port_.write( joint_state_ );
-  } 
 }
 
 bool CartesianPose::startHook()

@@ -24,7 +24,6 @@
 
 #include <tf/tf.h>
 
-#include <sensor_msgs/JointState.h>
 #include <geometry_msgs/TransformStamped.h>
 
 namespace bard_components {
@@ -39,13 +38,11 @@ namespace bard_components {
       std::string target_frame_;
       std::vector<double> kp_; // Proportional gains                                                                                                                             
       std::vector<double> kd_; // Derivative gains                                                                                                                               
-      RTT::os::TimeService::Seconds joint_state_throttle_period_;
 
       // RTT Ports
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
-      RTT::OutputPort<sensor_msgs::JointState> joint_state_out_port_;
 
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
 
@@ -89,9 +86,6 @@ namespace bard_components {
       KDL::Frame tip_frame_;
       KDL::Frame tip_frame_des_;
 
-      sensor_msgs::JointState joint_state_;
-      bard_components::util::PeriodicThrottle joint_state_throttle_;
-          
     };
   }
 }

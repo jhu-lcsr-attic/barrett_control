@@ -22,6 +22,7 @@ JointPID::JointPID(string const& name) :
   ,ki_(7,0.0)
   ,i_clamp_(7,0.0)
   ,kd_(7,0.0)
+  ,joint_state_throttle_period_(0.01)
   // Working variables
   ,n_dof_(0)
   ,kdl_chain_()
@@ -29,6 +30,8 @@ JointPID::JointPID(string const& name) :
   ,positions_()
   ,positions_des_()
   ,torques_()
+  ,joint_state_()
+  ,joint_state_throttle_(joint_state_throttle_period_)
 {
   // Declare properties
   this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
@@ -40,10 +43,15 @@ JointPID::JointPID(string const& name) :
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
 
+  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
+     .doc("The period of the ROS sensor_msgs/JointState publisher.");
+
   // Configure data ports
   this->ports()->addEventPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("positions_des_in", positions_des_in_port_).doc("Input port: nx1 vector of desired joint positions. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
+  this->ports()->addPort("joint_state_out", joint_state_out_port_)
+   .doc("Output port: sensor_msgs::JointState.");
 }
 
 bool JointPID::configureHook()
@@ -77,9 +85,13 @@ bool JointPID::configureHook()
   i_error_.data.setZero();
   d_error_.data.setZero();
   torques_.data.setZero();
+  
+  // Construct ros JointState message with the appropriate joint names
+  bard_components::util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
 
   // Prepare ports for realtime processing
   torques_out_port_.setDataSample(torques_);
+  joint_state_out_port_.setDataSample(joint_state_);
 
   return true;
 }
@@ -110,8 +122,18 @@ void JointPID::updateHook()
     torques_(i) = kp_[i]*p_error_(i) + ki_[i]*i_error_(i) + kd_[i]*d_error_(i) ;
   }
  
-  // Send joint positions
+  // Send joint torques
   torques_out_port_.write( torques_ );
+  
+  // Copy desired joint positions into joint state
+  if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
+    joint_state_.header.stamp = ros::Time::now();
+    for(unsigned int i=0; i<n_dof_; i++) {
+      joint_state_.position[i] = positions_des_.q(i);
+      joint_state_.effort[i] = torques_(i);
+    }
+    joint_state_out_port_.write( joint_state_ );
+  } 
 }
 
 void JointPID::stopHook()

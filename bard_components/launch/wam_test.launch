@@ -35,6 +35,13 @@
       <rosparam param="ki">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
       <rosparam param="i_clamp">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
       <rosparam param="kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
+
+      <!-- Publish TF Frames for the desired positions for all the joints -->
+      <node name="ik_transform_publisher" pkg="tf" type="static_transform_publisher" args=" 0 0 0 0 0 0 /baseLink /joint_pid_des/baseLink 10"/>
+      <param name="joint_state_throttle_period" value="0.1"/>
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+        <param name="tf_prefix" value="joint_pid_des"/>
+      </node>
     </group>
 
     <!-- Parameters for gravity compensation controller -->
@@ -57,13 +64,6 @@
       <rosparam param="kp">{Element0: 1.0, Element1: 1.0, Element2: 1.0, Element3: 1.0, Element4: 0.5, Element5: 0.5, Element6: 0.2}</rosparam>
       <rosparam param="kd">{Element0: 0.0, Element1: 0.0, Element2: 0.0, Element3: 0.0, Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
       <param name="target_frame" value="/wam_target"/>
-
-      <!-- Publish TF Frames for all the joints -->
-      <node name="ik_transform_publisher" pkg="tf" type="static_transform_publisher" args=" 0 0 0 0 0 0 /baseLink /pose_ik/baseLink 10"/>
-      <param name="joint_state_throttle_period" value="0.1"/>
-      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
-        <param name="tf_prefix" value="pose_ik"/>
-      </node>
     </group>
 
   </group>

@@ -78,6 +78,10 @@ left_joint_pid.configure()
 left_mux.load("joint_pid")
 connect("left_joint_pid.torques_out","left_mux.joint_pid",ConnPolicy())
 
+// Connect WAM state to ROS topic
+stream("left_joint_pid.joint_state_out", ros.topic("wam_rtt/left_joint_pid/joint_states")) 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Create gravity controller //////////////////////////////////////////////////
 loadComponent("left_grav","bard_components::controllers::GravityCompensation")
@@ -131,8 +135,25 @@ left_mux.load("pose")
 connect("left_pose.torques_out","left_mux.pose",ConnPolicy())
 connect("left_pose.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
 
+///////////////////////////////////////////////////////////////////////////////
+// Create joint trajectory controller //////////////////////////////////////////
+loadComponent("left_joint_traj","bard_components::controllers::JointTrajectory")
+setActivity("left_joint_traj",0,HighestPriority,ORO_SCHED_RT)
+connectPeers("tf","left_joint_traj")
+
+connect("wam_left.positions_out","left_joint_traj.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_joint_traj","rosparam")
+left_joint_traj.rosparam.refreshProperties()
+left_joint_traj.configure()
+
+// Connect controller to mux
+left_mux.load("joint_traj")
+connect("left_joint_traj.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+
 // Connect WAM state to ROS topic
-stream("left_pose.joint_state_out", ros.topic("wam_rtt/left_pose/joint_states")) 
+stream(ros.topic("wam_rtt/left_joint_traj/trajectories"),"left_joint_traj.trajectories_in", ) 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start Things ///////////////////////////////////////////////////////////////
