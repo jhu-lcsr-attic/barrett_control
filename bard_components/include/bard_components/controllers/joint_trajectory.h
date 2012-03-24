@@ -14,6 +14,9 @@
 #include <kdl/chain.hpp>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
 
+#include <trajectory_msgs/JointTrajectory.h>
+#include <trajectory_msgs/JointTrajectoryPoint.h>
+
 namespace bard_components {
   namespace controllers {
     class JointTrajectory : public RTT::TaskContext

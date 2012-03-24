@@ -82,6 +82,8 @@ WAM::WAM(string const& name) :
 
   this->addOperation("getLoopRate", &WAM::get_loop_rate, this, RTT::OwnThread)
     .doc("Get the loop rate (Hz)");
+  this->addOperation("printTime", &WAM::print_time, this, RTT::OwnThread)
+    .doc("Print the ROS and RTT time.");
 
   ROS_INFO_STREAM("WAM \""<<name<<"\" constructed !");
 }
@@ -289,4 +291,9 @@ void WAM::set_torque_fault(unsigned int thresh)
 
 double WAM::get_loop_rate() {
   return 1.0/loop_period_;
+}
+
+void WAM::print_time() {
+  RTT::os::TimeService *rtt_ts = RTT::os::TimeService::Instance();
+  ROS_INFO_STREAM("TIME DIFFERENCE (ROS-RTT): "<<ros::WallTime::now().toNSec()-rtt_ts->getNSecs());
 }

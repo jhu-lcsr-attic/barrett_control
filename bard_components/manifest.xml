@@ -17,6 +17,7 @@
     <depend package="bard_msgs" />
     <depend package="rtt_bard_msgs" />
     <depend package="geometry_msgs" />
+    <depend package="trajectory_msgs" />
     <depend package="tf" />
     <depend package="tf_conversions" />
   </package>

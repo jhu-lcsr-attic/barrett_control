@@ -43,6 +43,7 @@ namespace bard_components {
     void set_torque_warn(unsigned int thresh);
     void set_torque_fault(unsigned int thresh);
     double get_loop_rate();
+    void print_time();
 
     // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
     // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos

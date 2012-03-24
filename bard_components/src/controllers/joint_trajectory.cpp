@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense>
 
+#include <ros/ros.h>
 #include <kdl/tree.hpp>
 
 #include <kdl_parser/kdl_parser.hpp>
@@ -63,6 +64,15 @@ bool JointTrajectory::startHook()
   return true;
 }
 
+// Comparison function for binary search
+bool point_time_cmp(
+    trajectory_msgs::JointTrajectoryPoint i,
+    trajectory_msgs::JointTrajectoryPoint j)
+{
+  return (i.time_from_start < j.time_from_start);
+}
+      
+
 void JointTrajectory::updateHook()
 {
   // Read in the current joint positions & velocities
@@ -70,6 +80,7 @@ void JointTrajectory::updateHook()
 
   // Read in the trajectories until there are none left to read
   RTT::FlowStatus trajectories_in_status = RTT::NoData;
+  
   do{
     // Try to read in a trajectory 
     trajectories_in_status = trajectories_in_port_.read( new_trajectory_ );
@@ -77,14 +88,9 @@ void JointTrajectory::updateHook()
     // Splice in this new trajectory if it's new and has any traj points
     if(trajectories_in_status == RTT::NewData && new_trajectory_.points.size() > 0)
     {
-      // Comparison function for binary search
-      bool point_time_cmp(
-          trajectory_msgs::JointTrajectoryPoint i,
-          trajectory_msgs::JointTrajectoryPoint j)
-      {
-        return (i.time_from_start < j.time_from_start);
-      }
-      
+      // Duration representing the start time of this trajectory
+      ros::Duration init_duration = ros::Duration(new_trajectory_.header.stamp.sec,  new_trajectory_.header.stamp.nsec);
+
       // Declare bounds for binary search
       std::pair<
         std::list<trajectory_msgs::JointTrajectoryPoint>::iterator,
@@ -92,13 +98,13 @@ void JointTrajectory::updateHook()
 
       // Compute the time of the start of the new trajectory
       trajectory_msgs::JointTrajectoryPoint first_point = new_trajectory_.points[0];
-      first_point.time_from_start += new_trajectory_.header.stamp; 
+      first_point.time_from_start += init_duration; 
 
       // Find where to splice in the new trajectory via binary search
       insertion_bounds = std::equal_range(
           traj_points_.begin(),
-          traj_points.end(),
-          first_new_traj_point,
+          traj_points_.end(),
+          first_point,
           point_time_cmp);
 
       // Clear points after insertion bounds
@@ -110,7 +116,7 @@ void JointTrajectory::updateHook()
           it++)
       {
         // Add the begin time to the "time from start"
-        it->time_from_start += new_trajectory_.header.stamp;
+        it->time_from_start += init_duration;
         // Insert the point
         traj_points_.push_back(*it);
       }
@@ -141,11 +147,12 @@ void JointTrajectory::updateHook()
   } while(trajectories_in_status != RTT::NewData);
 
   // Check if we should dispatch the point
-  if(traj_points_.size() > 0 && last_point_.time_from_start < ros::Time::now()) {
+  ros::Time time = ros::Time::now();
+  if(traj_points_.size() > 0 && last_point_.time_from_start < ros::Duration(time.sec, time.nsec)) {
     // Set desired positions
     for(unsigned int i=0; i<n_dof_; i++) {
-      positions_des_.q(i) = traj_points_.front()->positions[i];
-      positions_des_.qdot(i) = traj_points_.front()->velocities[i];
+      positions_des_.q(i) = traj_points_.front().positions[i];
+      positions_des_.qdot(i) = traj_points_.front().velocities[i];
     }
 
     // Send joint positions
