@@ -94,6 +94,15 @@ bool ControllerMux::configureHook()
     return false;
   }
 
+  // Get torque limits from urdf
+  torque_limits_.clear();
+  for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
+      it != kdl_chain_.segments.end();
+      it++)
+  {
+    torque_limits_.push_back(urdf_model_.getJoint(it->getJoint().getName())->limits->effort);
+  }
+
   // Initialize joint arrays
   torques_.resize(n_dof_);
   positions_.resize(n_dof_);
@@ -149,6 +158,15 @@ void ControllerMux::updateHook()
 
   // Only send non-zero torques if enabled
   if(enabled_) {
+    // Apply torque limits
+    for(unsigned int i=0; i<n_dof_; i++) {
+      if(fabs(torques_(i)) > torque_limits_[i]) {
+        // Truncate this joint torque
+        torques_(i) = (torques_(i)>0.0)?(torque_limits_[i]):(-torque_limits_[i]);
+        // TODO: Raise warning flag
+      }
+    }
+    // Send torque command
     torques_out_port_.write( torques_ );
   } else {
     KDL::JntArray zero_array(n_dof_);
