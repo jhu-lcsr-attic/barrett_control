@@ -10,6 +10,7 @@
 
 #include <kdl/jntarray.hpp>
 #include <kdl/jntarrayvel.hpp>
+#include <kdl/jntarrayacc.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
@@ -51,7 +52,7 @@ namespace bard_components {
       struct Segment {
         double start_time;
         double duration;
-        std::list<Spline> splines;
+        std::vector<Spline> splines;
       };
       typedef std::list<Segment> SplineTrajectory;
 
@@ -67,7 +68,7 @@ namespace bard_components {
       KDL::Chain kdl_chain_;
       KDL::Tree kdl_tree_;
       urdf::Model urdf_model_;
-      std::vector<boost::shared_ptr<urdf::Joint> > joints_;
+      std::vector<boost::shared_ptr<const urdf::Joint> > joints_;
 
       KDL::JntArrayVel positions_;
       KDL::JntArrayVel positions_des_;

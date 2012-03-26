@@ -188,7 +188,7 @@ static void getCubicSplineCoefficients(
 }
 
 // Sample a quintic spline with a certain duration at a given time
-void JointSplineTrajectoryController::sampleSplineWithTimeBounds(
+void sampleSplineWithTimeBounds(
     const std::vector<double>& coefficients,
     double duration,
     double time,
@@ -225,8 +225,8 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   // Map from an index in joints_ to an index in the msg
   std::vector<int> lookup(joints_.size(), -1); 
   for (size_t j = 0; j < joints_.size(); ++j) {
-    for (size_t k = 0; k < msg->joint_names.size(); ++k) {
-      if (msg->joint_names[k] == joints_[j]->name) {
+    for (size_t k = 0; k < msg.joint_names.size(); ++k) {
+      if (msg.joint_names[k] == joints_[j]->name) {
         lookup[j] = k;
         break;
       }
@@ -243,30 +243,37 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
   // Compute the trajectory start time
   double msg_start_time;
-  if (msg->points.size() > 0) {
-    // Start time is the stamp + time of fist point
-    msg_start_time = (msg->header.stamp + msg->points[0].time_from_start).toSec();
+  if(msg.header.stamp == 0) {
+    // Start immediately
+    msg_start_time = 0;
+    // Clear current trajectory entirely
+    traj_splines_.clear();
   } else {
-    // Start time is the stamp (time to truncate the current trajectory)
-    msg_start_time = msg->header.stamp.toSec();
+    if (msg.points.size() > 0) {
+      // Start time is the stamp + time of fist point
+      msg_start_time = (msg.header.stamp + msg.points[0].time_from_start).toSec();
+    } else {
+      // Start time is the stamp (time to truncate the current trajectory)
+      msg_start_time = msg.header.stamp.toSec();
+    }
+
+    // Declare bounds for binary search
+    std::pair<SplineTrajectory::iterator, SplineTrajectory::iterator> insertion_bounds;
+
+    // Construct a dummy segment with the new trajectory's start time
+    Segment first_segment;
+    first_segment.start_time = msg_start_time;
+
+    // Find where to splice in the new trajectory via binary search
+    insertion_bounds = std::equal_range(
+        traj_splines_.begin(),
+        traj_splines_.end(),
+        first_segment,
+        segment_time_cmp);
+
+    // Clear points after insertion bounds
+    traj_splines_.erase(insertion_bounds.first, traj_splines_.end());
   }
-
-  // Declare bounds for binary search
-  std::pair<SplineTrajectory::iterator, SplineTrajectory::iterator> insertion_bounds;
-
-  // Construct a dummy segment with the new trajectory's start time
-  Segment first_segment;
-  first_segment.start_time = msg_start_time;
-
-  // Find where to splice in the new trajectory via binary search
-  insertion_bounds = std::equal_range(
-      traj_splines_.begin(),
-      traj_splines_.end(),
-      first_segment,
-      segment_time_cmp);
-
-  // Clear points after insertion bounds
-  traj_splines_.erase(insertion_bounds.first, traj_splines_.end());
 
   /////////////////////////////////////////////////////////////////////////////
   // Inerpolate from the last segment
@@ -293,14 +300,14 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
       sampleSplineWithTimeBounds(
           last_segment.splines[i].coef,
           last_segment.duration,
-          new_traj_start_time_in_segment,
+          new_traj_time_in_segment,
           prev_positions[i],
           prev_velocities[i],
           prev_accelerations[i]);
 
       ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)",
           prev_positions[i], prev_velocities[i],
-          prev_accelerations[i], joints_[i]->joint_->name.c_str());
+          prev_accelerations[i], joints_[i]->name.c_str());
     }
   } else {
     // Define the initial conditions from the last joint state reading
@@ -315,24 +322,24 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   // Construct the segments for the new trajectory
 
   // Compute durations of each segment (one segment per point)
-  std::vector<double> durations(msg->points.size());
+  std::vector<double> durations(msg.points.size());
 
   // Duration of segment (i) is the time from point (i-1) to point (i) in seconds
-  durations[0] = msg->points[0].time_from_start.toSec();
-  for (size_t i = 1; i < msg->points.size(); ++i) {
-    durations[i] = (msg->points[i].time_from_start - msg->points[i-1].time_from_start).toSec();
+  durations[0] = msg.points[0].time_from_start.toSec();
+  for (size_t i = 1; i < msg.points.size(); ++i) {
+    durations[i] = (msg.points[i].time_from_start - msg.points[i-1].time_from_start).toSec();
   }
 
   // Check if each joint should wrap angles between joint limits or not
   std::vector<double> wrap(n_dof_, 0.0);
-  assert(!msg->points[0].positions.empty());
+  assert(!msg.points[0].positions.empty());
 
   for (size_t j = 0; j < joints_.size(); ++j) {
     if (joints_[j]->type == urdf::Joint::CONTINUOUS) {
       double dist = angles::shortest_angular_distance(
           prev_positions[j],
-          msg->points[0].positions[j]);
-      wrap[j] = (prev_positions[j] + dist) - msg->points[0].positions[j];
+          msg.points[0].positions[j]);
+      wrap[j] = (prev_positions[j] + dist) - msg.points[0].positions[j];
     }
   }
   
@@ -342,42 +349,42 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   std::vector<double> accelerations(n_dof_,0.0);
 
   // Construct spline segment for each point
-  for (size_t i = 0; i < msg->points.size(); ++i) {
+  for (size_t i = 0; i < msg.points.size(); ++i) {
     // Construct new segment
     Segment seg;
 
     // Compute absolute start time
-    seg.start_time = (msg->header.stamp + msg->points[i].time_from_start).toSec() - durations[i];
+    seg.start_time = (msg.header.stamp + msg.points[i].time_from_start).toSec() - durations[i];
     seg.duration = durations[i];
     seg.splines.resize(joints_.size());
 
     // Checks that the incoming point has the right number of elements.
-    if (msg->points[i].accelerations.size() != 0 && msg->points[i].accelerations.size() != joints_.size()) {
-      ROS_ERROR("Command point %d has %d elements for the accelerations", (int)i, (int)msg->points[i].accelerations.size());
+    if (msg.points[i].accelerations.size() != 0 && msg.points[i].accelerations.size() != joints_.size()) {
+      ROS_ERROR("Command point %d has %d elements for the accelerations", (int)i, (int)msg.points[i].accelerations.size());
       return;
     }
-    if (msg->points[i].velocities.size() != 0 && msg->points[i].velocities.size() != joints_.size()) {
-      ROS_ERROR("Command point %d has %d elements for the velocities", (int)i, (int)msg->points[i].velocities.size());
+    if (msg.points[i].velocities.size() != 0 && msg.points[i].velocities.size() != joints_.size()) {
+      ROS_ERROR("Command point %d has %d elements for the velocities", (int)i, (int)msg.points[i].velocities.size());
       return;
     }
-    if (msg->points[i].positions.size() != joints_.size()) {
-      ROS_ERROR("Command point %d has %d elements for the positions", (int)i, (int)msg->points[i].positions.size());
+    if (msg.points[i].positions.size() != joints_.size()) {
+      ROS_ERROR("Command point %d has %d elements for the positions", (int)i, (int)msg.points[i].positions.size());
       return;
     }
 
     // Re-orders the joints in the command to match the interal joint order.
-    accelerations.resize(msg->points[i].accelerations.size());
-    velocities.resize(msg->points[i].velocities.size());
-    positions.resize(msg->points[i].positions.size());
+    accelerations.resize(msg.points[i].accelerations.size());
+    velocities.resize(msg.points[i].velocities.size());
+    positions.resize(msg.points[i].positions.size());
     for (size_t j = 0; j < joints_.size(); ++j) {
       if (!accelerations.empty()) {
-        accelerations[j] = msg->points[i].accelerations[lookup[j]];
+        accelerations[j] = msg.points[i].accelerations[lookup[j]];
       }
       if (!velocities.empty()) {
-        velocities[j] = msg->points[i].velocities[lookup[j]];
+        velocities[j] = msg.points[i].velocities[lookup[j]];
       }
       if (!positions.empty()) {
-        positions[j] = msg->points[i].positions[lookup[j]] + wrap[j];
+        positions[j] = msg.points[i].positions[lookup[j]] + wrap[j];
       }
     }
 
@@ -427,13 +434,14 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   ROS_DEBUG("Spliced in new trajectory.");
 }
       
+
 void JointTrajectory::updateHook()
 {
   // Read in the current joint positions & velocities
   positions_in_port_.readNewest( positions_ );
 
   // Update time metrics
-  ros::Time time = util::rtt_ros_now();
+  ros::Time time = util::ros_rtt_now();
   last_time_ = time;
 
   // Iterate through segments while the next segment starts before the current time
@@ -553,4 +561,3 @@ void JointTrajectory::load_trajectories()
   
 }
 #endif
-

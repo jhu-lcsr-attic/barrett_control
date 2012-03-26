@@ -83,6 +83,6 @@ void util::joint_state_from_kdl_chain(
   joint_state.effort.resize(n_dof);
 }
 
-ros::Time util::ros_rtt_now(); {
-  return ros::Time(0,RTT::os::TimeService::Instance()->getNSecs())
+ros::Time util::ros_rtt_now() {
+  return ros::Time(0,RTT::os::TimeService::Instance()->getNSecs());
 }
