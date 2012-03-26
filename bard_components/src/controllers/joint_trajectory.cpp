@@ -427,6 +427,7 @@ void JointTrajectory::load_trajectories_interp(trajectory_msgs::JointTrajectory 
   ROS_DEBUG("Spliced in new trajectory.");
 }
       
+#if 0
 void JointTrajectory::load_trajectories()
 {
   // Read in the trajectories until there are none left to read
@@ -498,6 +499,7 @@ void JointTrajectory::load_trajectories()
   } while(trajectories_in_status != RTT::NewData);
   
 }
+#endif
 
 void JointTrajectory::updateHook()
 {

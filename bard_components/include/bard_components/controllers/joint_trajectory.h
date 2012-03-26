@@ -39,7 +39,7 @@ namespace bard_components {
       void stopHook();
       void cleanupHook();
 
-      void load_trajectories();
+      void load_trajectory(trajectory_msgs::JointTrajectory);
 
       // Structure describing a quintic spline
       struct Spline {
