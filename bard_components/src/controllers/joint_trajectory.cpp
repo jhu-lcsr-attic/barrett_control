@@ -8,6 +8,8 @@
 
 #include <kdl_parser/kdl_parser.hpp>
 
+#include <angles/angles.h>
+
 #include <bard_components/util.h>
 #include <bard_components/controllers/joint_trajectory.h>
 

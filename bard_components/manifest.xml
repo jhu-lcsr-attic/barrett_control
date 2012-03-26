@@ -20,5 +20,6 @@
     <depend package="trajectory_msgs" />
     <depend package="tf" />
     <depend package="tf_conversions" />
+    <depend package="angles" />
   </package>
 
