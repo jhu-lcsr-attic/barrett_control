@@ -99,6 +99,15 @@ bool WAM::configureHook()
     return false;
   }
 
+  // Get torque limits from urdf
+  torque_limits_.clear();
+  for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
+      it != kdl_chain_.segments.end();
+      it++)
+  {
+    torque_limits_.push_back(urdf_model_.getJoint(it->getJoint().getName())->limits->effort);
+  }
+
   // Resize joint arrays
   torques_ = KDL::JntArray(n_dof_);
   positions_ = KDL::JntArrayVel(n_dof_);
@@ -175,6 +184,15 @@ void WAM::updateHook()
 {
   // Only send joint torques if new data is coming in
   if( torques_in_port_.read( torques_ ) == RTT::NewData ) {
+    // Apply torque limits
+    for(unsigned int i=0; i<n_dof_; i++) {
+      if(fabs(torques_(i)) > torque_limits_[i]) {
+        // Truncate this joint torque
+        torques_(i) = (torques_(i)>0.0)?(torque_limits_[i]):(-torque_limits_[i]);
+        // TODO: Raise warning flag
+      }
+    }
+    // Send the torques
     if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
       ROS_ERROR_STREAM("Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }

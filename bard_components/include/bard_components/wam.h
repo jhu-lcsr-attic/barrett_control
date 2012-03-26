@@ -77,6 +77,8 @@ namespace bard_components {
     RTT::os::TimeService::ticks last_loop_time_;
     RTT::os::TimeService::Seconds loop_period_;
 
+    std::vector<double> torque_limits_;
+
     bard_components::util::PeriodicThrottle joint_state_throttle_;
   };
 }

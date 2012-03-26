@@ -83,8 +83,6 @@ namespace bard_components {
     KDL::JntArray torques_;
     bool enabled_;
 
-    std::vector<double> torque_limits_;
-
     bard_msgs::MuxState config_cmd_;
     sensor_msgs::JointState joint_state_;
 
