@@ -39,13 +39,32 @@ namespace bard_components {
       void stopHook();
       void cleanupHook();
 
+      void load_trajectories();
+
+      // Structure describing a quintic spline
+      struct Spline {
+        std::vector<double> coef;
+        Spline() : coef(6, 0.0) {}
+      };
+
+      // Structure describing an n-DOF trajectory segment
+      struct Segment {
+        double start_time;
+        double duration;
+        std::list<Spline> splines;
+      };
+      typedef std::list<Segment> SplineTrajectory;
+
     private:
+      // The active trajectory (list of list of splines)
+      SplineTrajectory traj_splines_;
 
       // Working variables
       unsigned int n_dof_;
       KDL::Chain kdl_chain_;
       KDL::Tree kdl_tree_;
       urdf::Model urdf_model_;
+      std::vector<boost::shared_ptr<urdf::Joint> > joints_;
 
       KDL::JntArrayVel positions_;
       KDL::JntArrayVel positions_des_;
