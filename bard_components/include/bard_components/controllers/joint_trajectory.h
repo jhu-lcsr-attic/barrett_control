@@ -58,6 +58,9 @@ namespace bard_components {
     private:
       // The active trajectory (list of list of splines)
       SplineTrajectory traj_splines_;
+      SplineTrajectory::iterator traj_segment_;
+      Segment last_segment_;
+      ros::Time last_time_;
 
       // Working variables
       unsigned int n_dof_;
@@ -68,6 +71,7 @@ namespace bard_components {
 
       KDL::JntArrayVel positions_;
       KDL::JntArrayVel positions_des_;
+      KDL::JntArrayAcc pva_des_;
 
       trajectory_msgs::JointTrajectory new_trajectory_;
       trajectory_msgs::JointTrajectoryPoint last_point_;
