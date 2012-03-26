@@ -243,7 +243,7 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
   // Compute the trajectory start time
   double msg_start_time;
-  if(msg.header.stamp == 0) {
+  if(msg.header.stamp == ros::Time(0,0)) {
     // Start immediately
     msg_start_time = 0;
     // Clear current trajectory entirely
@@ -444,23 +444,26 @@ void JointTrajectory::updateHook()
   ros::Time time = util::ros_rtt_now();
   last_time_ = time;
 
-  // Iterate through segments while the next segment starts before the current time
+  // Iterate through segments while the current segment starts before the current time
   SplineTrajectory::iterator seg_it = traj_splines_.begin(); 
 
-  while((seg_it+1) != traj_splines_.end() && (seg_it+1)->start_time < time.toSec()) {
+  while(seg_it != traj_splines_.end() && seg_it->start_time < time.toSec()) {
     seg_it++;
   }
     
   // Check if we have reached the end of the trajectory
-  if((seg_it+1) == traj_splines_.end()) {
+  if(seg_it == traj_splines_.end()) {
     ROS_DEBUG("End of trajectory reached.");
     return;
   }
+
+  // Go to the sgement before the earliest valid one
+  seg_it--;
     
   // Compute the time in this segment
   double seg_time = time.toSec() - seg_it->start_time; 
   // Sample from the current segment in the trajectory
-  for (size_t i = 0; i < q.size(); ++i) {
+  for (size_t i = 0; i < n_dof_; ++i) {
     sampleSplineWithTimeBounds(
         seg_it->splines[i].coef,
         seg_it->duration,
@@ -477,7 +480,7 @@ void JointTrajectory::updateHook()
   last_segment_ = *seg_it;
   
   // Clear finished segments
-  traj_splines_.erase(traj_splines_.begin(), (seg_it-1));
+  traj_splines_.erase(traj_splines_.begin(), --seg_it);
 }
 
 void JointTrajectory::stopHook()
