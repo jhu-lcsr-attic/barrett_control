@@ -217,7 +217,7 @@ void JointSplineTrajectoryController::sampleSplineWithTimeBounds(
   }
 }
 
-void JointTrajectory::load_trajectories_interp(trajectory_msgs::JointTrajectory msg)
+void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 {
   // Store the time of the last sampled point that was dispatched
   ros::Time time = last_time_;
@@ -427,6 +427,59 @@ void JointTrajectory::load_trajectories_interp(trajectory_msgs::JointTrajectory 
   ROS_DEBUG("Spliced in new trajectory.");
 }
       
+void JointTrajectory::updateHook()
+{
+  // Read in the current joint positions & velocities
+  positions_in_port_.readNewest( positions_ );
+
+  // Update time metrics
+  ros::Time time = util::rtt_ros_now();
+  last_time_ = time;
+
+  // Iterate through segments while the next segment starts before the current time
+  SplineTrajectory::iterator seg_it = traj_splines_.begin(); 
+
+  while((seg_it+1) != traj_splines_.end() && (seg_it+1)->start_time < time.toSec()) {
+    seg_it++;
+  }
+    
+  // Check if we have reached the end of the trajectory
+  if((seg_it+1) == traj_splines_.end()) {
+    ROS_DEBUG("End of trajectory reached.");
+    return;
+  }
+    
+  // Compute the time in this segment
+  double seg_time = time.toSec() - seg_it->start_time; 
+  // Sample from the current segment in the trajectory
+  for (size_t i = 0; i < q.size(); ++i) {
+    sampleSplineWithTimeBounds(
+        seg_it->splines[i].coef,
+        seg_it->duration,
+        seg_time,
+        positions_des_.q(i),
+        positions_des_.qdot(i),
+        pva_des_.qdotdot(i));
+  }
+
+  // Dispatch the sampled point
+  positions_out_port_.write( positions_des_ );
+
+  // Store the current segment
+  last_segment_ = *seg_it;
+  
+  // Clear finished segments
+  traj_splines_.erase(traj_splines_.begin(), (seg_it-1));
+}
+
+void JointTrajectory::stopHook()
+{
+}
+
+void JointTrajectory::cleanupHook()
+{
+}
+
 #if 0
 void JointTrajectory::load_trajectories()
 {
@@ -500,57 +553,4 @@ void JointTrajectory::load_trajectories()
   
 }
 #endif
-
-void JointTrajectory::updateHook()
-{
-  // Read in the current joint positions & velocities
-  positions_in_port_.readNewest( positions_ );
-
-  // Update time metrics
-  ros::Time time = util::rtt_ros_now();
-  last_time_ = time;
-
-  // Iterate through segments while the next segment starts before the current time
-  SplineTrajectory::iterator seg_it = traj_splines_.begin(); 
-
-  while((seg_it+1) != traj_splines_.end() && (seg_it+1)->start_time < time.toSec()) {
-    seg_it++;
-  }
-    
-  // Check if we have reached the end of the trajectory
-  if((seg_it+1) == traj_splines_.end()) {
-    ROS_DEBUG("End of trajectory reached.");
-    return;
-  }
-    
-  // Compute the time in this segment
-  double seg_time = time.toSec() - seg_it->start_time; 
-  // Sample from the current segment in the trajectory
-  for (size_t i = 0; i < q.size(); ++i) {
-    sampleSplineWithTimeBounds(
-        seg_it->splines[i].coef,
-        seg_it->duration,
-        seg_time,
-        positions_des_.q(i),
-        positions_des_.qdot(i),
-        pva_des_.qdotdot(i));
-  }
-
-  // Dispatch the sampled point
-  positions_out_port_.write( positions_des_ );
-
-  // Store the current segment
-  last_segment_ = *seg_it;
-  
-  // Clear finished segments
-  traj_splines_.erase(traj_splines_.begin(), (seg_it-1));
-}
-
-void JointTrajectory::stopHook()
-{
-}
-
-void JointTrajectory::cleanupHook()
-{
-}
 

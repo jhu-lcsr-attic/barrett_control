@@ -74,8 +74,8 @@ namespace bard_components {
       KDL::JntArrayAcc pva_des_;
 
       trajectory_msgs::JointTrajectory new_trajectory_;
-      trajectory_msgs::JointTrajectoryPoint last_point_;
-      std::list<trajectory_msgs::JointTrajectoryPoint> traj_points_;
+      //trajectory_msgs::JointTrajectoryPoint last_point_;
+      //std::list<trajectory_msgs::JointTrajectoryPoint> traj_points_;
     };
   }
 }
