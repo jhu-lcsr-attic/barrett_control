@@ -34,8 +34,8 @@ JointTrajectory::JointTrajectory(string const& name) :
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
 
   // Configure data ports
-  this->ports()->addEventPort("positions_in", positions_in_port_).doc("Input port: nx1 vector of joint positions. (n joints)");
-  this->ports()->addPort("trajectories_in", trajectories_in_port_).doc("Input port: nx1 vector of desired joint positions. (n joints)");
+  this->ports()->addEventPort("positions_in", positions_in_port_, boost::bind(&JointTrajectory::feedback_cb, this)).doc("Input port: nx1 vector of joint positions. (n joints)");
+  this->ports()->addEventPort("trajectories_in", trajectories_in_port_, boost::bind(&JointTrajectory::command_cb, this)).doc("Input port: nx1 vector of desired joint positions. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_).doc("Output port: nx1 vector of joint positions. (n joints)");
 }
 
@@ -217,8 +217,12 @@ void sampleSplineWithTimeBounds(
   }
 }
 
-void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
+void JointTrajectory::command_cb()
 {
+  // Read in the new message
+  trajectory_msgs::JointTrajectory msg;
+  trajectories_in_port_.readNewest(msg);
+
   // Store the time of the last sampled point that was dispatched
   ros::Time time = last_time_;
   
@@ -445,9 +449,8 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   
   ROS_DEBUG("Spliced in new trajectory.");
 }
-      
 
-void JointTrajectory::updateHook()
+void JointTrajectory::feedback_cb()
 {
   // Read in the current joint positions & velocities
   positions_in_port_.readNewest( positions_ );
@@ -462,16 +465,19 @@ void JointTrajectory::updateHook()
     // Increment the iterator
     seg_it++;
     // Check if this segment begins later than now
-    if(seg_it != spline_traj_.end() && seg_it->start_time > time.toSec()) {
-      // Decrement the segment iterator to get to the
-      seg_it--;
-      break;
-    } 
+    if(seg_it != spline_traj_.end()) {
+      if(seg_it->start_time > time.toSec()) {
+        // Decrement the segment iterator to get to the
+        seg_it--;
+        break;
+      }
+    } else {
+      ROS_DEBUG("End of trajectory reached.");
+    }
   } 
 
   // Check if we have reached the end of the trajectory
   if(seg_it == spline_traj_.end()) {
-    ROS_DEBUG("End of trajectory reached.");
     return;
   }
 
@@ -496,6 +502,11 @@ void JointTrajectory::updateHook()
 
   // Dispatch the sampled point
   positions_out_port_.write( positions_des_ );
+}
+      
+
+void JointTrajectory::updateHook()
+{
 }
 
 void JointTrajectory::stopHook()
