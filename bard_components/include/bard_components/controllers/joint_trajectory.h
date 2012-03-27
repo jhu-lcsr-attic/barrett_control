@@ -58,9 +58,9 @@ namespace bard_components {
 
     private:
       // The active trajectory (list of list of splines)
-      SplineTrajectory traj_splines_;
+      SplineTrajectory spline_traj_;
       SplineTrajectory::iterator traj_segment_;
-      Segment last_segment_;
+      Segment active_segment_;
       ros::Time last_time_;
 
       // Working variables

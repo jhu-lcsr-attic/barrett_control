@@ -222,7 +222,7 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
   // Store the time of the last sampled point that was dispatched
   ros::Time time = last_time_;
   
-  // Map from an index in joints_ to an index in the msg
+  // Construct a map from an index in joints_ to an index in the msg
   std::vector<int> lookup(joints_.size(), -1); 
   for (size_t j = 0; j < joints_.size(); ++j) {
     for (size_t k = 0; k < msg.joint_names.size(); ++k) {
@@ -243,12 +243,15 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
   // Compute the trajectory start time
   double msg_start_time;
+  SplineTrajectory::iterator insertion_it = spline_traj_.end();
+
   if(msg.header.stamp == ros::Time(0,0)) {
     // Start immediately
-    msg_start_time = 0;
-    // Clear current trajectory entirely
-    traj_splines_.clear();
+    msg_start_time = last_time_.toSec();
+    // Insert after the first segment
+    insertion_it = ++(spline_traj_.begin());
   } else {
+    // Compute the time at which the first point in the new traj should be achieved
     if (msg.points.size() > 0) {
       // Start time is the stamp + time of fist point
       msg_start_time = (msg.header.stamp + msg.points[0].time_from_start).toSec();
@@ -266,13 +269,13 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
     // Find where to splice in the new trajectory via binary search
     insertion_bounds = std::equal_range(
-        traj_splines_.begin(),
-        traj_splines_.end(),
+        spline_traj_.begin(),
+        spline_traj_.end(),
         first_segment,
         segment_time_cmp);
 
-    // Clear points after insertion bounds
-    traj_splines_.erase(insertion_bounds.first, traj_splines_.end());
+    // Set insertion it to the first
+    insertion_it = insertion_bounds.first;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -285,9 +288,9 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
   // Get the last segment
   Segment last_segment;
-  if(traj_splines_.size() > 0) {
+  if(spline_traj_.size() > 0) {
     // Get the segment on the end of the spline trajectory
-    last_segment = traj_splines_.back();
+    last_segment = spline_traj_.back();
 
     // Find the end conditions of the last segment from the spline trajectory
     ROS_DEBUG("Initial conditions for new set of splines:");
@@ -320,6 +323,9 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
 
   /////////////////////////////////////////////////////////////////////////////
   // Construct the segments for the new trajectory
+
+  // New trajectory segments
+  SplineTrajectory new_spline_traj;
 
   // Compute durations of each segment (one segment per point)
   std::vector<double> durations(msg.points.size());
@@ -423,13 +429,19 @@ void JointTrajectory::load_trajectory(trajectory_msgs::JointTrajectory msg)
     }
 
     // Push the splines onto the end of the new trajectory.
-    traj_splines_.push_back(seg);
+    new_spline_traj.push_back(seg);
 
     // Store the initial conditions for the next segment
     prev_positions = positions;
     prev_velocities = velocities;
     prev_accelerations = accelerations;
   }
+
+  // Delete the no longer valid trajectory
+  spline_traj_.erase(insertion_it, spline_traj_.end());
+
+  // Splice in the new trajectory
+  spline_traj_.splice(spline_traj_.end(), new_spline_traj);
   
   ROS_DEBUG("Spliced in new trajectory.");
 }
@@ -444,23 +456,32 @@ void JointTrajectory::updateHook()
   ros::Time time = util::ros_rtt_now();
   last_time_ = time;
 
-  // Iterate through segments while the current segment starts before the current time
-  SplineTrajectory::iterator seg_it = traj_splines_.begin(); 
-
-  while(seg_it != traj_splines_.end() && seg_it->start_time < time.toSec()) {
+  // Iterate through segments to find the active one
+  SplineTrajectory::iterator seg_it = spline_traj_.begin(); 
+  while(seg_it != spline_traj_.end()) {
+    // Increment the iterator
     seg_it++;
-  }
-    
+    // Check if this segment begins later than now
+    if(seg_it != spline_traj_.end() && seg_it->start_time > time.toSec()) {
+      // Decrement the segment iterator to get to the
+      seg_it--;
+      break;
+    } 
+  } 
+
   // Check if we have reached the end of the trajectory
-  if(seg_it == traj_splines_.end()) {
+  if(seg_it == spline_traj_.end()) {
     ROS_DEBUG("End of trajectory reached.");
     return;
   }
 
-  // Go to the sgement before the earliest valid one
-  seg_it--;
+  // Store the current segment as the last segment
+  active_segment_ = *seg_it;
+
+  // Erase the old segments
+  spline_traj_.erase(spline_traj_.begin(),seg_it);
     
-  // Compute the time in this segment
+  // Compute the time from the beginning of this segment
   double seg_time = time.toSec() - seg_it->start_time; 
   // Sample from the current segment in the trajectory
   for (size_t i = 0; i < n_dof_; ++i) {
@@ -475,12 +496,6 @@ void JointTrajectory::updateHook()
 
   // Dispatch the sampled point
   positions_out_port_.write( positions_des_ );
-
-  // Store the current segment
-  last_segment_ = *seg_it;
-  
-  // Clear finished segments
-  traj_splines_.erase(traj_splines_.begin(), --seg_it);
 }
 
 void JointTrajectory::stopHook()
