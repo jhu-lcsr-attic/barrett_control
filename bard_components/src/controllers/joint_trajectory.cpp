@@ -613,7 +613,7 @@ void JointTrajectory::feedback_cb()
   }
 
   // Compute the time from the beginning of this segment
-  double seg_time = now.toSec() - active_segment_it_->end_time; 
+  double seg_time = now.toSec() - (active_segment_it_->end_time-active_segment_it_->duration); 
 
   ROS_DEBUG_STREAM_COND(verbose,"Sampling segment at t="<<seg_time<<" s:");
   ROS_DEBUG_STREAM_COND(verbose,"  end_time: "<<active_segment_it_->end_time);

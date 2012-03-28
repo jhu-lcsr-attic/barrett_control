@@ -107,7 +107,9 @@ void JointPID::updateHook()
   positions_in_port_.readNewest( positions_ );
 
   // Read in the goal joint positions & velocities
-  positions_des_in_port_.readNewest( positions_des_ );
+  if(positions_des_in_port_.readNewest( positions_des_ ) != RTT::NewData ) {
+    positions_des_ = positions_;
+  }
 
   // Compute torques
   for(unsigned int i=0; i<n_dof_; i++) {

@@ -164,7 +164,7 @@ wam_left.start()
 left_grav.start()
 left_joint_pid.start()
 //left_joint_trajectory.start()
-left_pose.start()
+//left_pose.start()
 //left_wrench.start()
 
 // Start the multiplexer
