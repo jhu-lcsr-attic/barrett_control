@@ -3,8 +3,8 @@
         This package contains the components of the bard_components package
     </description>
     <!--NOTE: set the license and author before you publish this code-->
-    <license></license>
-    <author>Unknown Author</author>
+    <license>BSD</license>
+    <author>Jonathan Bohren, jbo@jhu.edu</author>
     <depend package="eigen" />
     <depend package="kdl" />
     <depend package="kdl_parser" />
