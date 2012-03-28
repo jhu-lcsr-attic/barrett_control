@@ -225,6 +225,17 @@ void sampleSplineWithTimeBounds(
   }
 }
 
+template <typename T>
+std::string iter_name(T l, typename T::iterator it) {
+  if(it == l.begin()) {
+    return std::string("BEGIN");
+  } else if(it == l.end()) {
+    return std::string("END");
+  } else {
+    return std::string("OTHER");
+  }
+}
+
 void JointTrajectory::command_cb()
 {
   ROS_DEBUG("Received new trajecotory.");
@@ -297,6 +308,9 @@ void JointTrajectory::command_cb()
         spline_traj_.end(),
         first_new_segment,
         segment_time_cmp);
+
+    ROS_DEBUG_STREAM("Insertion lower bound of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, insertion_bounds.first));
+    ROS_DEBUG_STREAM("Insertion upper bound of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, insertion_bounds.second));
 
     if(insertion_bounds.second == spline_traj_.end() ) {
       // Set insertion iterator to the last segment of the current trajectory
