@@ -10,7 +10,7 @@ def spewer():
     while not rospy.is_shutdown():
         msg = JointTrajectory()
 
-        #msg.header.stamp = rospy.Time.now()
+        msg.header.stamp = rospy.Time.now()
 
         point = JointTrajectoryPoint()
         point.positions = [0,3.1415,0,0,0,0,0]
@@ -26,7 +26,7 @@ def spewer():
 
         pub.publish(msg)
         print(msg)
-        rospy.sleep(10.0)
+        rospy.sleep(2.0)
 
 if __name__ == '__main__':
     try:

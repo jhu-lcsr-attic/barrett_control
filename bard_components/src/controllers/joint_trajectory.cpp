@@ -405,6 +405,7 @@ void JointTrajectory::command_cb()
     Segment seg;
 
     // Compute absolute start time
+    seg.index = i;
     seg.end_time = msg_start_time + msg.points[i].time_from_start.toSec();
     seg.duration = durations[i];
     seg.splines.resize(joints_.size());
@@ -482,15 +483,23 @@ void JointTrajectory::command_cb()
     prev_accelerations = accelerations;
   }
 
+  // Increment insertion it to the following segment
+  ++insertion_it;
 
   // Delete the no longer valid trajectory
-  ROS_DEBUG("Erasing invalid segments from trajectory.");
-  spline_traj_.erase(++insertion_it, spline_traj_.end());
+  ROS_DEBUG_STREAM("Erasing invalid segments from trajectory ("<<spline_traj_.size()<<")");
+  if(insertion_it == spline_traj_.end()) {
+    ROS_DEBUG_STREAM("Erasing no segments.");
+  } else {
+    ROS_DEBUG_STREAM("Erasing segments starting with index "<<insertion_it->index);
+  }
+  spline_traj_.erase(insertion_it, spline_traj_.end());
 
   // Splice in the new trajectory
-  ROS_DEBUG("Splicing new segments into trajectory.");
+  ROS_DEBUG_STREAM("Splicing "<<spline_traj_.size()<<" new segment(s) into trajectory.");
   spline_traj_.splice(spline_traj_.end(), new_spline_traj);
-  
+
+  ROS_DEBUG_STREAM("Trajectory now has "<<spline_traj_.size()<<" segments.");
 }
 
 void JointTrajectory::feedback_cb()
@@ -519,7 +528,9 @@ void JointTrajectory::feedback_cb()
     if(active_segment_it_->end_time > now.toSec()) {
       ROS_DEBUG_STREAM_NAMED("feedback","Active segment found! End time: "<<active_segment_it_->end_time);
       break;
-    } 
+    } else {
+      ROS_DEBUG_STREAM_NAMED("feedback","Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
+    }
 
     // Clear the old segments
     spline_traj_.erase(spline_traj_.begin(), active_segment_it_);

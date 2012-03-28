@@ -51,6 +51,7 @@ namespace bard_components {
 
       // Structure describing an n-DOF trajectory segment
       struct Segment {
+        size_t index;
         double end_time;
         double duration;
         std::vector<Spline> splines;
