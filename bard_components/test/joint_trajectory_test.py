@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import roslib; roslib.load_manifest('bard_components')
 import rospy
+from copy import copy
 
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
@@ -22,15 +23,15 @@ def spewer():
                 'LeftWAM/UpperWristPitchJoint', 'LeftWAM/LowerWristYawJoint']
 
         point.time_from_start = rospy.Duration(1.0)
-        msg.points = [point]
+        msg.points = [copy(point)]
         point.time_from_start = rospy.Duration(2.0)
-        msg.points.append(point)
+        msg.points.append(copy(point))
         point.time_from_start = rospy.Duration(3.0)
-        msg.points.append(point)
+        msg.points.append(copy(point))
         point.time_from_start = rospy.Duration(4.0)
-        msg.points.append(point)
+        msg.points.append(copy(point))
         point.time_from_start = rospy.Duration(5.0)
-        msg.points.append(point)
+        msg.points.append(copy(point))
 
 
         pub.publish(msg)
