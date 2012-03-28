@@ -51,6 +51,7 @@ namespace bard_components {
 
       // Structure describing an n-DOF trajectory segment
       struct Segment {
+        size_t traj_index;
         size_t index;
         double end_time;
         double duration;
@@ -75,6 +76,8 @@ namespace bard_components {
       KDL::JntArrayVel positions_;
       KDL::JntArrayVel positions_des_;
       KDL::JntArrayAcc pva_des_;
+
+      size_t traj_count_;
 
       trajectory_msgs::JointTrajectory new_trajectory_;
       //trajectory_msgs::JointTrajectoryPoint last_point_;
