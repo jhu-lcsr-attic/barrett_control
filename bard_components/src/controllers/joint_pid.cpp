@@ -75,6 +75,9 @@ bool JointPID::configureHook()
   // Resize working vectors
   positions_.resize(n_dof_);
   positions_des_.resize(n_dof_);
+  positions_des_.q.data.setZero();
+  positions_des_.qdot.data.setZero();
+
   p_error_.resize(n_dof_);
   i_error_.resize(n_dof_);
   d_error_.resize(n_dof_);
@@ -98,6 +101,8 @@ bool JointPID::configureHook()
 
 bool JointPID::startHook()
 {
+  positions_des_.q.data.setZero();
+  positions_des_.qdot.data.setZero();
   return true;
 }
 
@@ -107,31 +112,34 @@ void JointPID::updateHook()
   positions_in_port_.readNewest( positions_ );
 
   // Read in the goal joint positions & velocities
-  if(positions_des_in_port_.readNewest( positions_des_ ) != RTT::NewData ) {
-    positions_des_ = positions_;
-  }
+  if(positions_des_in_port_.readNewest( positions_des_ ) ) {
 
-  // Compute torques
-  for(unsigned int i=0; i<n_dof_; i++) {
-    // Compute proportional and derivative error
-    p_error_(i) = positions_des_.q(i) - positions_.q(i);
-    d_error_(i) = positions_des_.qdot(i) - positions_.qdot(i);
-    // Integrate proportional error if it is below the integral clamp
-    if(fabs(i_error_(i)) < fabs(i_clamp_[i])) {
-      i_error_(i) += p_error_(i);
+    // Compute torques
+    for(unsigned int i=0; i<n_dof_; i++) {
+      // Compute proportional and derivative error
+      p_error_(i) = positions_des_.q(i) - positions_.q(i);
+      d_error_(i) = positions_des_.qdot(i) - positions_.qdot(i);
+      // Integrate proportional error if it is below the integral clamp
+      if(fabs(i_error_(i)) < fabs(i_clamp_[i])) {
+        i_error_(i) += p_error_(i);
+      }
+      // Compute pid joint torque
+      torques_(i) = kp_[i]*p_error_(i) + ki_[i]*i_error_(i) + kd_[i]*d_error_(i) ;
     }
-    // Compute pid joint torque
-    torques_(i) = kp_[i]*p_error_(i) + ki_[i]*i_error_(i) + kd_[i]*d_error_(i) ;
+  } else {
+    torques_.data.setZero();
   }
  
   // Send joint torques
   torques_out_port_.write( torques_ );
+
   
   // Copy desired joint positions into joint state
   if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
     joint_state_.header.stamp = ros::Time::now();
     for(unsigned int i=0; i<n_dof_; i++) {
       joint_state_.position[i] = positions_des_.q(i);
+      joint_state_.velocity[i] = positions_des_.qdot(i);
       joint_state_.effort[i] = torques_(i);
     }
     joint_state_out_port_.write( joint_state_ );

@@ -14,17 +14,24 @@ def spewer():
 
         msg.header.stamp = rospy.Time.now()
 
-        point = JointTrajectoryPoint()
-        point.positions = [0,0,0,math.pi,0,0,0]
-        point.velocities = [0,0,0,0,0,0,0]
-
         msg.joint_names = ['LeftWAM/YawJoint',
                 'LeftWAM/ShoulderPitchJoint', 'LeftWAM/ShoulderYawJoint',
                 'LeftWAM/ElbowJoint', 'LeftWAM/UpperWristYawJoint',
                 'LeftWAM/UpperWristPitchJoint', 'LeftWAM/LowerWristYawJoint']
 
-        point.time_from_start = rospy.Duration(10.0)
-        msg.points = [copy(point)]
+        msg.points=[]
+
+        point = JointTrajectoryPoint()
+        point.velocities = [0,0,0,0,0,0,0]
+
+        point.positions = [0,0,0,math.pi,0,0,0]
+        point.time_from_start = rospy.Duration(3.0)
+        msg.points.append(copy(point))
+
+        point.positions = [0,-math.pi/2.0,0,math.pi,0,0,0]
+        point.time_from_start = rospy.Duration(8.0)
+        msg.points.append(copy(point))
+
         '''
         point.time_from_start = rospy.Duration(2.0)
         msg.points.append(copy(point))
@@ -39,7 +46,7 @@ def spewer():
 
         pub.publish(msg)
         print(msg)
-        rospy.sleep(10.0)
+        rospy.sleep(15.0)
 
 if __name__ == '__main__':
     try:

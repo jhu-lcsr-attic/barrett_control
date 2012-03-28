@@ -572,7 +572,6 @@ void JointTrajectory::feedback_cb()
   // Read in the current joint positions & velocities
   positions_in_port_.readNewest( positions_ );
 
-
   // Update time metrics
   ros::Time now = util::ros_rtt_now();
 
@@ -580,7 +579,7 @@ void JointTrajectory::feedback_cb()
     if(last_time_.toSec() < spline_traj_.back().end_time
         && now.toSec() > spline_traj_.back().end_time)
     {
-      ROS_DEBUG_STREAM("End of trajectory reached. Size: "<<spline_traj_.size());
+      //ROS_DEBUG_STREAM("End of trajectory reached. Size: "<<spline_traj_.size());
     }
   }
 
@@ -594,10 +593,10 @@ void JointTrajectory::feedback_cb()
   while(active_segment_it_ != spline_traj_.end()) {
     // Check if this segment begins later than now
     if(active_segment_it_->end_time > now.toSec()) {
-      ROS_DEBUG_STREAM_COND(verbose,"Active segment found! End time: "<<active_segment_it_->end_time);
+      //ROS_DEBUG_STREAM_COND(verbose,"Active segment found! End time: "<<active_segment_it_->end_time);
       break;
     } else {
-      ROS_DEBUG_STREAM_COND(verbose,"Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
+      //ROS_DEBUG_STREAM_COND(verbose,"Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
     }
 
     // Clear the old segments
@@ -615,10 +614,10 @@ void JointTrajectory::feedback_cb()
   // Compute the time from the beginning of this segment
   double seg_time = now.toSec() - (active_segment_it_->end_time-active_segment_it_->duration); 
 
-  ROS_DEBUG_STREAM_COND(verbose,"Sampling segment at t="<<seg_time<<" s:");
-  ROS_DEBUG_STREAM_COND(verbose,"  end_time: "<<active_segment_it_->end_time);
-  ROS_DEBUG_STREAM_COND(verbose,"    duration: "<<active_segment_it_->duration);
-  ROS_DEBUG_STREAM_COND(verbose,"    #splines: "<<active_segment_it_->splines.size());
+  //ROS_DEBUG_STREAM_COND(verbose,"Sampling segment at t="<<seg_time<<" s:");
+  //ROS_DEBUG_STREAM_COND(verbose,"  end_time: "<<active_segment_it_->end_time);
+  //ROS_DEBUG_STREAM_COND(verbose,"    duration: "<<active_segment_it_->duration);
+  //ROS_DEBUG_STREAM_COND(verbose,"    #splines: "<<active_segment_it_->splines.size());
 
   // Sample from the current segment in the trajectory
   for (size_t i = 0; i < n_dof_; i++) {
@@ -634,7 +633,7 @@ void JointTrajectory::feedback_cb()
   // Dispatch the sampled point
   positions_out_port_.write( positions_des_ );
   
-  ROS_DEBUG_STREAM_COND(verbose,"Done.");
+  //ROS_DEBUG_STREAM_COND(verbose,"Done.");
 }
       
 
