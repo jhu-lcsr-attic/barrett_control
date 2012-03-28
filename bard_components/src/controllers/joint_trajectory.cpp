@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <map>
 
 #include <Eigen/Dense>
@@ -226,7 +227,7 @@ void sampleSplineWithTimeBounds(
 }
 
 template <typename T>
-std::string iter_name(T l, typename T::iterator it) {
+std::string iter_name(T &l, typename T::iterator &it) {
   if(it == l.begin()) {
     return std::string("BEGIN");
   } else if(it == l.end()) {
@@ -286,9 +287,6 @@ void JointTrajectory::command_cb()
 
     ROS_DEBUG_STREAM("Starting trajectory in "<<(msg_start_time-util::ros_rtt_now().toSec())<<" seconds.");
 
-    // Declare bounds for binary search
-    std::pair<SplineTrajectory::iterator, SplineTrajectory::iterator> insertion_bounds;
-
     // Construct a dummy segment with the new trajectory's start time
     Segment first_new_segment;
 
@@ -301,24 +299,71 @@ void JointTrajectory::command_cb()
 
     // Compute the end time of the new segment
     first_new_segment.end_time = msg_start_time + first_new_segment.duration;
+    
+    // Declare bounds for binary search
+    std::pair<SplineTrajectory::iterator, SplineTrajectory::iterator> insertion_bounds;
 
     // Find where to splice in the new trajectory via binary search
+    /*
     insertion_bounds = std::equal_range(
         spline_traj_.begin(),
         spline_traj_.end(),
         first_new_segment,
         segment_time_cmp);
+     lower = insertion_bounds.first;
+     upper = insertion_bounds.second;
+     */
 
-    ROS_DEBUG_STREAM("Insertion lower bound of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, insertion_bounds.first));
-    ROS_DEBUG_STREAM("Insertion upper bound of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, insertion_bounds.second));
 
-    if(insertion_bounds.second == spline_traj_.end() ) {
+    // Binary search
+    SplineTrajectory::iterator
+      lower = spline_traj_.begin(),
+      upper = spline_traj_.end(),
+      pivot;
+
+    ROS_DEBUG_STREAM("Binary search for insertion point...");
+    while(lower != upper) {
+      pivot = lower;
+      int middle = std::distance(lower,upper)/2;
+      std::advance(pivot,middle);
+      ROS_DEBUG_STREAM("  middle: "<<middle);
+
+      if(first_new_segment.end_time < pivot->end_time) {
+        ROS_DEBUG_STREAM("  below pivot: "<<first_new_segment.end_time<<" < "<<pivot->end_time);
+        upper = --pivot;
+      } else {
+        ROS_DEBUG_STREAM("  above pivot: "<<first_new_segment.end_time<<" > "<<pivot->end_time);
+        lower = ++pivot;
+      }
+    }
+
+    ROS_DEBUG_STREAM("Insertion lower of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, lower));
+    ROS_DEBUG_STREAM("Insertion pivot of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, pivot));
+    ROS_DEBUG_STREAM("Insertion upper of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, upper));
+                       
+    std::ostringstream oss;
+    for(std::list<Segment>::iterator it = spline_traj_.begin();
+        it != spline_traj_.end();
+        ++it)
+    {
+      if(it == lower) {
+        oss<<"("<<it->index<<" ";
+      } else if(it == upper) {
+        oss<<it->index<<") ";
+      } else {
+        oss<<it->index<<" ";
+      }
+    }
+
+    ROS_DEBUG_STREAM("[ "<<oss.str()<<"]");
+
+    if(upper == spline_traj_.end() ) {
       // Set insertion iterator to the last segment of the current trajectory
       // (this should be equivalent to (--spline_traj_.end()))
-      insertion_it = insertion_bounds.first;
+      insertion_it = --upper;
     } else {
       // Set insertion iterator to the segment that ends after the insertion time
-      insertion_it = insertion_bounds.second;
+      insertion_it = upper;
     }
   }
   // POST: insertion_it points to a valid Segment structure if there is an active trajectory

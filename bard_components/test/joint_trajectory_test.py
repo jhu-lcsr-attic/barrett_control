@@ -22,7 +22,7 @@ def spewer():
                 'LeftWAM/ElbowJoint', 'LeftWAM/UpperWristYawJoint',
                 'LeftWAM/UpperWristPitchJoint', 'LeftWAM/LowerWristYawJoint']
 
-        msg.points = [point]
+        msg.points = [point, point]
 
         pub.publish(msg)
         print(msg)
