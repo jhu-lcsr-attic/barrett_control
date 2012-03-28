@@ -163,6 +163,7 @@ wam_left.start()
 // Start the controllers
 left_grav.start()
 left_joint_pid.start()
+//left_joint_trajectory.start()
 left_pose.start()
 //left_wrench.start()
 

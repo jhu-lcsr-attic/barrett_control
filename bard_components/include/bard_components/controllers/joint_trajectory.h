@@ -51,7 +51,7 @@ namespace bard_components {
 
       // Structure describing an n-DOF trajectory segment
       struct Segment {
-        double start_time;
+        double end_time;
         double duration;
         std::vector<Spline> splines;
       };
@@ -60,9 +60,9 @@ namespace bard_components {
     private:
       // The active trajectory (list of list of splines)
       SplineTrajectory spline_traj_;
-      SplineTrajectory::iterator traj_segment_;
-      Segment active_segment_;
+      SplineTrajectory::iterator active_segment_it_;
       ros::Time last_time_;
+      RTT::os::Mutex traj_cmd_mutex_;
 
       // Working variables
       unsigned int n_dof_;

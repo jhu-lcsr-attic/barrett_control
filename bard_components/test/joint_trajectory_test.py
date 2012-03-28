@@ -10,15 +10,17 @@ def spewer():
     while not rospy.is_shutdown():
         msg = JointTrajectory()
 
-        point = JointTrajectoryPoint()
-        point.positions = [0,0,0,0,0,0,0];
-        point.velocities = [0,0,0,0,0,0,0];
-        point.time_from_start = rospy.Duration(0.1)
+        #msg.header.stamp = rospy.Time.now()
 
-        msg.joint_names = "name: ['LeftWAM/YawJoint',
-        'LeftWAM/ShoulderPitchJoint', 'LeftWAM/ShoulderYawJoint',
-        'LeftWAM/ElbowJoint', 'LeftWAM/UpperWristYawJoint',
-        'LeftWAM/UpperWristPitchJoint', 'LeftWAM/LowerWristYawJoint']
+        point = JointTrajectoryPoint()
+        point.positions = [0,3.1415,0,0,0,0,0]
+        point.velocities = [0,0,0,0,0,0,0]
+        point.time_from_start = rospy.Duration(5.0)
+
+        msg.joint_names = ['LeftWAM/YawJoint',
+                'LeftWAM/ShoulderPitchJoint', 'LeftWAM/ShoulderYawJoint',
+                'LeftWAM/ElbowJoint', 'LeftWAM/UpperWristYawJoint',
+                'LeftWAM/UpperWristPitchJoint', 'LeftWAM/LowerWristYawJoint']
 
         msg.points = [point]
 
