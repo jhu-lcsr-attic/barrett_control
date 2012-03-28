@@ -103,6 +103,8 @@ bool JointPID::startHook()
 {
   positions_des_.q.data.setZero();
   positions_des_.qdot.data.setZero();
+  torques_.data.setZero();
+  torques_out_port_.write( torques_ );
   return true;
 }
 
