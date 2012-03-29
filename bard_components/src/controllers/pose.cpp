@@ -184,10 +184,18 @@ void CartesianPose::compute_ik(bool debug)
 
   kdl_ik_solver_top_->CartToJnt(ik_hint, tip_frame_des_, positions_des_.q);
 
+  ROS_DEBUG_STREAM("Unwrapped angles: "<<(positions_des_.q.data.transpose)());
+
   // Unwrap angles
   for(unsigned int i=0; i<n_dof_; i++) {
-    positions_des_.q(i) = fmod(positions_des_.q(i)+M_PI,2.0*M_PI)-M_PI;
+    if(positions_des_.q(i) > 0) {
+      positions_des_.q(i) = fmod(positions_des_.q(i)+M_PI,2.0*M_PI)-M_PI;
+    } else {
+      positions_des_.q(i) = fmod(positions_des_.q(i)-M_PI,2.0*M_PI)+M_PI;
+    }
   }
+
+  ROS_DEBUG_STREAM("Wrapped angles: "<<(positions_des_.q.data.transpose()));
 
   // Servo in jointspace to the appropriate joint coordinates
   for(unsigned int i=0; i<n_dof_; i++) {

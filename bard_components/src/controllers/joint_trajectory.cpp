@@ -246,25 +246,10 @@ std::string iter_name(T &l, typename T::iterator &it) {
   }
 }
 
-bool JointTrajectory::within_error(KDL::JntArray &pos_des) {
-  double max_err = 0.0;
-
-  for(size_t i=0; i<n_dof_; i++) {
-    max_err = std::max(max_err, fabs(pos_des(i)-positions_.q(i)));
-  }
-
-  return max_err < 0.05;
-}
-
 void JointTrajectory::command_cb()
 {
   ROS_DEBUG("Received new trajecotory.");
-  RTT::os::MutexTryLock lock(traj_cmd_mutex_);
-
-  if(!lock.isSuccessful()) {
-    ROS_ERROR("Trajectories coming in too fast!");
-    return;
-  }
+  RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   // Read in the new message
   trajectory_msgs::JointTrajectory msg;
@@ -626,11 +611,7 @@ void JointTrajectory::feedback_cb()
 
   last_time_ = now;
 
-  RTT::os::MutexTryLock lock(traj_cmd_mutex_);
-
-  if(!lock.isSuccessful()) {
-    return;
-  }
+  RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   active_segment_it_ = spline_traj_.begin();
 
@@ -676,9 +657,7 @@ void JointTrajectory::feedback_cb()
   }
   
   // Dispatch the sampled point
-  if(this->within_error(positions_des_.q)) {
-    positions_out_port_.write( positions_des_ );
-  }
+  positions_out_port_.write( positions_des_ );
   
   //ROS_DEBUG_STREAM("Done.");
 }

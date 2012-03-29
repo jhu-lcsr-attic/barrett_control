@@ -120,7 +120,7 @@ connect("left_wrench.torques_out","left_mux.wrench",ConnPolicy())
 ///////////////////////////////////////////////////////////////////////////////
 // Create cartesian pose  controller //////////////////////////////////////////
 loadComponent("left_pose","bard_components::controllers::CartesianPose")
-setActivity("left_pose",2.0,HighestPriority,ORO_SCHED_RT)
+setActivity("left_pose",10.0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","left_pose")
 
 connect("wam_left.positions_out","left_pose.positions_in",ConnPolicy())

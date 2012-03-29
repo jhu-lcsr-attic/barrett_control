@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <algorithm>
 
 #include <Eigen/Dense>
 
@@ -114,13 +115,24 @@ bool JointPID::startHook()
   return true;
 }
 
+bool JointPID::within_error(KDL::JntArray &pos_des) {
+  double max_err = 0.0;
+
+  for(size_t i=0; i<n_dof_; i++) {
+    max_err = std::max(max_err, fabs(pos_des(i)-positions_.q(i)));
+  }
+
+  return max_err < 0.15;
+}
+
+
 void JointPID::updateHook()
 {
   // Read in the current joint positions & velocities
   positions_in_port_.readNewest( positions_ );
 
   // Read in the goal joint positions & velocities
-  if(positions_des_in_port_.readNewest( positions_des_ ) ) {
+  if(positions_des_in_port_.readNewest( positions_des_ ) && this->within_error(positions_des_.q) ) {
 
     // Compute torques
     for(unsigned int i=0; i<n_dof_; i++) {

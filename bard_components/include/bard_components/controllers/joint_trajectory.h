@@ -42,7 +42,6 @@ namespace bard_components {
 
       void feedback_cb();
       void command_cb();
-      bool within_error(KDL::JntArray &pos_des);
 
       // Structure describing a quintic spline
       struct Spline {
