@@ -260,7 +260,7 @@ void CartesianPose::updateHook()
 
   // Send traj target
   if(trajectories_out_port_.connected()) {
-    trajectory_.header.stamp = util::ros_rtt_now() + ros::Duration(1.0);
+    trajectory_.header.stamp = ros::Time(0,0);//util::ros_rtt_now() + ros::Duration(1.0);
 
     for(size_t i=0; i<n_dof_; i++) {
       trajectory_.points[0].positions[i] = positions_des_.q(i);

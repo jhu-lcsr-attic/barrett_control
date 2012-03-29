@@ -312,7 +312,7 @@ std::string iter_name(T &l, typename T::iterator &it) {
 void JointTrajectory::command_cb()
 {
   ROS_DEBUG("Received new trajecotory.");
-  RTT::os::MutexLock lock(traj_cmd_mutex_);
+  //RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   // Read in the new message
   trajectory_msgs::JointTrajectory msg;
@@ -674,7 +674,7 @@ void JointTrajectory::feedback_cb()
 
   last_time_ = now;
 
-  RTT::os::MutexLock lock(traj_cmd_mutex_);
+  //RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   active_segment_it_ = spline_traj_.begin();
 
