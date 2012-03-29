@@ -653,6 +653,7 @@ void JointTrajectory::command_cb()
   ROS_DEBUG_STREAM("Trajectory now has "<<spline_traj_.size()<<" segments.");
 
 #if _TICTOC
+  // Old segments are removed in feedback_cb
 #else
   // Remove old segments
   SplineTrajectory::iterator last_old_segment_it = active_segment_it_;
@@ -686,8 +687,10 @@ void JointTrajectory::feedback_cb()
 
   //RTT::os::MutexLock lock(traj_cmd_mutex_);
 #if _TICTOC
+  // Reset the active segment iterator
   active_segment_it_ = spline_traj_.begin();
 #else
+  // active_segment_it_ is persistent now
 #endif
 
   // Iterate through segments to find the active one
@@ -700,10 +703,10 @@ void JointTrajectory::feedback_cb()
       //ROS_DEBUG_STREAM("Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
     }
 
+#if _TICTOC
     // Clear the old segments
     spline_traj_.pop_front();
-#if _TICTOC
-    // Reset the iterator
+    // Reset the active segment iterator
     active_segment_it_ = spline_traj_.begin();
 #else
     // TODO: try this instead
