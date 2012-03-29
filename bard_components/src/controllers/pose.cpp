@@ -48,7 +48,7 @@ CartesianPose::CartesianPose(string const& name) :
     .doc("The target frame to track with tip_link.");
 
   // Configure data ports
-  this->ports()->addEventPort("positions_in", positions_in_port_)
+  this->ports()->addPort("positions_in", positions_in_port_)
     .doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_)
     .doc("Output port: nx1 vector of desired joint positins. (n joints)");
@@ -149,7 +149,9 @@ bool CartesianPose::configureHook()
   // Zero out torque data
   torques_.data.setZero();
   positions_.q.data.setZero();
+  positions_.qdot.data.setZero();
   positions_des_.q.data.setZero();
+  positions_des_.qdot.data.setZero();
 
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_des_);
@@ -221,7 +223,7 @@ void CartesianPose::updateHook()
 
   // Send traj target
   if(trajectories_out_port_.connected()) {
-    trajectory_.header.stamp = util::ros_rtt_now() + ros::Duration(5.0);
+    trajectory_.header.stamp = util::ros_rtt_now() + ros::Duration(1.0);
 
     for(size_t i=0; i<n_dof_; i++) {
       trajectory_.points[0].positions[i] = positions_des_.q(i);

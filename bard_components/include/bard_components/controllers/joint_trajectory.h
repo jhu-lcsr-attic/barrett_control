@@ -42,6 +42,7 @@ namespace bard_components {
 
       void feedback_cb();
       void command_cb();
+      bool within_error(KDL::JntArray &pos_des);
 
       // Structure describing a quintic spline
       struct Spline {
@@ -64,7 +65,7 @@ namespace bard_components {
       SplineTrajectory spline_traj_;
       SplineTrajectory::iterator active_segment_it_;
       ros::Time last_time_;
-      RTT::os::Mutex traj_cmd_mutex_;
+      RTT::os::MutexRecursive traj_cmd_mutex_;
 
       // Working variables
       unsigned int n_dof_;

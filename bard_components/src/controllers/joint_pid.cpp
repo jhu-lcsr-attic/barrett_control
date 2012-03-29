@@ -101,10 +101,16 @@ bool JointPID::configureHook()
 
 bool JointPID::startHook()
 {
+  // Zero output data
   positions_des_.q.data.setZero();
   positions_des_.qdot.data.setZero();
   torques_.data.setZero();
   torques_out_port_.write( torques_ );
+
+  // Clear input ports
+  positions_in_port_.clear();
+  positions_des_in_port_.clear();
+
   return true;
 }
 
