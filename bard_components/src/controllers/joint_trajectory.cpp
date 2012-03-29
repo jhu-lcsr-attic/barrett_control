@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <algorithm>
 
 #include <Eigen/Dense>
 
@@ -33,6 +34,7 @@ JointTrajectory::JointTrajectory(string const& name) :
   this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
+  this->addProperty("velocity_limits",velocity_limits_).doc("The velocity limits.");
 
   // Configure data ports
   this->ports()->addEventPort("positions_in", positions_in_port_, boost::bind(&JointTrajectory::feedback_cb, this)).doc("Input port: nx1 vector of joint positions. (n joints)");
@@ -54,11 +56,13 @@ bool JointTrajectory::configureHook()
 
   // Store joints from urdf
   joints_.clear();
+  velocity_limits_.clear();
   for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
       it != kdl_chain_.segments.end();
       it++)
   {
     joints_.push_back(urdf_model_.getJoint(it->getJoint().getName()));
+    velocity_limits_.push_back(joints_.back()->limits->velocity);
   }
 
   // Resize working vectors
@@ -240,7 +244,7 @@ std::string iter_name(T &l, typename T::iterator &it) {
 
 void JointTrajectory::command_cb()
 {
-  ROS_DEBUG("Received new trajecotory.");
+  //ROS_DEBUG("Received new trajecotory.");
   RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   // Read in the new message
@@ -251,7 +255,7 @@ void JointTrajectory::command_cb()
   ros::Time time = last_time_;
   
   // Construct a map from an index in joints_ to an index in the msg
-  ROS_DEBUG("Constructing index map.");
+  //ROS_DEBUG("Constructing index map.");
   std::vector<int> lookup(joints_.size(), -1); 
   for (size_t j = 0; j < joints_.size(); ++j) {
     for (size_t k = 0; k < msg.joint_names.size(); ++k) {
@@ -274,8 +278,13 @@ void JointTrajectory::command_cb()
   double msg_start_time;
   SplineTrajectory::iterator insertion_it = spline_traj_.end();
 
+  if (msg.points.size() == 0) {
+    ROS_WARN("Empty trajectory!");
+  }
+
+
   if(msg.header.stamp.isZero()) {
-    ROS_DEBUG("Starting trajectory immediately,");
+    //ROS_DEBUG("Starting trajectory immediately,");
 
     // Start immediately
     msg_start_time = util::ros_rtt_now().toSec();
@@ -286,17 +295,13 @@ void JointTrajectory::command_cb()
     // Compute the time at which this trajectory should start
     msg_start_time = msg.header.stamp.toSec();
 
-    ROS_DEBUG_STREAM("Starting trajectory in "<<(msg_start_time-util::ros_rtt_now().toSec())<<" seconds.");
+    //ROS_DEBUG_STREAM("Starting trajectory in "<<(msg_start_time-util::ros_rtt_now().toSec())<<" seconds.");
 
     // Construct a dummy segment with the new trajectory's start time
     Segment first_new_segment;
 
     // Set the duration of the first segment
-    if (msg.points.size() > 0) {
-      first_new_segment.duration = msg.points[0].time_from_start.toSec();
-    } else {
-      first_new_segment.end_time = msg_start_time;
-    }
+    first_new_segment.duration = msg.points[0].time_from_start.toSec();
 
     // Compute the end time of the new segment
     first_new_segment.end_time = msg_start_time + first_new_segment.duration;
@@ -305,43 +310,31 @@ void JointTrajectory::command_cb()
     std::pair<SplineTrajectory::iterator, SplineTrajectory::iterator> insertion_bounds;
 
     // Find where to splice in the new trajectory via binary search
-    /*
-    insertion_bounds = std::equal_range(
-        spline_traj_.begin(),
-        spline_traj_.end(),
-        first_new_segment,
-        segment_time_cmp);
-     lower = insertion_bounds.first;
-     upper = insertion_bounds.second;
-     */
-
-
-    // Binary search
     SplineTrajectory::iterator
       lower = spline_traj_.begin(),
       upper = spline_traj_.end(),
       pivot;
 
-    ROS_DEBUG_STREAM("Binary search for insertion point...");
+    //ROS_DEBUG_STREAM("Binary search for insertion point...");
     while(lower != upper) {
       pivot = lower;
       int middle = std::distance(lower,upper)/2;
       std::advance(pivot,middle);
-      ROS_DEBUG_STREAM("  middle: "<<middle);
+      //ROS_DEBUG_STREAM("  middle: "<<middle);
 
       if(first_new_segment.end_time < pivot->end_time) {
-        ROS_DEBUG_STREAM("  below pivot: "<<first_new_segment.end_time<<" < "<<pivot->end_time);
+        //ROS_DEBUG_STREAM("  below pivot: "<<first_new_segment.end_time<<" < "<<pivot->end_time);
         upper = --pivot;
       } else {
-        ROS_DEBUG_STREAM("  above pivot: "<<first_new_segment.end_time<<" > "<<pivot->end_time);
+        //ROS_DEBUG_STREAM("  above pivot: "<<first_new_segment.end_time<<" > "<<pivot->end_time);
         lower = ++pivot;
       }
     }
 
-    ROS_DEBUG_STREAM("Insertion lower of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, lower));
-    ROS_DEBUG_STREAM("Insertion pivot of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, pivot));
-    ROS_DEBUG_STREAM("Insertion upper of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, upper));
-                       
+    /*                 
+    //ROS_DEBUG_STREAM("Insertion lower of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, lower));
+    //ROS_DEBUG_STREAM("Insertion pivot of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, pivot));
+    //ROS_DEBUG_STREAM("Insertion upper of spline_traj_ "<<iter_name<std::list<Segment> >(spline_traj_, upper));
     std::ostringstream oss;
     for(std::list<Segment>::iterator it = spline_traj_.begin();
         it != spline_traj_.end();
@@ -356,8 +349,8 @@ void JointTrajectory::command_cb()
       }
     }
 
-    ROS_DEBUG_STREAM("[ "<<oss.str()<<"]");
-
+    //ROS_DEBUG_STREAM("[ "<<oss.str()<<"]");
+    */
     if(upper == spline_traj_.end() ) {
       // Set insertion iterator to the last segment of the current trajectory
       // (this should be equivalent to (--spline_traj_.end()))
@@ -380,14 +373,14 @@ void JointTrajectory::command_cb()
   // Check if there is currently a trajectory being executed
   // TODO: make sure we're actually executing it!
   if( active_segment_it_ != spline_traj_.end() ) {
-    ROS_DEBUG("New trajectory will interrupt current trajectory.");
+    //ROS_DEBUG("New trajectory will interrupt current trajectory.");
 
     // Truncate the duration & end time of the interrupted segment
     insertion_it->duration = insertion_it->duration - (insertion_it->end_time - msg_start_time);
     insertion_it->end_time = msg_start_time;
 
     // Get the initial conditions from the start time of the new traj
-    ROS_DEBUG("Initial conditions for new set of splines:");
+    //ROS_DEBUG("Initial conditions for new set of splines:");
     for (unsigned int i = 0; i < n_dof_; ++i) {
       // Shift the new traj start time into the local time of this segment
       double new_traj_time_in_segment =
@@ -403,22 +396,22 @@ void JointTrajectory::command_cb()
           prev_velocities[i],
           prev_accelerations[i]);
 
-      ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)",
-          prev_positions[i], prev_velocities[i],
-          prev_accelerations[i], joints_[i]->name.c_str());
+      //ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)",
+      //    prev_positions[i], prev_velocities[i],
+      //    prev_accelerations[i], joints_[i]->name.c_str());
     }
   } else {
-    ROS_DEBUG("No active trajectory. Defining initial conditions from last position reading:");
+    //ROS_DEBUG("No active trajectory. Defining initial conditions from last position reading:");
     // Define the initial conditions from the last joint state reading
-    ROS_DEBUG("Initial conditions for new set of splines:");
+    //ROS_DEBUG("Initial conditions for new set of splines:");
     for (unsigned int i = 0; i < n_dof_; ++i) {
       prev_positions[i] = positions_.q(i);
       prev_velocities[i] = positions_.qdot(i);
       prev_accelerations[i] = 0.0;
 
-      ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)",
-          prev_positions[i], prev_velocities[i],
-          prev_accelerations[i], joints_[i]->name.c_str());
+      //ROS_DEBUG("    %.2lf, %.2lf, %.2lf  (%s)",
+      //    prev_positions[i], prev_velocities[i],
+      //    prev_accelerations[i], joints_[i]->name.c_str());
     }
   }
   // POST: prev_* contain the initial condtions for the first segmet of the new traj
@@ -459,6 +452,10 @@ void JointTrajectory::command_cb()
   std::vector<double> velocities(n_dof_,0.0);
   std::vector<double> accelerations(n_dof_,0.0);
 
+  // Initialize safety time offset
+  // This is incremented to slow down a trajectory to live within velocity limits
+  double safety_time_offset = 0.0;
+
   // Construct spline segment for each point
   for (size_t i = 0; i < msg.points.size(); i++) {
     // Construct new segment
@@ -467,8 +464,8 @@ void JointTrajectory::command_cb()
     // Compute absolute start time
     seg.traj_index = traj_count_;
     seg.index = i;
-    seg.end_time = msg_start_time + msg.points[i].time_from_start.toSec();
     seg.duration = durations[i];
+    seg.end_time = msg_start_time + msg.points[i].time_from_start.toSec();
     seg.splines.resize(joints_.size());
 
     // Checks that the incoming point has the right number of elements.
@@ -501,6 +498,28 @@ void JointTrajectory::command_cb()
       }
     }
 
+
+    // Check the maximum average velocity of this segment
+    double max_vel_ratio = 0.0;
+    for(size_t j = 0; j < n_dof_; j++) {
+      max_vel_ratio = std::max(max_vel_ratio, (fabs(prev_positions[j] - positions[j])/seg.duration)/velocity_limits_[j]);
+    }
+
+    //ROS_DEBUG_STREAM("Maximum velocity ratio is: "<<max_vel_ratio);
+
+    // Compute new (safe) duration
+    double new_duration = std::max(seg.duration, max_vel_ratio*seg.duration);
+    //ROS_DEBUG_STREAM("Duration update: "<<seg.duration<<"->"<<new_duration);
+
+    // Increment time offset
+    safety_time_offset += new_duration-seg.duration;
+
+    // Update time properties
+    durations[i] = new_duration;
+    seg.duration = new_duration;
+    seg.end_time += safety_time_offset;
+
+    
     // Compute splines from the boundary conditions
     for (size_t j = 0; j < n_dof_; ++j) {
       if (prev_accelerations.size() > 0 && accelerations.size() > 0) {
@@ -548,27 +567,25 @@ void JointTrajectory::command_cb()
   ++insertion_it;
 
   // Delete the no longer valid trajectory
-  ROS_DEBUG_STREAM("Erasing invalid segments from trajectory ("<<spline_traj_.size()<<")");
+  //ROS_DEBUG_STREAM("Erasing invalid segments from trajectory ("<<spline_traj_.size()<<")");
   if(insertion_it == spline_traj_.end()) {
-    ROS_DEBUG_STREAM("Erasing no segments.");
+    //ROS_DEBUG_STREAM("Erasing no segments.");
   } else {
-    ROS_DEBUG_STREAM("Erasing segments starting with index "<<insertion_it->index);
+    //ROS_DEBUG_STREAM("Erasing segments starting with index "<<insertion_it->index);
   }
   spline_traj_.erase(insertion_it, spline_traj_.end());
 
   // Splice in the new trajectory
-  ROS_DEBUG_STREAM("Splicing "<<spline_traj_.size()<<" new segment(s) into trajectory.");
+  //ROS_DEBUG_STREAM("Splicing "<<spline_traj_.size()<<" new segment(s) into trajectory.");
   spline_traj_.splice(spline_traj_.end(), new_spline_traj);
 
-  ROS_DEBUG_STREAM("Trajectory now has "<<spline_traj_.size()<<" segments.");
+  //ROS_DEBUG_STREAM("Trajectory now has "<<spline_traj_.size()<<" segments.");
 
   traj_count_++;
 }
 
 void JointTrajectory::feedback_cb()
 {
-  bool verbose = false;
-
   // Read in the current joint positions & velocities
   positions_in_port_.readNewest( positions_ );
 
@@ -593,10 +610,10 @@ void JointTrajectory::feedback_cb()
   while(active_segment_it_ != spline_traj_.end()) {
     // Check if this segment begins later than now
     if(active_segment_it_->end_time > now.toSec()) {
-      //ROS_DEBUG_STREAM_COND(verbose,"Active segment found! End time: "<<active_segment_it_->end_time);
+      //ROS_DEBUG_STREAM("Active segment found! End time: "<<active_segment_it_->end_time);
       break;
     } else {
-      //ROS_DEBUG_STREAM_COND(verbose,"Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
+      //ROS_DEBUG_STREAM("Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
     }
 
     // Clear the old segments
@@ -614,10 +631,10 @@ void JointTrajectory::feedback_cb()
   // Compute the time from the beginning of this segment
   double seg_time = now.toSec() - (active_segment_it_->end_time-active_segment_it_->duration); 
 
-  //ROS_DEBUG_STREAM_COND(verbose,"Sampling segment at t="<<seg_time<<" s:");
-  //ROS_DEBUG_STREAM_COND(verbose,"  end_time: "<<active_segment_it_->end_time);
-  //ROS_DEBUG_STREAM_COND(verbose,"    duration: "<<active_segment_it_->duration);
-  //ROS_DEBUG_STREAM_COND(verbose,"    #splines: "<<active_segment_it_->splines.size());
+  //ROS_DEBUG_STREAM("Sampling segment at t="<<seg_time<<" s:");
+  //ROS_DEBUG_STREAM("  end_time: "<<active_segment_it_->end_time);
+  //ROS_DEBUG_STREAM("    duration: "<<active_segment_it_->duration);
+  //ROS_DEBUG_STREAM("    #splines: "<<active_segment_it_->splines.size());
 
   // Sample from the current segment in the trajectory
   for (size_t i = 0; i < n_dof_; i++) {
@@ -633,7 +650,7 @@ void JointTrajectory::feedback_cb()
   // Dispatch the sampled point
   positions_out_port_.write( positions_des_ );
   
-  //ROS_DEBUG_STREAM_COND(verbose,"Done.");
+  //ROS_DEBUG_STREAM("Done.");
 }
       
 
@@ -648,77 +665,3 @@ void JointTrajectory::stopHook()
 void JointTrajectory::cleanupHook()
 {
 }
-
-#if 0
-void JointTrajectory::load_trajectories()
-{
-  // Read in the trajectories until there are none left to read
-  RTT::FlowStatus trajectories_in_status = RTT::NoData;
-
-  do{
-    // Try to read in a trajectory 
-    trajectories_in_status = trajectories_in_port_.read( new_trajectory_ );
-
-    // Splice in this new trajectory if it's new and has any traj points
-    if(trajectories_in_status == RTT::NewData && new_trajectory_.points.size() > 0)
-    {
-      // Duration representing the start time of this trajectory
-      ros::Duration init_duration = ros::Duration(new_trajectory_.header.stamp.sec,  new_trajectory_.header.stamp.nsec);
-
-      // Declare bounds for binary search
-      std::pair<
-        std::list<trajectory_msgs::JointTrajectoryPoint>::iterator,
-        std::list<trajectory_msgs::JointTrajectoryPoint>::iterator> insertion_bounds;
-
-      // Compute the time of the start of the new trajectory
-      trajectory_msgs::JointTrajectoryPoint first_point = new_trajectory_.points[0];
-      first_point.time_from_start += init_duration; 
-
-      // Find where to splice in the new trajectory via binary search
-      insertion_bounds = std::equal_range(
-          traj_points_.begin(),
-          traj_points_.end(),
-          first_point,
-          point_time_cmp);
-
-      // Clear points after insertion bounds
-      traj_points_.erase(insertion_bounds.first, traj_points_.end());
-
-      // Add all trajectory points after the insertion point 
-      for(std::vector<trajectory_msgs::JointTrajectoryPoint>::iterator it=new_trajectory_.points.begin();
-          it != new_trajectory_.points.end();
-          it++)
-      {
-        // Add the begin time to the "time from start"
-        it->time_from_start += init_duration;
-        // Insert the point
-        traj_points_.push_back(*it);
-      }
-
-      /*
-      // Find where to splice in the new trajectory via binary search
-      // Compute start time for this trajectory
-      ros::Time new_traj_end_time = new_trajectory_.header.stamp + new_trajectory_.points[0].time_from_start;
-      // Initializa binary search indices
-      size_t insertion = traj_points_.size()/2,
-             low = 0,
-             high = traj_points_.size()-1;
-      while(insertion > low && insertion < high) {
-        if(new_traj_end_time < traj_points_[insertion].time_from_start) {
-          high = insertion - 1;
-          insertion = (low + insertion)/2;
-        } else {
-          low = insertion + 1;
-          insertion = (insertion + high)/2;
-        }
-      }
-      // Pre-allocate any needed memory
-      traj_points_.reserve(
-          size_t(insertion_bounds.first - traj_points_.begin()) // # of points to keep
-          + new_trajectory_.points.size());                     // # of new points
-      */
-    }
-  } while(trajectories_in_status != RTT::NewData);
-  
-}
-#endif

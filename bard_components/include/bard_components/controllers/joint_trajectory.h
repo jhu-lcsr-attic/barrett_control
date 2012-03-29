@@ -79,6 +79,8 @@ namespace bard_components {
 
       size_t traj_count_;
 
+      std::vector<double> velocity_limits_;
+
       trajectory_msgs::JointTrajectory new_trajectory_;
       //trajectory_msgs::JointTrajectoryPoint last_point_;
       //std::list<trajectory_msgs::JointTrajectoryPoint> traj_points_;

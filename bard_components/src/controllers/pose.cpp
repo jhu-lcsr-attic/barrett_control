@@ -54,6 +54,8 @@ CartesianPose::CartesianPose(string const& name) :
     .doc("Output port: nx1 vector of desired joint positins. (n joints)");
   this->ports()->addPort("torques_out", torques_out_port_)
     .doc("Output port: nx1 vector of joint torques. (n joints)");
+  this->ports()->addPort("trajectories_out", trajectories_out_port_)
+    .doc("Output port: nx1 vector of joint trajectories. (n joints)");
 
   this->addOperation("testIK", &CartesianPose::test_ik, this, RTT::OwnThread)
     .doc("Test the IK computation.");
@@ -106,6 +108,26 @@ bool CartesianPose::configureHook()
     }
   }
 
+  // Construct trajectory message
+  trajectory_.joint_names.clear();
+  trajectory_.points.clear();
+
+  for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
+      it != kdl_chain_.segments.end();
+      it++)
+  {
+    trajectory_.joint_names.push_back(it->getJoint().getName());
+  }
+
+  trajectory_msgs::JointTrajectoryPoint single_point;
+  single_point.time_from_start = ros::Duration(0.005);
+  single_point.positions.resize(n_dof_);
+  single_point.velocities.resize(n_dof_);
+  std::fill(single_point.positions.begin(),single_point.positions.end(),0.0);
+  std::fill(single_point.velocities.begin(),single_point.velocities.end(),0.0);
+  trajectory_.points.push_back(single_point);
+
+
   // Initialize IK solver
   kdl_fk_solver_pos_.reset(
       new KDL::ChainFkSolverPos_recursive(kdl_chain_));
@@ -132,6 +154,7 @@ bool CartesianPose::configureHook()
   // Prepare ports for realtime processing
   positions_out_port_.setDataSample(positions_des_);
   torques_out_port_.setDataSample(torques_);
+  trajectories_out_port_.setDataSample(trajectory_);
 
   return true;
 }
@@ -196,9 +219,21 @@ void CartesianPose::updateHook()
   // Compute the inverse kinematics solution
   this->compute_ik(false);
 
+  // Send traj target
+  if(trajectories_out_port_.connected()) {
+    trajectory_.header.stamp = util::ros_rtt_now() + ros::Duration(5.0);
+
+    for(size_t i=0; i<n_dof_; i++) {
+      trajectory_.points[0].positions[i] = positions_des_.q(i);
+      trajectory_.points[0].velocities[i] = positions_des_.qdot(i);
+    }
+
+    trajectories_out_port_.write( trajectory_ );
+  }
+
   // Send position target
   positions_out_port_.write( positions_des_ );
-  
+
   // Send joint torques 
   torques_out_port_.write( torques_ );
 }
