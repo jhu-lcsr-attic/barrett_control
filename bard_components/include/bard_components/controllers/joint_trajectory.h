@@ -126,7 +126,7 @@ namespace bard_components {
       SplineTrajectory spline_traj_;
       SplineTrajectory::iterator active_segment_it_;
       ros::Time last_time_;
-      RTT::os::Mutex traj_cmd_mutex_;
+      RTT::os::MutexRecursive traj_cmd_mutex_;
 
       // Working variables
       unsigned int n_dof_;
@@ -140,6 +140,8 @@ namespace bard_components {
       KDL::JntArrayAcc pva_des_;
 
       size_t traj_count_;
+
+      std::vector<double> velocity_limits_;
 
       trajectory_msgs::JointTrajectory new_trajectory_;
       //trajectory_msgs::JointTrajectoryPoint last_point_;

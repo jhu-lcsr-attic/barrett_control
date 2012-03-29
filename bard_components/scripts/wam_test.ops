@@ -149,7 +149,7 @@ connect("left_wrench.torques_out","left_mux.wrench",ConnPolicy())
 ///////////////////////////////////////////////////////////////////////////////
 // Create cartesian pose  controller //////////////////////////////////////////
 loadComponent("left_pose","bard_components::controllers::CartesianPose")
-setActivity("left_pose",0,HighestPriority,ORO_SCHED_RT)
+setActivity("left_pose",10.0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","left_pose")
 
 connect("wam_left.positions_out","left_pose.positions_in",ConnPolicy())
@@ -162,7 +162,9 @@ left_pose.configure()
 // Connect controller to mux
 left_mux.load("pose")
 connect("left_pose.torques_out","left_mux.pose",ConnPolicy())
-connect("left_pose.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+//connect("left_pose.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+
+stream("left_pose.trajectories_out",ros.topic("wam_rtt/left_pose/trajectories_out")) 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Create joint trajectory controller //////////////////////////////////////////
@@ -180,6 +182,7 @@ left_joint_traj.configure()
 // Connect controller to mux
 left_mux.load("joint_traj")
 connect("left_joint_traj.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+connect("left_joint_traj.trajectories_in","left_pose.trajectories_out",ConnPolicy())
 
 // Connect WAM state to ROS topic
 stream("left_joint_traj.trajectories_in",ros.topic("wam_rtt/left_joint_traj/trajectories")) 
@@ -191,9 +194,10 @@ wam_left.start()
 
 // Start the controllers
 left_grav.start()
-left_joint_pid.start()
-//left_joint_trajectory.start()
+
 //left_pose.start()
+left_joint_traj.start()
+left_joint_pid.start()
 //left_wrench.start()
 
 // Start the multiplexer

@@ -54,6 +54,7 @@
 #include <tf/tf.h>
 
 #include <geometry_msgs/TransformStamped.h>
+#include <trajectory_msgs/JointTrajectory.h>
 
 namespace bard_components {
   namespace controllers {
@@ -72,6 +73,7 @@ namespace bard_components {
       RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
       RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
       RTT::OutputPort<KDL::JntArray> torques_out_port_;
+      RTT::OutputPort<trajectory_msgs::JointTrajectory> trajectories_out_port_;
 
       RTT::OperationCaller<geometry_msgs::TransformStamped(const std::string&, const std::string&)> tf_lookup_transform_;
 
@@ -114,6 +116,8 @@ namespace bard_components {
       tf::Transform tip_frame_tf_;
       KDL::Frame tip_frame_;
       KDL::Frame tip_frame_des_;
+
+      trajectory_msgs::JointTrajectory trajectory_;
 
     };
   }

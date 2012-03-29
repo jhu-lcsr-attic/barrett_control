@@ -70,6 +70,8 @@ namespace bard_components {
       void stopHook();
       void cleanupHook();
 
+      bool within_error(KDL::JntArray &pos_des);
+
     private:
 
       // Working variables
