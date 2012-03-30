@@ -166,10 +166,10 @@ bool CartesianPose::configureHook()
         1.0E-6,
         150));
   kdl_ik_solver_top_.reset(
-      new KDL::ChainIkSolverPos_NR_JL(
+      new KDL::ChainIkSolverPos_NR(
         kdl_chain_,
-        joint_limits_min_,
-        joint_limits_max_,
+        //joint_limits_min_,
+        //joint_limits_max_,
         *kdl_fk_solver_pos_,
         *kdl_ik_solver_vel_,
         250,

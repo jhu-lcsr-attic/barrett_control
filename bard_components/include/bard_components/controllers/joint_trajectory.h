@@ -128,7 +128,7 @@ namespace bard_components {
       SplineTrajectory spline_traj_;
       SplineTrajectory::iterator active_segment_it_;
       ros::Time last_time_;
-      RTT::os::MutexRecursive traj_cmd_mutex_;
+      RTT::os::Mutex traj_cmd_mutex_;
 
       // Working variables
       unsigned int n_dof_;
