@@ -121,6 +121,8 @@ namespace bard_components {
       };
       typedef std::list<Segment> SplineTrajectory;
 
+      std::string debug_iter(const SplineTrajectory::iterator &debug_it);
+
     private:
       // The active trajectory (list of list of splines)
       SplineTrajectory spline_traj_;
