@@ -562,9 +562,18 @@ void JointTrajectory::command_cb()
       ROS_ERROR("Command point %d has %d elements for the velocities", (int)i, (int)msg.points[i].velocities.size());
       return;
     }
-    if (msg.points[i].positions.size() != joints_.size()) {
-      ROS_ERROR("Command point %d has %d elements for the positions", (int)i, (int)msg.points[i].positions.size());
-      return;
+    if (msg.points[i].positions.size() != 0) {
+      // Joint traj has a position command
+      if( msg.points[i].positions.size() != joints_.size()) {
+        ROS_ERROR("Command point %d has %d elements for the positions", (int)i, (int)msg.points[i].positions.size());
+        return;
+      }
+    } else if(msg.points[i].velocities.size() != 0) {
+      // TODO: test this
+      // Joint traj has no position command
+      for(size_t j=0; j<n_dof_; j++) {
+        msg.points[i].positions[j] = prev_positions[j] + msg.points[i].velocities[j]*durations[i];
+      }
     }
 
     // Re-order the joints in the command to match the interal joint order.
