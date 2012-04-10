@@ -34,6 +34,8 @@
 
 #include <boost/scoped_ptr.hpp>
 
+#include <urdf/model.h>
+
 #include <kdl/jntarray.hpp>
 #include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>

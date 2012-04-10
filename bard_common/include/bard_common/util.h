@@ -34,6 +34,8 @@
 
 #include <sensor_msgs/JointState.h>
 
+#include <urdf/model.h>
+
 #include <kdl_parser/kdl_parser.hpp>
 #include <kdl/tree.hpp>
 
