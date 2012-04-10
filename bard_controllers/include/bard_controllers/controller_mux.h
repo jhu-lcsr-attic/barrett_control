@@ -27,8 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BARD_COMPONENTS_CONTROLLER_MUX_H
-#define __BARD_COMPONENTS_CONTROLLER_MUX_H
+#ifndef __BARD_CONTROLLERS_CONTROLLER_MUX_H
+#define __BARD_CONTROLLERS_CONTROLLER_MUX_H
 
 #include <iostream>
 
@@ -124,4 +124,4 @@ namespace bard_controllers {
   };
 }
 
-#endif // ifndef __BARD_COMPONENTS_CONTROLLER_MUX_H
+#endif // ifndef __BARD_CONTROLLERS_CONTROLLER_MUX_H
