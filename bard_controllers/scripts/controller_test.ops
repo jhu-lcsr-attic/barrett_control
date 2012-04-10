@@ -1,0 +1,211 @@
+/*
+ * Copyright (c) 2012, The Johns Hopkins University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of The Johns Hopkins University. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+import("bard_common")
+import("bard_hardware")
+import("bard_controllers")
+
+import("kdl_typekit")
+
+import("rtt_sensor_msgs")
+import("rtt_trajectory_msgs")
+import("rtt_geometry_msgs")
+import("rtt_bard_msgs")
+
+// Set up TF
+import("rtt_tf")
+loadComponent("tf","rtt_tf::RTT_TF")
+tf.configure()
+tf.start()
+
+//// Set up left WAM + Controller
+///////////////////////////////////////////////////////////////////////////////
+// Create WAM /////////////////////////////////////////////////////////////////
+loadComponent("wam_left","bard_hardware::WAM")
+setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
+
+// Load properties from rosparam
+loadService("wam_left","rosparam")
+wam_left.rosparam.refreshProperties()
+
+// Connect WAM state to ROS topic
+stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
+
+///////////////////////////////////////////////////////////////////////////////
+// Create multiplexer /////////////////////////////////////////////////////////
+loadComponent("left_mux","bard_controllers::ControllerMux")
+setActivity("left_mux",0,HighestPriority,ORO_SCHED_RT)
+stream("left_mux.joint_state_out", ros.topic("wam_rtt/left_mux/joint_states")) 
+
+// Configure parameters
+loadService("left_mux","rosparam")
+left_mux.rosparam.refreshProperties()
+left_mux.configure()
+
+// Connect mux to wam
+connect("wam_left.positions_out","left_mux.positions_in",ConnPolicy())
+connect("left_mux.torques_out","wam_left.torques_in",ConnPolicy())
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Create trivial controller //////////////////////////////////////////////////
+/*
+loadComponent("left_trivial","bard_controllers::controllers::Trivial")
+setActivity("left_trivial",0.001,HighestPriority,ORO_SCHED_RT)
+
+connect("wam_left.positions_out","left_trivial.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_trivial","rosparam")
+left_trivial.rosparam.refreshProperties()
+left_trivial.configure()
+
+// Connect controller to mux
+left_mux.load("trivial")
+connect("left_trivial.torques_out","left_mux.trivial",ConnPolicy())
+*/
+
+///////////////////////////////////////////////////////////////////////////////
+// Create joint PID controller ////////////////////////////////////////////////
+
+loadComponent("left_joint_pid","bard_controllers::controllers::JointPID")
+setActivity("left_joint_pid",0.001,HighestPriority,ORO_SCHED_RT)
+
+connect("wam_left.positions_out","left_joint_pid.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_joint_pid","rosparam")
+left_joint_pid.rosparam.refreshProperties()
+left_joint_pid.configure()
+
+// Connect controller to mux
+left_mux.load("joint_pid")
+connect("left_joint_pid.torques_out","left_mux.joint_pid",ConnPolicy())
+
+// Connect WAM state to ROS topic
+stream("left_joint_pid.joint_state_out", ros.topic("wam_rtt/left_joint_pid/joint_states")) 
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Create gravity controller //////////////////////////////////////////////////
+loadComponent("left_grav","bard_controllers::controllers::GravityCompensation")
+setActivity("left_grav",0,HighestPriority,ORO_SCHED_RT)
+
+connect("wam_left.positions_out","left_grav.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_grav","rosparam")
+left_grav.rosparam.refreshProperties()
+left_grav.configure()
+
+// Connect controller to mux
+left_mux.load("gravity")
+connect("left_grav.torques_out","left_mux.gravity",ConnPolicy())
+
+///////////////////////////////////////////////////////////////////////////////
+// Create cartesian wrench controller /////////////////////////////////////////
+/*
+loadComponent("left_wrench","bard_controllers::controllers::CartesianWrench")
+setActivity("left_wrench",0.001,HighestPriority,ORO_SCHED_RT)
+connectPeers("tf","left_wrench")
+
+connect("wam_left.positions_out","left_wrench.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_wrench","rosparam")
+left_wrench.rosparam.refreshProperties()
+left_wrench.configure()
+
+// Connect controller to mux
+left_mux.load("wrench")
+connect("left_wrench.torques_out","left_mux.wrench",ConnPolicy())
+*/
+
+///////////////////////////////////////////////////////////////////////////////
+// Create cartesian pose  controller //////////////////////////////////////////
+loadComponent("left_pose","bard_controllers::controllers::CartesianPose")
+setActivity("left_pose",10.0,HighestPriority,ORO_SCHED_RT)
+connectPeers("tf","left_pose")
+
+connect("wam_left.positions_out","left_pose.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_pose","rosparam")
+left_pose.rosparam.refreshProperties()
+left_pose.configure()
+
+// Connect controller to mux
+left_mux.load("pose")
+connect("left_pose.torques_out","left_mux.pose",ConnPolicy())
+//connect("left_pose.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+
+stream("left_pose.trajectories_out",ros.topic("wam_rtt/left_pose/trajectories_out")) 
+
+///////////////////////////////////////////////////////////////////////////////
+// Create joint trajectory controller //////////////////////////////////////////
+loadComponent("left_joint_traj","bard_controllers::controllers::JointTrajectory")
+setActivity("left_joint_traj",0,HighestPriority,ORO_SCHED_RT)
+connectPeers("tf","left_joint_traj")
+
+connect("wam_left.positions_out","left_joint_traj.positions_in",ConnPolicy())
+
+// Configure parameters
+loadService("left_joint_traj","rosparam")
+left_joint_traj.rosparam.refreshProperties()
+left_joint_traj.configure()
+
+// Connect controller to mux
+left_mux.load("joint_traj")
+connect("left_joint_traj.positions_out","left_joint_pid.positions_des_in",ConnPolicy())
+connect("left_joint_traj.trajectories_in","left_pose.trajectories_out",ConnPolicy())
+
+// Connect WAM state to ROS topic
+stream("left_joint_traj.trajectories_in",ros.topic("wam_rtt/left_joint_traj/trajectories")) 
+
+///////////////////////////////////////////////////////////////////////////////
+// Start Things ///////////////////////////////////////////////////////////////
+wam_left.configure()
+wam_left.start()
+
+// Start the controllers
+left_grav.start()
+
+//left_pose.start()
+left_joint_traj.start()
+left_joint_pid.start()
+//left_wrench.start()
+
+// Start the multiplexer
+left_mux.disable()
+left_mux.start()
+left_mux.toggleControllers(strings("gravity"),strings())
+left_mux.toggleControllers(strings("joint_pid"),strings())
+//left_mux.toggleControllers(strings("pose"),strings())
+//left_mux.toggleControllers(strings("trivial"),strings("gravity"))
+//left_mux.toggleControllers(strings("gravity"),strings("trivial"))
