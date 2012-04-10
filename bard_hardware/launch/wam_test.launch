@@ -1,0 +1,18 @@
+<launch>
+  <!--node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops "/-->
+  <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops --" output="screen"/>
+
+  <group ns="wam_rtt">
+
+    <!-- Parameters for WAM RTT device -->
+    <group ns="wam_left">
+      <include file="$(find bard_components)/launch/left_params.launch"/>
+      <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
+      <param name="can_dev_name" value="rtcan1"/>
+      <param name="joint_state_throttle_period" value="0.01"/>
+
+      <!-- Publish TF Frames for all the joints -->
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+    </group>
+  </group>
+</launch>

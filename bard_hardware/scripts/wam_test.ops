@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2012, The Johns Hopkins University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of The Johns Hopkins University. nor the names of its
+ *       contributors may be used to endorse or promote products derived from
+ *       this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+import("bard_common")
+import("bard_hardware")
+
+import("kdl_typekit")
+
+import("rtt_sensor_msgs")
+import("rtt_trajectory_msgs")
+import("rtt_geometry_msgs")
+import("rtt_bard_msgs")
+
+//*****************************************************************************
+// Create WAM 
+loadComponent("wam_left","bard_hardware::WAM")
+setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
+
+// Load properties from rosparam
+loadService("wam_left","rosparam")
+wam_left.rosparam.refreshProperties()
+
+// Connect WAM state to ROS topic
+stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
+
+
+//*****************************************************************************
+// Start Things
+wam_left.configure()
+wam_left.start()
