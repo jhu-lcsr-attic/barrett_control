@@ -1,0 +1,33 @@
+<package>
+  <description brief="bard_common">
+
+     bard_common
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/bard_util</url>
+
+  <depend package="eigen" />
+  <depend package="kdl" />
+  <depend package="kdl_parser" />
+  <depend package="rtt" />
+  <depend package="rtt_rosnode"/>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="bard_msgs" />
+  <depend package="rtt_bard_msgs" />
+  <depend package="geometry_msgs" />
+  <depend package="trajectory_msgs" />
+  <depend package="tf" />
+  <depend package="tf_conversions" />
+  <depend package="angles" />
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -Wl,-rpath,-L${prefix}lib -lutil"/>
+  </export>
+
+</package>
+
+
