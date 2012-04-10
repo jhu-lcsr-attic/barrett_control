@@ -1,8 +1,9 @@
 <package>
   <description brief="bard_common">
-
-     bard_common
-
+    This package contains utilities and helper libraries for use in OROCOS/RTT
+    components in the BARD stack.
+    
+    See the C++ API for more details.
   </description>
   <author>Jonathan Bohren</author>
   <license>BSD</license>
@@ -24,11 +25,4 @@
   <depend package="tf_conversions" />
   <depend package="angles" />
 
-  <export>
-    <!-- Export includ directories, but not library flags, since binaries will be dynamically loaded via orocos -->
-    <cpp cflags="-I${prefix}/include"/>
-  </export>
-
 </package>
-
-
