@@ -37,7 +37,7 @@
 
 #include <kdl_parser/kdl_parser.hpp>
 
-#include <bard_controllers/util.h>
+#include <bard_common/util.h>
 #include <bard_controllers/controllers/joint_pid.h>
 
 using namespace bard_controllers::controllers;

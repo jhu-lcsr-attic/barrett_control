@@ -75,11 +75,12 @@
 
 #include <angles/angles.h>
 
-#include <bard_controllers/util.h>
+#include <bard_common/util.h>
 #include <bard_controllers/controllers/joint_trajectory.h>
 
 #define _TICTOC (0) // used for testing changes
 
+using namespace bard_common;
 using namespace bard_controllers::controllers;
 
 JointTrajectory::JointTrajectory(string const& name) :

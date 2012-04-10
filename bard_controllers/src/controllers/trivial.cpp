@@ -1,7 +1,7 @@
 
 #include <ros/ros.h>
 
-#include <bard_controllers/util.h>
+#include <bard_common/util.h>
 #include <bard_controllers/controllers/trivial.h>
 
 using namespace bard_controllers::controllers;

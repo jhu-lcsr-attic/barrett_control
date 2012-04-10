@@ -22,7 +22,7 @@
     <depend package="tf_conversions" />
     <depend package="angles" />
 
-    <depend package="bard_util"/>
+    <depend package="bard_common"/>
     <depend package="bard_hardware"/>
   </package>
 

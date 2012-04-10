@@ -1,6 +1,5 @@
 
 #include <ocl/Component.hpp>
-#include <bard_controllers/wam.h>
 #include <bard_controllers/controller_mux.h>
 #include <bard_controllers/controllers/trivial.h>
 #include <bard_controllers/controllers/gravity_compensation.h>

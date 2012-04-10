@@ -8,7 +8,7 @@
 
 #include <kdl_parser/kdl_parser.hpp>
 
-#include <bard_controllers/util.h>
+#include <bard_common/util.h>
 #include <bard_controllers/controllers/gravity_compensation.h>
 
 using namespace bard_controllers::controllers;

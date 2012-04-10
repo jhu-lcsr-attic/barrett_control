@@ -41,6 +41,11 @@
 #include <kdl/chain.hpp>
 
 #include <bard_msgs/MuxState.h>
+#include <bard_common/util.h>
+
+#include <sensor_msgs/JointState.h>
+#include <urdf/model.h>
+
 
 // This class can be connected to multiple controllers, and performs
 // automatic validation to ensure that large impulses do not arise from

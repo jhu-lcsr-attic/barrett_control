@@ -40,7 +40,7 @@
 
 #include <kdl_parser/kdl_parser.hpp>
 
-#include <bard_controllers/util.h>
+#include <bard_common/util.h>
 #include <bard_controllers/controller_mux.h>
 
 #include <boost/math/special_functions/fpclassify.hpp>
