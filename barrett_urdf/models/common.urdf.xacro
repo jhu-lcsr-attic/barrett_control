@@ -32,7 +32,7 @@
   xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!-- Directories -->
-  <xacro:property name="homeDirectory" value="package://bard_urdf" />
+  <xacro:property name="homeDirectory" value="package://barrett_urdf" />
   <xacro:property name="highResModelDirectory" value="${homeDirectory}/models/componentSTL/splitModels" />
 
   <!-- Constants -->

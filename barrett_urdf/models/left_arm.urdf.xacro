@@ -30,11 +30,11 @@
   xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller">
 
   <!-- Some macros used by the WAM urdf -->
-  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
+  <include filename="$(find barrett_urdf)/models/common.urdf.xacro"/>
   <!-- Definition of a single WAM arm -->
-  <include filename="$(find bard_urdf)/models/arm.urdf.xacro"/>
+  <include filename="$(find barrett_urdf)/models/arm.urdf.xacro"/>
   <!-- Definition of all the different parts of a WAM arm -->
-  <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
+  <include filename="$(find barrett_urdf)/models/components.urdf.xacro"/>
 
   <!-- Materials -->
   <material name="WAMGrey">
