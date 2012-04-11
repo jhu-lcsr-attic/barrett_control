@@ -48,10 +48,10 @@
 #include <sensor_msgs/JointState.h>
 
 #include <bard_common/util.h>
-#include <bard_simulation/wam_interface.h>
+#include <bard_component_interfaces/wam_interface.h>
 
 namespace bard_simulation {
-  class WAMStub : public WAMInterface
+  class WAMStub : public bard_component_interfaces::WAMInterface
   {
     // RTT Properties
     // see bard_simulation::WAMInterface

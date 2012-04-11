@@ -44,7 +44,6 @@
 #include <sensor_msgs/JointState.h>
 
 #include <bard_common/util.h>
-#include <bard_simulation/wam_interface.h>
 #include <bard_simulation/wam_stub.h>
 
 using namespace bard_common;
@@ -144,7 +143,7 @@ void WAMStub::updateHook()
   }
 
   // Compute inertia matrix
-  KDL::JntSpaceInertiaMatrix joint_inertia_;
+  KDL::JntSpaceInertiaMatrix joint_inertia_(n_dof_);
   kdl_chain_dynamics_->JntToMass(positions_.q, joint_inertia_);
     
   // Get the actual loop period
@@ -158,6 +157,13 @@ void WAMStub::updateHook()
   Eigen::VectorXd &tau = torques_.data;
   Eigen::MatrixXd &M = joint_inertia_.data;
   Eigen::MatrixXd const &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
+
+  // Check sizes of matrices
+  ROS_DEBUG_STREAM("q:\n"<<q);
+  ROS_DEBUG_STREAM("qdot:\n"<<qdot);
+  ROS_DEBUG_STREAM("tau:\n"<<tau);
+  ROS_DEBUG_STREAM("M:\n"<<M);
+  ROS_DEBUG_STREAM("c:\n"<<c);
 
   // Integrate!
   positions_.q.data = q + dT*(qdot);

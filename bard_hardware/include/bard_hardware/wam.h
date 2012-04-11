@@ -30,8 +30,6 @@
 #ifndef __BARD_HARDWARE_WAM_H
 #define __BARD_HARDWARE_WAM_H
 
-#ifdef __XENO__
-
 #include <iostream>
 
 #include <boost/scoped_ptr.hpp>
@@ -52,10 +50,10 @@
 #include <barrett_direct/WAM.h>
 
 #include <bard_common/util.h>
-#include <bard_hardware/wam_interface.h>
+#include <bard_component_interfaces/wam_interface.h>
 
 namespace bard_hardware {
-  class WAM : public WAMInterface
+  class WAM : public bard_component_interfaces::WAMInterface
   {
     // RTT Properties
     std::string can_dev_name_;
@@ -96,5 +94,4 @@ namespace bard_hardware {
   };
 }
 
-#endif // ifdef __XENO__
 #endif // ifndef __BARD_HARDWARE_WAM_H
