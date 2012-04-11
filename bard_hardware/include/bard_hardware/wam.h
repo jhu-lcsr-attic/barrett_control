@@ -30,6 +30,8 @@
 #ifndef __BARD_HARDWARE_WAM_H
 #define __BARD_HARDWARE_WAM_H
 
+#ifdef __XENO__
+
 #include <iostream>
 
 #include <boost/scoped_ptr.hpp>
@@ -94,5 +96,5 @@ namespace bard_hardware {
   };
 }
 
-
+#endif // ifdef __XENO__
 #endif // ifndef __BARD_HARDWARE_WAM_H

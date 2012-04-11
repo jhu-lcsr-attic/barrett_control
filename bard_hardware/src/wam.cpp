@@ -27,6 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef __XENO__
+
 #include <iostream>
 
 #include <Eigen/Dense>
@@ -243,3 +245,5 @@ void WAM::set_torque_fault(unsigned int thresh)
     ROS_ERROR_STREAM("Could not set torque fault threshold.");
   }
 }
+
+#endif // ifdef __XENO__
