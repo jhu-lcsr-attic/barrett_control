@@ -39,18 +39,18 @@ import("rtt_bard_msgs")
 
 //*****************************************************************************
 // Create WAM 
-loadComponent("wam_left","bard_simulation::WAMStub")
-setActivity("wam_left",0.05,HighestPriority,ORO_SCHED_RT)
+loadComponent("wam","bard_simulation::WAMStub")
+setActivity("wam",0.05,HighestPriority,ORO_SCHED_RT)
 
 // Load properties from rosparam
-loadService("wam_left","rosparam")
-wam_left.rosparam.refreshProperties()
+loadService("wam","rosparam")
+wam.rosparam.refreshProperties()
 
 // Connect WAM state to ROS topic
-stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
+stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
 
 
 //*****************************************************************************
 // Start Things
-wam_left.configure()
-wam_left.start()
+wam.configure()
+wam.start()
