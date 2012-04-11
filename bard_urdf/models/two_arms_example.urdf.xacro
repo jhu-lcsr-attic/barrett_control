@@ -27,9 +27,9 @@
   xmlns:xacro="http://www.ros.org/wiki/xacro"
   xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller">
 
-  <include filename="$(find barrett_urdf)/models/common.urdf.xacro"/>
-  <include filename="$(find barrett_urdf)/models/arm.urdf.xacro"/>
-  <include filename="$(find barrett_urdf)/models/components.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/arm.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
 
   <!-- Materials -->
   <material name="WAMGrey">
@@ -51,13 +51,13 @@
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <!--box size="0.04 2.54 0.04"/-->
-          <mesh filename="package://barrett_urdf/models/componentSTL/bench_lattice.dae"/>
+          <mesh filename="package://bard_urdf/models/componentSTL/bench_lattice.dae"/>
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://barrett_urdf/models/componentSTL/bench_lattice.stl"/>
+          <mesh filename="package://bard_urdf/models/componentSTL/bench_lattice.stl"/>
         </geometry>
       </collision>
     </link>

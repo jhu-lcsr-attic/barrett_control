@@ -31,8 +31,8 @@
   xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
   xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <include filename="$(find barrett_urdf)/models/hand.urdf.xacro"/>
-  <include filename="$(find barrett_urdf)/models/common.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/hand.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
 
   <!-- Upper arm macros -->
   <xacro:macro name="Shoulder" params="prefix parentLink xyz rpy">

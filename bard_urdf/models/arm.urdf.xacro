@@ -25,9 +25,9 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <include filename="$(find barrett_urdf)/models/hand.urdf.xacro"/>
-  <include filename="$(find barrett_urdf)/models/common.urdf.xacro"/>
-  <include filename="$(find barrett_urdf)/models/components.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/hand.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
 
   <!-- different types of arms -->
   <xacro:macro name="wam_4dof" params="prefix parentLink xyz rpy">

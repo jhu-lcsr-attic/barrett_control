@@ -29,7 +29,7 @@
   xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
   xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <include filename="$(find barrett_urdf)/models/common.urdf.xacro"/>
+  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
 
   <!-- Palm -->
   <xacro:macro name="Palm" params="prefix">

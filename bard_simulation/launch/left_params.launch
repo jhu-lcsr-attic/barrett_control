@@ -1,5 +1,5 @@
 <launch>
   <param name="root_link" value="LeftWAM/FixedLink"/>
   <param name="tip_link" value="LeftWAM/LowerWristYawLink"/>
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find barrett_urdf)/models/left_arm.urdf.xacro'"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find bard_urdf)/models/left_arm.urdf.xacro'"/>
 </launch>
