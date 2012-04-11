@@ -27,65 +27,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BARD_HARDWARE_WAM_STUB_H
-#define __BARD_HARDWARE_WAM_STUB_H
+import("bard_common")
+import("bard_simulation")
 
-#include <iostream>
+import("kdl_typekit")
 
-#include <boost/scoped_ptr.hpp>
+import("rtt_sensor_msgs")
+import("rtt_trajectory_msgs")
+import("rtt_geometry_msgs")
+import("rtt_bard_msgs")
 
-#include <urdf/model.h>
+//*****************************************************************************
+// Create WAM 
+loadComponent("wam_left","bard_simulation::WAMStub")
+setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
 
-#include <kdl/jntarray.hpp>
-#include <kdl/jntarrayvel.hpp>
-#include <kdl/tree.hpp>
-#include <kdl/chain.hpp>
-#include <kdl/chaindynparam.hpp>
+// Load properties from rosparam
+loadService("wam_left","rosparam")
+wam_left.rosparam.refreshProperties()
 
-#include <rtt/RTT.hpp>
-#include <rtt/Port.hpp>
-
-#include <sensor_msgs/JointState.h>
-
-#include <bard_common/util.h>
-#include <bard_hardware/wam_interface.h>
-
-namespace bard_hardware {
-  class WAMStub : public WAMInterface
-  {
-    // RTT Properties
-    // see bard_hardware::WAMInterface
-    bool coriolis_enabled_;
-    bool gravity_enabled_;
-    std::vector<double> gravity_;
-    std::vector<double> damping_;
-
-    // RTT Ports
-    // see bard_hardware::WAMInterface
-
-    // RTT Operations
-    void calibrate_position(std::vector<double> &actual_positions);
-    void set_velocity_warn(unsigned int thresh);
-    void set_velocity_fault(unsigned int thresh);
-    void set_torque_warn(unsigned int thresh);
-    void set_torque_fault(unsigned int thresh);
-
-    // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
-    // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
-    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
-  public:
-    WAMStub(std::string const& name);
-    bool configureHook();
-    bool startHook();
-    void updateHook(); 
-    void stopHook();
-    void cleanupHook();
-
-  private:
-    boost::scoped_ptr<KDL::ChainDynParam> kdl_chain_dynamics_;
-  };
-}
+// Connect WAM state to ROS topic
+stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
 
 
-#endif // ifndef __BARD_HARDWARE_WAM_H
+//*****************************************************************************
+// Start Things
+wam_left.configure()
+wam_left.start()

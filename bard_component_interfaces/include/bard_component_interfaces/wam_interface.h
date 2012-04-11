@@ -40,7 +40,7 @@
 
 #include <bard_common/util.h>
 
-namespace bard_hardware {
+namespace bard_component_interfaces {
   class WAMInterface : public RTT::TaskContext
   {
   public:

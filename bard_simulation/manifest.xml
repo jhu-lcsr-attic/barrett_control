@@ -1,7 +1,7 @@
 <package>
-  <description brief="Orocos bard_hardware Component package">
-    This package contains Orocos/RTT components for talking to lower-level
-    robot hardware drivers.
+  <description brief="Orocos bard_simulation Component package">
+    This package contains Orocos/RTT components for simulating various elements
+    of the bard stack.
 
     Robots:
       - Barrett WAM
@@ -17,8 +17,6 @@
   <depend package="rtt_rosnode"/>
   <depend package="std_msgs"/>
   <depend package="sensor_msgs"/>
-  <depend package="barrett_direct" />
-  <depend package="leoCAN" />
   <depend package="bard_msgs" />
   <depend package="rtt_bard_msgs" />
   <depend package="geometry_msgs" />

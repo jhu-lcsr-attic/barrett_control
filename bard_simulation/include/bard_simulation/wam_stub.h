@@ -27,30 +27,65 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-import("bard_common")
-import("bard_hardware")
+#ifndef __BARD_HARDWARE_WAM_STUB_H
+#define __BARD_HARDWARE_WAM_STUB_H
 
-import("kdl_typekit")
+#include <iostream>
 
-import("rtt_sensor_msgs")
-import("rtt_trajectory_msgs")
-import("rtt_geometry_msgs")
-import("rtt_bard_msgs")
+#include <boost/scoped_ptr.hpp>
 
-//*****************************************************************************
-// Create WAM 
-loadComponent("wam_left","bard_hardware::WAMStub")
-setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
+#include <urdf/model.h>
 
-// Load properties from rosparam
-loadService("wam_left","rosparam")
-wam_left.rosparam.refreshProperties()
+#include <kdl/jntarray.hpp>
+#include <kdl/jntarrayvel.hpp>
+#include <kdl/tree.hpp>
+#include <kdl/chain.hpp>
+#include <kdl/chaindynparam.hpp>
 
-// Connect WAM state to ROS topic
-stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
+#include <rtt/RTT.hpp>
+#include <rtt/Port.hpp>
+
+#include <sensor_msgs/JointState.h>
+
+#include <bard_common/util.h>
+#include <bard_simulation/wam_interface.h>
+
+namespace bard_simulation {
+  class WAMStub : public WAMInterface
+  {
+    // RTT Properties
+    // see bard_simulation::WAMInterface
+    bool coriolis_enabled_;
+    bool gravity_enabled_;
+    std::vector<double> gravity_;
+    std::vector<double> damping_;
+
+    // RTT Ports
+    // see bard_simulation::WAMInterface
+
+    // RTT Operations
+    void calibrate_position(std::vector<double> &actual_positions);
+    void set_velocity_warn(unsigned int thresh);
+    void set_velocity_fault(unsigned int thresh);
+    void set_torque_warn(unsigned int thresh);
+    void set_torque_fault(unsigned int thresh);
+
+    // See: http://eigen.tuxfamily.org/dox/TopicStructHavingEigenMembers.html
+    // See: http://www.orocos.org/forum/orocos/orocos-users/some-info-eigen-and-orocos
+    // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+  public:
+    WAMStub(std::string const& name);
+    bool configureHook();
+    bool startHook();
+    void updateHook(); 
+    void stopHook();
+    void cleanupHook();
+
+  private:
+    boost::scoped_ptr<KDL::ChainDynParam> kdl_chain_dynamics_;
+  };
+}
 
 
-//*****************************************************************************
-// Start Things
-wam_left.configure()
-wam_left.start()
+#endif // ifndef __BARD_HARDWARE_WAM_H

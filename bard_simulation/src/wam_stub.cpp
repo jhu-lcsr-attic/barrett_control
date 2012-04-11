@@ -44,11 +44,11 @@
 #include <sensor_msgs/JointState.h>
 
 #include <bard_common/util.h>
-#include <bard_hardware/wam_interface.h>
-#include <bard_hardware/wam_stub.h>
+#include <bard_simulation/wam_interface.h>
+#include <bard_simulation/wam_stub.h>
 
 using namespace bard_common;
-using namespace bard_hardware;
+using namespace bard_simulation;
 
 WAMStub::WAMStub(string const& name) :
   WAMInterface(name)

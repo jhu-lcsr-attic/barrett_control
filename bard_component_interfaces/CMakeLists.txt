@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.6.3)
 # This creates a standard cmake project. You may extend this file with
 # any cmake macro you see fit.
 #
-project(bard_hardware)
+project(bard_component_interfaces)
 
 #
 # Do setup in case of ros package, If ROS_ROOT is set, it is
@@ -38,40 +38,39 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 # controlled by generated code of 'typegen'.
 #
 
-# Creates a component library libbard_hardware-<target>.so
-# and installs in the directory lib/orocos/bard_hardware/
-orocos_component(components
-  src/bard_hardware.cpp
-  src/wam.cpp
-  ) # ...you may add multiple source files
+# Creates a component library libbard_component_interfaces-<target>.so
+# and installs in the directory lib/orocos/bard_component_interfaces/
+#orocos_component(components
+#  ) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 
 # Additional headers:
-# Installs in the include/orocos/bard_hardware/ directory
-#orocos_install_headers(
-#  ) # ...you may add multiple header files
+# Installs in the include/orocos/bard_component_interfaces/ directory
+orocos_install_headers(
+  include/bard_component_interfaces/wam_interface.h 
+  ) # ...you may add multiple header files
 # You may add multiple orocos_install_headers statements.
 
 # Building a Plugin
-# Creates a plugin library libbard_hardware-plugin-<target>.so
-# and installs in the directory lib/orocos/bard_hardware/plugins/
+# Creates a plugin library libbard_component_interfaces-plugin-<target>.so
+# and installs in the directory lib/orocos/bard_component_interfaces/plugins/
 # Be aware that a plugin may only have the loadRTTPlugin() function once defined in a .cpp file.
 # This function is defined by the plugin and service CPP macros.
-##orocos_plugin(bard_hardware-plugin bard_hardware-plugin.cpp) # ...only one plugin function per library !
+##orocos_plugin(bard_component_interfaces-plugin bard_component_interfaces-plugin.cpp) # ...only one plugin function per library !
 # You may add multiple orocos_plugin statements.
 
 
 # Building a Service:
-# Creates a plugin library libbard_hardware-service-<target>.so
-# and installs in the directory lib/orocos/bard_hardware/plugins/
-##orocos_service(bard_hardware-service bard_hardware-service.cpp) # ...only one service per library !
+# Creates a plugin library libbard_component_interfaces-service-<target>.so
+# and installs in the directory lib/orocos/bard_component_interfaces/plugins/
+##orocos_service(bard_component_interfaces-service bard_component_interfaces-service.cpp) # ...only one service per library !
 # You may add multiple orocos_service statements.
 
 
 # Building a typekit (recommended):
-# Creates a typekit library libbard_hardware-types-<target>.so
-# and installs in the directory lib/orocos/bard_hardware/types/
-##orocos_typegen_headers(bard_hardware-types.hpp) # ...you may add multiple header files
+# Creates a typekit library libbard_component_interfaces-types-<target>.so
+# and installs in the directory lib/orocos/bard_component_interfaces/types/
+##orocos_typegen_headers(bard_component_interfaces-types.hpp) # ...you may add multiple header files
 # You may only have *ONE* orocos_typegen_headers statement !
 
 
