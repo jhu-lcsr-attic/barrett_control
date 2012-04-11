@@ -1,0 +1,13 @@
+<robot name="wam"
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Includea all the WAM stuff -->
+  <include filename="$(find bard_urdf)/models/wam_top.urdf.xacro"/>
+
+  <!-- Root link is in the world frame-->
+  <link name = "baseLink"/>
+
+  <xacro:wam_root prefix="RightWAM" parentLink="baseLink" xyz="0.356 -0.46 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
+  <xacro:wam_7dof prefix="RightWAM" parentLink="RightWAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
+  <!--xacro:barrett_hand prefix="RightWAM" /-->
+</robot>
