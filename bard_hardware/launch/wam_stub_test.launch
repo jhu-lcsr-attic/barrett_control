@@ -1,6 +1,6 @@
 <launch>
   <!--node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops "/-->
-  <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_hardware)/scripts/wam_test.ops --" output="screen"/>
+  <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_hardware)/scripts/wam_stub_test.ops --" output="screen"/>
 
   <group ns="wam_rtt">
 
@@ -8,7 +8,11 @@
     <group ns="wam_left">
       <include file="$(find bard_hardware)/launch/left_params.launch"/>
       <rosparam param="initial_positions">{Element0: 0.0, Element1: rad(-pi/2), Element2: 0.0, Element3: rad(pi), Element4: 0.0, Element5: 0.0, Element6: 0.0}</rosparam>
-      <param name="can_dev_name" value="rtcan1"/>
+      <param name="coriolis_enabled" value="true"/>
+      <param name="gravity_enabled" value="true"/>
+      <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
+      <rosparam param="damping">{Element0: 0.001, Element1: 0.001, Element2: 0.001, Element3: 0.01, Element4: 0.001, Element5: 0.001, Element6: 0.001}</rosparam>
+
       <param name="joint_state_throttle_period" value="0.01"/>
 
       <!-- Publish TF Frames for all the joints -->
