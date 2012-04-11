@@ -49,111 +49,27 @@ using namespace bard_common;
 using namespace bard_hardware;
 
 WAM::WAM(string const& name) :
-  TaskContext(name, RTT::base::TaskCore::PreOperational)
-  // Properties
+  TaskContext(name, RTT::base::TaskCore::PreOperational),
+  WAMInterface()
+  // RTT Properties
   ,can_dev_name_("")
-  ,robot_description_("")
-  ,root_link_("")
-  ,tip_link_("")
-  ,initial_positions_(7,0.0)
-  ,joint_state_throttle_period_(0.01)
   // Internal variables
   ,canbus_(NULL)
   ,robot_(NULL)
   ,needs_calibration_(true)
-  ,n_dof_(0)
-  ,torques_()
-  ,positions_()
-  ,positions_new_()
-  ,joint_state_()
-  ,joint_state_throttle_(joint_state_throttle_period_)
 {
-  // Declare properties (configuration variables)
-  this->addProperty("can_dev_name",can_dev_name_)
-     .doc("The name of the RTCAN device to which this WAM robot is connected.");
-  this->addProperty("robot_description",robot_description_)
-     .doc("The WAM URDF xml string.");
-  this->addProperty("initial_positions",initial_positions_)
-     .doc("The calibration position of the robot.");
-  this->addProperty("root_link",root_link_)
-    .doc("The root link for the controller.");
-  this->addProperty("tip_link",tip_link_)
-    .doc("The tip link for the controller.");
-  this->addProperty("joint_state_throttle_period",joint_state_throttle_period_)
-     .doc("The period of the ROS sensor_msgs/JointState publisher.");
+  // Initialize all the RTT properties/ports/services
+  init_rtt_interface();
 
-  // Configure data ports
-  this->ports()->addPort("torques_in", torques_in_port_)
-   .doc("Input Event port: nx1 vector of joint torques. (n joints)");
-  this->ports()->addPort("positions_out", positions_out_port_)
-   .doc("Output port: nx1 vector of joint positions & velocities. (n joints)");
-  this->ports()->addPort("joint_state_out", joint_state_out_port_)
-   .doc("Output port: sensor_msgs::JointState.");
-
-  // Add operation for setting the encoder values
-  this->provides("calibration")
-    ->addOperation("calibrate_position", &WAM::calibrate_position, this, RTT::OwnThread)
-    .doc("Set the angles that the encoders should read with the arm in the current configuration. This is used for calibrating the robot.")
-    .arg("angles","The new joint angles.");
-
-  // Add operations for setting warnings and faults
-  this->addOperation("setVelocityWarning", &WAM::set_velocity_warn, this, RTT::OwnThread)
-    .doc("Set the velocities above which the WAM pendant will illumiate a warning light.")
-    .arg("thresh","Velocity Warning Threshold");
-  this->addOperation("setVelocityFault", &WAM::set_velocity_fault, this, RTT::OwnThread)
-    .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
-    .arg("thresh","Velocity Fault Threshold");
-  this->addOperation("setTorqueWarning", &WAM::set_torque_warn, this, RTT::OwnThread)
-    .doc("Set the torques above which the WAM pendant will illumiate a warning light.")
-    .arg("thresh","Torque Warning Threshold");
-  this->addOperation("setTorqueFault", &WAM::set_torque_fault, this, RTT::OwnThread)
-    .doc("Set the torques above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
-    .arg("thresh","Torque Fault Threshold");
-
-  this->addOperation("getLoopRate", &WAM::get_loop_rate, this, RTT::OwnThread)
-    .doc("Get the loop rate (Hz)");
-  this->addOperation("printTime", &WAM::print_time, this, RTT::OwnThread)
-    .doc("Print the ROS and RTT time.");
-
-  ROS_INFO_STREAM("WAM \""<<name<<"\" constructed !");
+  ROS_INFO_STREAM("WAM component \""<<name<<"\" constructed !");
 }
 
 bool WAM::configureHook()
 {
-  // Initialize kinematics (KDL tree, KDL chain, and #DOF)
-  if(!util::initialize_kinematics_from_urdf(
-        robot_description_, root_link_, tip_link_,
-        n_dof_, kdl_chain_, kdl_tree_, urdf_model_))
-  {
-    ROS_ERROR("Could not initialize robot kinematics!");
+  // Initialize the arm kinematics from the robot description
+  if(!this->init_kinematics()) {
     return false;
   }
-
-  // Get torque limits from urdf
-  torque_limits_.clear();
-  for(std::vector<KDL::Segment>::const_iterator it=kdl_chain_.segments.begin();
-      it != kdl_chain_.segments.end();
-      it++)
-  {
-    torque_limits_.push_back(urdf_model_.getJoint(it->getJoint().getName())->limits->effort);
-  }
-
-  // Resize joint arrays
-  torques_ = KDL::JntArray(n_dof_);
-  positions_ = KDL::JntArrayVel(n_dof_);
-  positions_new_ = KDL::JntArrayVel(n_dof_);
-
-  // Zero out joint arrays
-  KDL::SetToZero(torques_);
-  KDL::SetToZero(positions_.q); KDL::SetToZero(positions_.qdot);
-  KDL::SetToZero(positions_new_.q); KDL::SetToZero(positions_new_.qdot);
-  
-  // Construct ros JointState message with the appropriate joint names
-  util::joint_state_from_kdl_chain(kdl_chain_, joint_state_);
-
-  // Prepare ports for realtime processing
-  positions_out_port_.setDataSample(positions_);
-  joint_state_out_port_.setDataSample(joint_state_);
 
   // Try to connect and initialize hardware
   try{
@@ -239,6 +155,7 @@ void WAM::updateHook()
   for(unsigned int i=0; i<n_dof_; i++) {
     positions_.qdot(i) = (positions_new_.q(i) - positions_.q(i))/loop_period_;
   }
+  // Store this time
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
 
   // Update positions
@@ -247,16 +164,8 @@ void WAM::updateHook()
   // Send joint positions
   positions_out_port_.write( positions_ );
 
-  // Copy joint positions into joint state
-  if( joint_state_throttle_.ready(joint_state_throttle_period_)) {
-    joint_state_.header.stamp = ros::Time::now();
-    for(unsigned int i=0; i<n_dof_; i++) {
-      joint_state_.position[i] = positions_.q(i);
-      joint_state_.velocity[i] = positions_.qdot(i);
-      joint_state_.effort[i] = torques_(i);
-    }
-    joint_state_out_port_.write( joint_state_ );
-  } 
+  // Publish joint state
+  this->publish_throttled_joint_state();
 }
 
 void WAM::stopHook()
@@ -286,7 +195,7 @@ void WAM::calibrate_position(std::vector<double> &actual_positions)
   // Make sure we have a connection to the robot
   if(this->isConfigured()) {
     // Assign the positions to the current robot configuration
-    if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0],actual_positions.size()))
+    if(robot_->SetPositions(Eigen::Map<Eigen::VectorXd>(&actual_positions[0],n_dof_))
         != barrett_direct::WAM::ESUCCESS)
     {
       ROS_ERROR_STREAM("Failed to calibrate encoders!");
@@ -334,14 +243,4 @@ void WAM::set_torque_fault(unsigned int thresh)
   if(!this->isConfigured() || robot_->SetTorqueFault(thresh) != barrett_direct::WAM::ESUCCESS) {
     ROS_ERROR_STREAM("Could not set torque fault threshold.");
   }
-}
-
-
-double WAM::get_loop_rate() {
-  return 1.0/loop_period_;
-}
-
-void WAM::print_time() {
-  RTT::os::TimeService *rtt_ts = RTT::os::TimeService::Instance();
-  ROS_INFO_STREAM("TIME DIFFERENCE (ROS-RTT): "<<ros::WallTime::now().toNSec()-rtt_ts->getNSecs());
 }
