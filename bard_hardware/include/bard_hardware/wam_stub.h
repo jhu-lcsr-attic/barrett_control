@@ -40,6 +40,7 @@
 #include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
+#include <kdl/chaindynparam.hpp>
 
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
@@ -49,7 +50,7 @@
 #include <bard_common/util.h>
 
 namespace bard_hardware {
-  class WAMStub : public RTT::TaskContext, public WAMInterface
+  class WAMStub : public WAMInterface
   {
     // RTT Properties
     // see bard_hardware::WAMInterface
@@ -73,7 +74,7 @@ namespace bard_hardware {
     // EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   public:
-    WAM(std::string const& name);
+    WAMStub(std::string const& name);
     bool configureHook();
     bool startHook();
     void updateHook(); 

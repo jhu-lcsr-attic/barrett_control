@@ -53,7 +53,7 @@
 #include <bard_hardware/wam_interface.h>
 
 namespace bard_hardware {
-  class WAM : public RTT::TaskContext, public WAMInterface
+  class WAM : public WAMInterface
   {
     // RTT Properties
     std::string can_dev_name_;

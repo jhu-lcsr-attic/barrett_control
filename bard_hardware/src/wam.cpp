@@ -49,8 +49,7 @@ using namespace bard_common;
 using namespace bard_hardware;
 
 WAM::WAM(string const& name) :
-  TaskContext(name, RTT::base::TaskCore::PreOperational),
-  WAMInterface()
+  WAMInterface(name)
   // RTT Properties
   ,can_dev_name_("")
   // Internal variables

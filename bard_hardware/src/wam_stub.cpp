@@ -37,6 +37,7 @@
 #include <kdl/jntarrayvel.hpp>
 #include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
+#include <kdl/chaindynparam.hpp>
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
 
@@ -50,13 +51,12 @@ using namespace bard_common;
 using namespace bard_hardware;
 
 WAMStub::WAMStub(string const& name) :
-  TaskContext(name, RTT::base::TaskCore::PreOperational),
-  WAMInterface()
+  WAMInterface(name)
   //RTT Properties
   ,coriolis_enabled_(true)
   ,gravity_enabled_(true)
   ,gravity_(3,0.0)
-  ,damping(7,0.0)
+  ,damping_(7,0.0)
 {
   // Initialize all the RTT properties/ports/services
   this->init_rtt_interface();
@@ -85,7 +85,7 @@ bool WAMStub::configureHook()
   kdl_chain_dynamics_.reset(
       new KDL::ChainDynParam(
         kdl_chain_,
-        KDL::Vector(gravity_[0],gravity[1],gravity[2])));
+        KDL::Vector(gravity_[0],gravity_[1],gravity_[2])));
 
   // Initialize arrays and ports
   damping_.resize(n_dof_,0.0);
@@ -103,7 +103,7 @@ bool WAMStub::startHook()
     ROS_WARN_STREAM("No connection to \"positions_out\" for WAM stub!");
   }
 
-  if(gravity_enabled_ && (fabs(gravity_[0] + gravity[1] + gravity_[2]) < 1E-6)) {
+  if(gravity_enabled_ && (fabs(gravity_[0] + gravity_[1] + gravity_[2]) < 1E-6)) {
     ROS_WARN("Gravity is enabled, but set to zero!");
   }
 
@@ -136,16 +136,16 @@ void WAMStub::updateHook()
 
   // Compute coriolis torques
   if(coriolis_enabled_) {
-    kdl_chain_dynamics_.JntToCoriolis(positions_.q, positions_.qdot, coriolis_torques_);
+    kdl_chain_dynamics_->JntToCoriolis(positions_.q, positions_.qdot, coriolis_torques_);
   }
   // Compute gravity torques
   if(gravity_enabled_) {
-    kdl_chain_dynamics_.JntToGravity(positions_.q, gravity_torques_);
+    kdl_chain_dynamics_->JntToGravity(positions_.q, gravity_torques_);
   }
 
   // Compute inertia matrix
   KDL::JntSpaceInertiaMatrix joint_inertia_;
-  kdl_chain_dynamics_.JntToMass(positions_.q, joint_inertia_);
+  kdl_chain_dynamics_->JntToMass(positions_.q, joint_inertia_);
     
   // Get the actual loop period
   loop_period_ = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
@@ -157,7 +157,7 @@ void WAMStub::updateHook()
   Eigen::VectorXd &qdot = positions_.qdot.data;
   Eigen::VectorXd &tau = torques_.data;
   Eigen::MatrixXd &M = joint_inertia_.data;
-  Eigen::MatrixXd &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
+  Eigen::MatrixXd const &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
 
   // Integrate!
   positions_.q.data = q + dT*(qdot);

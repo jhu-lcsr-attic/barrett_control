@@ -43,13 +43,14 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 orocos_component(components
   src/bard_hardware.cpp
   src/wam.cpp
+  src/wam_stub.cpp
   ) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 
 # Additional headers:
 # Installs in the include/orocos/bard_hardware/ directory
 orocos_install_headers(
-  include/bard_hardware/wam.h 
+  include/bard_hardware/wam_interface.h 
   ) # ...you may add multiple header files
 # You may add multiple orocos_install_headers statements.
 

@@ -27,8 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BARD_COMPONENTS_WAM_INTERFACE_H
-#define __BARD_COMPONENTS_WAM_INTERFACE_H
+#ifndef __BARD_HARDWARE_WAM_INTERFACE_H
+#define __BARD_HARDWARE_WAM_INTERFACE_H
 
 #include <iostream>
 
@@ -38,13 +38,16 @@
 
 #include <sensor_msgs/JointState.h>
 
+#include <bard_common/util.h>
+
 namespace bard_hardware {
-  class WAMInterface 
+  class WAMInterface : public RTT::TaskContext
   {
   public:
-    WAMInterface() :
+    WAMInterface(std::string const& name) :
+      TaskContext(name, RTT::base::TaskCore::PreOperational)
       // RTT Properties
-      robot_description_("")
+      ,robot_description_("")
       ,root_link_("")
       ,tip_link_("")
       ,initial_positions_(7,0.0)
@@ -139,32 +142,41 @@ namespace bard_hardware {
 
       // Add operation for setting the encoder values
       this->provides("calibration")
-        ->addOperation("calibrate_position", &WAM::calibrate_position, this, RTT::OwnThread)
+        ->addOperation("calibrate_position", 
+            &WAMInterface::calibrate_position, this, RTT::OwnThread)
         .doc("Set the angles that the encoders should read with the arm in the current configuration. This is used for calibrating the robot.")
         .arg("angles","The new joint angles.");
 
       // Add operations for setting warnings and faults
-      this->addOperation("setVelocityWarning", &WAM::set_velocity_warn, this, RTT::OwnThread)
-        .doc("Set the velocities above which the WAM pendant will illumiate a warning light.")
+      this->addOperation("setVelocityWarning",
+          &WAMInterface::set_velocity_warn, this, RTT::OwnThread)
+        .doc("Set the velocities above which the WAMInterface pendant will illumiate a warning light.")
         .arg("thresh","Velocity Warning Threshold");
-      this->addOperation("setVelocityFault", &WAM::set_velocity_fault, this, RTT::OwnThread)
-        .doc("Set the velocities above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
+      this->addOperation("setVelocityFault",
+          &WAMInterface::set_velocity_fault, this, RTT::OwnThread)
+        .doc("Set the velocities above which the WAMInterface pendant will abruptly shut down the arm and illumiate a fault light.")
         .arg("thresh","Velocity Fault Threshold");
-      this->addOperation("setTorqueWarning", &WAM::set_torque_warn, this, RTT::OwnThread)
-        .doc("Set the torques above which the WAM pendant will illumiate a warning light.")
+      this->addOperation("setTorqueWarning",
+          &WAMInterface::set_torque_warn, this, RTT::OwnThread)
+        .doc("Set the torques above which the WAMInterface pendant will illumiate a warning light.")
         .arg("thresh","Torque Warning Threshold");
-      this->addOperation("setTorqueFault", &WAM::set_torque_fault, this, RTT::OwnThread)
-        .doc("Set the torques above which the WAM pendant will abruptly shut down the arm and illumiate a fault light.")
+      this->addOperation("setTorqueFault",
+          &WAMInterface::set_torque_fault, this, RTT::OwnThread)
+        .doc("Set the torques above which the WAMInterface pendant will abruptly shut down the arm and illumiate a fault light.")
         .arg("thresh","Torque Fault Threshold");
 
-      this->addOperation("getLoopRate", &WAM::get_loop_rate, this, RTT::OwnThread)
+      this->addOperation("getLoopRate",
+          &WAMInterface::get_loop_rate, this, RTT::OwnThread)
         .doc("Get the loop rate (Hz)");
-      this->addOperation("printTime", &WAM::print_time, this, RTT::OwnThread)
+      this->addOperation("printTime",
+          &WAMInterface::print_time, this, RTT::OwnThread)
         .doc("Print the ROS and RTT time.");
     }
 
     virtual bool init_kinematics()
     {
+      using namespace bard_common;
+
       // Initialize kinematics (KDL tree, KDL chain, and #DOF)
       if(!util::initialize_kinematics_from_urdf(
             robot_description_, root_link_, tip_link_,
@@ -199,6 +211,8 @@ namespace bard_hardware {
       // Prepare ports for realtime processing
       positions_out_port_.setDataSample(positions_);
       joint_state_out_port_.setDataSample(joint_state_);
+
+      return true;
     }
 
     virtual void publish_throttled_joint_state()
@@ -218,4 +232,4 @@ namespace bard_hardware {
 }
 
 
-#endif // ifndef __BARD_COMPONENTS_WAM_H
+#endif // ifndef __BARD_HARDWARE_WAM_INTERFACE_H
