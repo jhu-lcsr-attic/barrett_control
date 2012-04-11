@@ -61,7 +61,7 @@ WAMStub::WAMStub(string const& name) :
   this->init_rtt_interface();
 
   // Initialize simulator-specific interface
-  this->addProperty("coriolis_enabled",gravity_enabled_)
+  this->addProperty("coriolis_enabled",coriolis_enabled_)
     .doc("True if coriolis forces are applied to the simulated arm.");
   this->addProperty("gravity_enabled",gravity_enabled_)
     .doc("True if gravity is applied to the simulated arm.");
@@ -128,46 +128,54 @@ void WAMStub::updateHook()
   }
 
   // Initialize dynamic force vectors
-  KDL::JntArray coriolis_torques_(n_dof_);
-  KDL::JntArray gravity_torques_(n_dof_);
-  KDL::SetToZero(coriolis_torques_);
-  KDL::SetToZero(gravity_torques_);
 
   // Compute coriolis torques
-  if(coriolis_enabled_) {
-    kdl_chain_dynamics_->JntToCoriolis(positions_.q, positions_.qdot, coriolis_torques_);
+  KDL::JntArray coriolis_torques_(n_dof_);
+  kdl_chain_dynamics_->JntToCoriolis(positions_.q, positions_.qdot, coriolis_torques_);
+  if(!coriolis_enabled_) {
+    KDL::SetToZero(coriolis_torques_);
   }
-  // Compute gravity torques
-  if(gravity_enabled_) {
-    kdl_chain_dynamics_->JntToGravity(positions_.q, gravity_torques_);
-  }
-
+  
   // Compute inertia matrix
   KDL::JntSpaceInertiaMatrix joint_inertia_(n_dof_);
   kdl_chain_dynamics_->JntToMass(positions_.q, joint_inertia_);
     
+  // Compute gravity torques
+  KDL::JntArray gravity_torques_(n_dof_);
+  kdl_chain_dynamics_->JntToGravity(positions_.q, gravity_torques_);
+  if(!gravity_enabled_) {
+    KDL::SetToZero(gravity_torques_);
+  }
+
   // Get the actual loop period
   loop_period_ = RTT::os::TimeService::Instance()->secondsSince(last_loop_time_);
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
   
   // Update joint positions
-  double &dT = loop_period_;
+  double dT = 0.001;// loop_period_;
   Eigen::VectorXd &q = positions_.q.data;
   Eigen::VectorXd &qdot = positions_.qdot.data;
   Eigen::VectorXd &tau = torques_.data;
   Eigen::MatrixXd &M = joint_inertia_.data;
-  Eigen::MatrixXd const &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
+  Eigen::VectorXd const &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
+  Eigen::VectorXd &g = gravity_torques_.data;
+  Eigen::VectorXd &r = coriolis_torques_.data;
 
   // Check sizes of matrices
-  ROS_DEBUG_STREAM("q:\n"<<q);
-  ROS_DEBUG_STREAM("qdot:\n"<<qdot);
-  ROS_DEBUG_STREAM("tau:\n"<<tau);
-  ROS_DEBUG_STREAM("M:\n"<<M);
-  ROS_DEBUG_STREAM("c:\n"<<c);
+  ROS_DEBUG_STREAM("q: "<<q.transpose());
+  ROS_DEBUG_STREAM("qdot:"<<qdot.transpose());
+  ROS_DEBUG_STREAM("c: "<<c.transpose());
+  ROS_DEBUG_STREAM("-c.*qdot: "<<-1.0*c.cwiseProduct(qdot));
+  ROS_DEBUG_STREAM("tau: "<<tau.transpose());
+  ROS_DEBUG_STREAM("inv(M):\n"<<M.inverse());
+  ROS_DEBUG_STREAM("g: "<<g.transpose());
+  ROS_DEBUG_STREAM("r: "<<r.transpose());
 
   // Integrate!
-  positions_.q.data = q + dT*(qdot);
-  positions_.qdot.data = qdot + dT*(M.inverse()*tau - c.cwiseProduct(qdot));
+  positions_new_.q.data = q + dT*(qdot);
+  positions_new_.qdot.data = qdot + dT*(M.inverse()*(tau - r - g - c.cwiseProduct(qdot)));
+
+  positions_ = positions_new_;
 
   // Send joint positions
   positions_out_port_.write( positions_ );

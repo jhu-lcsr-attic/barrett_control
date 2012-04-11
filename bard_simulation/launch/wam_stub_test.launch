@@ -11,7 +11,7 @@
       <param name="coriolis_enabled" value="true"/>
       <param name="gravity_enabled" value="true"/>
       <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>
-      <rosparam param="damping">{Element0: 0.001, Element1: 0.001, Element2: 0.001, Element3: 0.01, Element4: 0.001, Element5: 0.001, Element6: 0.001}</rosparam>
+      <rosparam param="damping">{Element0: 0.3, Element1: 0.3, Element2: 0.3, Element3: 0.3, Element4: 0.1, Element5: 0.1, Element6: 0.1}</rosparam>
 
       <param name="joint_state_throttle_period" value="0.01"/>
 
