@@ -30,6 +30,11 @@ find_package(OROCOS-RTT REQUIRED ${RTT_HINTS})
 # documentation.
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
+# Allow this to switch between using RTSocketCAN and another CANBus implementation
+if("${OROCOS_TARGET}" STREQUAL "xenomai") 
+  add_definitions(-D__XENO__)
+endif()
+
 #
 # Components, types and plugins.
 #
