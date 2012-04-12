@@ -42,6 +42,12 @@
 
 #include <sensor_msgs/JointState.h>
 
+#ifdef __XENO__
+#include <leoCAN/RTSocketCAN.h>
+#else
+#warning This component needs the xenomai libraries to run!
+#endif
+
 #include <bard_common/util.h>
 #include <bard_hardware/wam.h>
 
@@ -73,7 +79,13 @@ bool WAM::configureHook()
   // Try to connect and initialize hardware
   try{
     // Construct CAN structure
+#ifdef __XENO__
     canbus_.reset(new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 ));
+#else
+    // TODO: port a non-realtime canbus to leoCAN
+    ROS_FATAL("This component cannot be used without the xenomai libraries and rtsocketcan!");
+    return false;
+#endif
 
     // Open the canbus
     if( canbus_->Open() != leoCAN::CANBus::ESUCCESS ){

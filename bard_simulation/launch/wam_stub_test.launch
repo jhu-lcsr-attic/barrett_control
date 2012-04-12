@@ -3,5 +3,5 @@
   <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_simulation)/scripts/wam_stub_test.ops --" output="screen"/>
 
   <!-- WAM Stub params and transform publisher-->
-  <include ns="wam_rtt/wam" file="$(find bard_simulation)/launch/wam_stub.xml"/>
+  <include ns="wam_rtt/wam" file="$(find bard_simulation)/launch/wam_stub.launch"/>
 </launch>

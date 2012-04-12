@@ -46,7 +46,7 @@
 
 #include <sensor_msgs/JointState.h>
 
-#include <leoCAN/RTSocketCAN.h>
+#include <leoCAN/CANBus.h>
 #include <barrett_direct/WAM.h>
 
 #include <bard_common/util.h>
@@ -86,12 +86,11 @@ namespace bard_hardware {
     void cleanup_internal();
 
     // Hardware hooks
-    boost::scoped_ptr<leoCAN::RTSocketCAN> canbus_;
+    boost::scoped_ptr<leoCAN::CANBus> canbus_;
     boost::scoped_ptr<barrett_direct::WAM> robot_;
 
     // Other members
     bool needs_calibration_;
   };
 }
-
 #endif // ifndef __BARD_HARDWARE_WAM_H
