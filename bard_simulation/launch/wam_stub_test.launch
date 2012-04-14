@@ -1,4 +1,8 @@
 <launch>
+
+  <!-- Use simulation time -->
+  <param name="use_sim_time" value="true"/>
+
   <!-- Orocos Node -->
   <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_simulation)/scripts/wam_stub_test.ops --" output="screen"/>
 

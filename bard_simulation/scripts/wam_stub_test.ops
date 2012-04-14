@@ -48,6 +48,7 @@ wam.rosparam.refreshProperties()
 
 // Connect WAM state to ROS topic
 stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
+stream("wam.clock", ros.topic("clock"))
 
 
 //*****************************************************************************

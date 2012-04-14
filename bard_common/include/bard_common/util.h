@@ -43,45 +43,10 @@
 
 #include <rtt/RTT.hpp>
 
+#include <ros/ros.h>
+
 namespace bard_common {
   namespace util {
-
-    class TimeLord {
-    public:
-      static void Init() {
-        if(Singleton_.get() == NULL) {
-          Singleton_ = new TimeLord();
-        }
-      }
-
-      static ros::Time get_rostime() {
-        Init();
-        
-        if(UseSimTime_) {
-          return ros::Time::now();
-        } else {
-#ifdef __XENO__
-          // Use Xenomai 2.6 feature to get the NTP-synched real-time clock
-          timespec ts = {0,0};
-          clock_gettime(CLOCK_HOST_REALTIME, &ts);
-          return ros::Time(ts.tv_sec, ts.tv_nsec);
-#endif
-        }
-        return ros::Time(((double)RTT::os::TimeService::Instance()->getNSecs())*1E-9);
-      }
-
-      static 
-
-    protected:
-      TimeLord() {
-        // Check if ROS is using simulation time
-        ros::NodeHandle nh;
-        nh.getParam("use_sim_time",UseSimTime_);
-      }
-
-      static boost::scoped_ptr<TimeLord> Singleton_;
-      static bool UseSimTime_;
-    };
     
     // Function to create some KDL structures and get the #DOF from an URDF
     bool initialize_kinematics_from_urdf(
@@ -100,6 +65,55 @@ namespace bard_common {
 
     // Function to get a ros::Time initialized from RTT::os::TimeService
     ros::Time ros_rt_now();
+
+    // Class for picking either ROS time or RT time
+    class TimeLord {
+    public:
+      typedef enum {
+        UNKNOWN = 0,
+        WALL_TIME,
+        SIM_TIME
+      } time_state_t;
+
+      static void Init() {
+        if( TimeState_ == UNKNOWN ) {
+          // Check if ROS is using simulation time
+          ros::NodeHandle nh;
+          bool use_sim_time = false;
+
+          use_sim_time = nh.getParam("use_sim_time",use_sim_time) && use_sim_time;
+
+          if(use_sim_time) {
+            TimeState_ = SIM_TIME;
+          } else {
+            TimeState_ = WALL_TIME;
+          }
+        }
+      }
+
+      static ros::Time autotime_now() {
+        TimeLord::Init();
+        
+        if(TimeState_ == SIM_TIME) {
+          // Use the ROS clock time, which in this case will be the time from the /clock topic
+          return ros::Time::now();
+        } else {
+          // Use NTP-synchronized RTC time in an RT system, and the ROS clock time in a non-rt system
+          return util::ros_rt_now();
+        }
+      }
+
+      static ros::Time rostime_now() {
+        return ros::Time::now();
+      }
+
+      static ros::Time walltime_now() {
+        return ros_rt_now();
+      }
+
+    protected:
+      static time_state_t TimeState_;
+    };
 
     // Classes to throttle the rate at which something is being done in an RTT thread
     class PeriodicThrottle {

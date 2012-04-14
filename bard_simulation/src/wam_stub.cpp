@@ -70,6 +70,9 @@ WAMStub::WAMStub(string const& name) :
   this->addProperty("damping",damping_)
     .doc("Damping coefficients for each joint.");
 
+  this->ports()->addPort("clock",clock_out_port_)
+    .doc("Simulation time (begins at zero).");
+
   ROS_INFO_STREAM("WAM stub component \""<<name<<"\" constructed !");
 }
 
@@ -88,6 +91,9 @@ bool WAMStub::configureHook()
 
   // Initialize arrays and ports
   damping_.resize(n_dof_,0.0);
+
+  // Initialize clock
+  clock_.clock = ros::Time(0);
 
   return true;
 }
@@ -176,6 +182,10 @@ void WAMStub::updateHook()
   positions_new_.qdot.data = qdot + dT*(M.inverse()*(tau - r - g - c.cwiseProduct(qdot)));
 
   positions_ = positions_new_;
+
+  // Output new time
+  clock_.clock = clock_.clock + ros::Duration(dT);
+  clock_out_port_.write(clock_);
 
   // Send joint positions
   positions_out_port_.write( positions_ );

@@ -46,6 +46,7 @@
 #include <rtt/Port.hpp>
 
 #include <sensor_msgs/JointState.h>
+#include <rosgraph_msgs/Clock.h>
 
 #include <bard_common/util.h>
 #include <bard_component_interfaces/wam_interface.h>
@@ -62,6 +63,7 @@ namespace bard_simulation {
 
     // RTT Ports
     // see bard_simulation::WAMInterface
+    RTT::OutputPort<rosgraph_msgs::Clock> clock_out_port_;
 
     // RTT Operations
     void calibrate_position(std::vector<double> &actual_positions);
@@ -84,6 +86,7 @@ namespace bard_simulation {
 
   private:
     boost::scoped_ptr<KDL::ChainDynParam> kdl_chain_dynamics_;
+    rosgraph_msgs::Clock clock_;
   };
 }
 
