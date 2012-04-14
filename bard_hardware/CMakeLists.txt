@@ -45,7 +45,7 @@ endif()
 
 # Creates a component library libbard_hardware-<target>.so
 # and installs in the directory lib/orocos/bard_hardware/
-orocos_component(components
+orocos_component(bard_hardware_components
   src/bard_hardware.cpp
   src/wam.cpp
   ) # ...you may add multiple source files

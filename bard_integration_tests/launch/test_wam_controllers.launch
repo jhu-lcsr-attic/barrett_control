@@ -3,7 +3,7 @@
   <param name="use_sim_time" value="true"/>
 
   <!-- Orocos Node -->
-  <node launch-prefix="gdb -ex run --args" pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_integration_tests)/scripts/test_wam_controllers.ops --" output="screen"/>
+  <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_integration_tests)/scripts/test_wam_controllers.ops --" output="screen"/>
 
   <!-- WAM Stub -->
   <include ns="wam_rtt" file="$(find bard_simulation)/launch/wam_stub.launch"/>

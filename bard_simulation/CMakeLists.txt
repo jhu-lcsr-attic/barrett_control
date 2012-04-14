@@ -40,7 +40,7 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 # Creates a component library libbard_simulation-<target>.so
 # and installs in the directory lib/orocos/bard_simulation/
-orocos_component(components
+orocos_component(bard_simulation_components
   src/bard_simulation.cpp
   src/wam_stub.cpp
   ) # ...you may add multiple source files

@@ -40,7 +40,7 @@ include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
 # Creates a component library libbard_controllers-<target>.so
 # and installs in the directory lib/orocos/bard_controllers/
-orocos_component(components
+orocos_component(bard_controllers_components
   src/bard_controllers.cpp
   src/controller_mux.cpp
   src/controllers/trivial.cpp
