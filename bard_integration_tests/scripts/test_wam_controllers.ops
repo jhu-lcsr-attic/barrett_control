@@ -28,7 +28,7 @@
  */
 
 import("bard_common")
-import("bard_hardware")
+import("bard_simulation")
 import("bard_controllers")
 
 import("kdl_typekit")

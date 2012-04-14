@@ -28,7 +28,6 @@
  */
 
 import("bard_common")
-import("bard_hardware")
 import("bard_controllers")
 
 import("kdl_typekit")
@@ -153,9 +152,6 @@ connect("wam_joint_traj.positions_out","wam_joint_pid.positions_des_in",ConnPoli
 connect("wam_joint_traj.trajectories_in","wam_pose.trajectories_out",ConnPolicy())
 
 //*****************************************************************************
-// Start Things 
-wam.configure()
-wam.start()
 
 // Start the controllers
 wam_grav.start()
