@@ -32,6 +32,8 @@
 
 #include <iostream>
 
+#include <boost/scoped_ptr.hpp>
+
 #include <sensor_msgs/JointState.h>
 
 #include <urdf/model.h>
@@ -43,6 +45,43 @@
 
 namespace bard_common {
   namespace util {
+
+    class TimeLord {
+    public:
+      static void Init() {
+        if(Singleton_.get() == NULL) {
+          Singleton_ = new TimeLord();
+        }
+      }
+
+      static ros::Time get_rostime() {
+        Init();
+        
+        if(UseSimTime_) {
+          return ros::Time::now();
+        } else {
+#ifdef __XENO__
+          // Use Xenomai 2.6 feature to get the NTP-synched real-time clock
+          timespec ts = {0,0};
+          clock_gettime(CLOCK_HOST_REALTIME, &ts);
+          return ros::Time(ts.tv_sec, ts.tv_nsec);
+#endif
+        }
+        return ros::Time(((double)RTT::os::TimeService::Instance()->getNSecs())*1E-9);
+      }
+
+      static 
+
+    protected:
+      TimeLord() {
+        // Check if ROS is using simulation time
+        ros::NodeHandle nh;
+        nh.getParam("use_sim_time",UseSimTime_);
+      }
+
+      static boost::scoped_ptr<TimeLord> Singleton_;
+      static bool UseSimTime_;
+    };
     
     // Function to create some KDL structures and get the #DOF from an URDF
     bool initialize_kinematics_from_urdf(

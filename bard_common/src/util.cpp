@@ -45,6 +45,9 @@
 
 using namespace bard_common;
 
+boost::scoped_ptr<TimeLord> TimeLord::Singleton_;
+bool TimeLord::UseSimTime_;
+
 bool util::initialize_kinematics_from_urdf(
     const std::string &robot_description,
     const std::string &root_link,
