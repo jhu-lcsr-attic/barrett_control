@@ -1,0 +1,11 @@
+<launch>
+  <!--node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops "/-->
+  <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_hardware)/scripts/wam_test.ops --" output="screen"/>
+
+  <!-- WAM Stub -->
+  <include ns="wam_rtt/wam" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"><arg name="robot_name" value="$(arg robot_name)"/></include>
+  <include ns="wam_rtt/wam" file="$(find bard_hardware)/launch/wam_component.launch"/>
+
+  <!-- Controllers -->
+  <include ns="wam_rtt" file="$(find bard_controllers)/launch/controllers.launch"/> 
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+  <!--node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_controllers)/scripts/wam_test.ops "/-->
+  <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_controllers)/scripts/controller_test.ops --" output="screen"/>
+
+  <!-- Controllers -->
+  <include ns="wam_rtt" file="$(find bard_controllers)/launch/controllers.launch"/> 
+</launch>
