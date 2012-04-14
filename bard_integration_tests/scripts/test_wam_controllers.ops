@@ -27,9 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-import("bard_common")
-import("bard_simulation")
-import("bard_controllers")
+import("bard_integration_tests")
 
 import("kdl_typekit")
 
@@ -120,7 +118,7 @@ wam_wrench.configure()
 //*****************************************************************************
 // Create cartesian pose  controller
 loadComponent("wam_pose","bard_controllers::controllers::CartesianPose")
-setActivity("wam_pose",10.0,HighestPriority,ORO_SCHED_RT)
+setActivity("wam_pose",1.0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_pose")
 
 // Configure parameters
@@ -129,7 +127,6 @@ wam_pose.rosparam.refreshProperties()
 wam_pose.configure()
 
 //connect("wam_pose.positions_out","wam_joint_pid.positions_des_in",ConnPolicy())
-stream("wam_pose.trajectories_out",ros.topic("wam_rtt/wam_pose/trajectories_out")) 
 
 //*****************************************************************************
 // Create joint trajectory controller
@@ -141,9 +138,6 @@ connectPeers("tf","wam_joint_traj")
 loadService("wam_joint_traj","rosparam")
 wam_joint_traj.rosparam.refreshProperties()
 wam_joint_traj.configure()
-
-// Connect WAM state to ROS topic
-stream("wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/trajectories")) 
 
 
 //*****************************************************************************
@@ -157,17 +151,20 @@ wam_mux.load("joint_traj")
 
 // Connect controllers 
 connect("wam_grav.torques_out","wam_mux.gravity",ConnPolicy())
+
 connect("wam_pose.torques_out","wam_mux.pose",ConnPolicy())
+stream( "wam_pose.trajectories_out",ros.topic("wam_rtt/wam_pose/trajectories_out")) 
+
 connect("wam_wrench.torques_out","wam_mux.wrench",ConnPolicy())
 connect("wam_trivial.torques_out","wam_mux.trivial",ConnPolicy())
 connect("wam_joint_pid.torques_out","wam_mux.joint_pid",ConnPolicy())
+
 connect("wam_joint_traj.positions_out","wam_joint_pid.positions_des_in",ConnPolicy())
 connect("wam_joint_traj.trajectories_in","wam_pose.trajectories_out",ConnPolicy())
+stream( "wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/trajectories")) 
+
 
 //*****************************************************************************
-// Start Things 
-wam.configure()
-wam.start()
 
 // Start the controllers
 wam_grav.start()
