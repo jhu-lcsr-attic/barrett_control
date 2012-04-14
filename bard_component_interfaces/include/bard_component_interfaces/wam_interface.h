@@ -96,7 +96,7 @@ namespace bard_component_interfaces {
       RTT::os::TimeService *rtt_ts = RTT::os::TimeService::Instance();
       
       ROS_INFO_STREAM("TIME DIFFERENCE (ROS-RTT) RTT::os::TimeService:               "<<(ros::Time::now() - ros::Time(((double)rtt_ts->getNSecs())*1E-9)));
-      ROS_INFO_STREAM("TIME DIFFERENCE (ROS-RTT) clock_gettime(CLOCK_HOST_REALTIME): "<<ros::Time::now() - bard_common::util::ros_rtt_now());
+      ROS_INFO_STREAM("TIME DIFFERENCE (ROS-RTT) clock_gettime(CLOCK_HOST_REALTIME): "<<ros::Time::now() - bard_common::util::ros_rt_now());
     }
 
     // Kinematic properties

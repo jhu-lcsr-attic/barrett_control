@@ -60,7 +60,7 @@ namespace bard_common {
         sensor_msgs::JointState &joint_state);
 
     // Function to get a ros::Time initialized from RTT::os::TimeService
-    ros::Time ros_rtt_now();
+    ros::Time ros_rt_now();
 
     // Classes to throttle the rate at which something is being done in an RTT thread
     class PeriodicThrottle {

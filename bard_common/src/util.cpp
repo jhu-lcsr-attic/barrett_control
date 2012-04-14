@@ -116,15 +116,14 @@ void util::joint_state_from_kdl_chain(
   joint_state.effort.resize(n_dof);
 }
 
-ros::Time util::ros_rtt_now() {
+ros::Time util::ros_rt_now() {
 #if OROCOS_TARGET == xenomai
-#warning using xenomai clock_gettime
   // Use Xenomai 2.6 feature to get the NTP-synched real-time clock
   timespec ts = {0,0};
   clock_gettime(CLOCK_HOST_REALTIME, &ts);
   return ros::Time(ts.tv_sec, ts.tv_nsec);
 #else 
-#warning not using xenomai clock_gettime
+  // Use standard RTT API to get the time
   return ros::Time(((double)RTT::os::TimeService::Instance()->getNSecs())*1E-9);
 #endif
 }

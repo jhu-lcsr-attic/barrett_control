@@ -313,7 +313,7 @@ std::string iter_name(T &l, typename T::iterator &it) {
 }
 
 std::string JointTrajectory::debug_iter(const JointTrajectory::SplineTrajectory::iterator &debug_it) {
-  double now = util::ros_rtt_now().toSec();
+  double now = util::ros_rt_now().toSec();
 
   std::ostringstream oss;
   oss<<"[ ";
@@ -389,7 +389,7 @@ void JointTrajectory::command_cb()
     ROS_DEBUG("Starting trajectory immediately,");
 
     // Start immediately
-    msg_start_time = util::ros_rtt_now().toSec() + 0.002;
+    msg_start_time = util::ros_rt_now().toSec() + 0.002;
 
     // Insert into the active segment
     insertion_it = active_segment_it_;
@@ -397,7 +397,7 @@ void JointTrajectory::command_cb()
     // Compute the time at which this trajectory should start
     msg_start_time = msg.header.stamp.toSec();
 
-    ROS_DEBUG_STREAM("Starting trajectory in "<<(msg_start_time-util::ros_rtt_now().toSec())<<" seconds.");
+    ROS_DEBUG_STREAM("Starting trajectory in "<<(msg_start_time-util::ros_rt_now().toSec())<<" seconds.");
 
     // Construct a dummy segment with the new trajectory's start time
     Segment first_new_segment;
@@ -714,7 +714,7 @@ void JointTrajectory::feedback_cb()
   positions_in_port_.readNewest( positions_ );
 
   // Update time metrics
-  ros::Time now = util::ros_rtt_now();
+  ros::Time now = util::ros_rt_now();
 
   if(spline_traj_.size()>0) {
     if(last_time_.toSec() < spline_traj_.back().end_time
