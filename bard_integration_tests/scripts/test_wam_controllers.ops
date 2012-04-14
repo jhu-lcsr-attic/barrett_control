@@ -27,7 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-import("bard_integration_tests")
+import("bard_simulation")
+import("bard_controllers")
 
 import("kdl_typekit")
 
@@ -55,11 +56,17 @@ wam.rosparam.refreshProperties()
 stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
 stream("wam.clock", ros.topic("clock"))
 
+wam.configure()
+wam.start()
+
 //*****************************************************************************
 // Create multiplexer 
 loadComponent("wam_mux","bard_controllers::ControllerMux")
+
+/*
 setActivity("wam_mux",0,HighestPriority,ORO_SCHED_RT)
 stream("wam_mux.joint_state_out", ros.topic("wam_rtt/wam_mux/joint_states")) 
+
 
 // Configure parameters
 loadService("wam_mux","rosparam")
@@ -167,18 +174,19 @@ stream( "wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/traje
 //*****************************************************************************
 
 // Start the controllers
-wam_grav.start()
+//wam_grav.start()
 
 //wam_pose.start()
-wam_joint_traj.start()
-wam_joint_pid.start()
+//wam_joint_traj.start()
+//wam_joint_pid.start()
 //wam_wrench.start()
 
 // Start the multiplexer
-wam_mux.disable()
-wam_mux.start()
-wam_mux.toggleControllers(strings("gravity"),strings())
-wam_mux.toggleControllers(strings("joint_pid"),strings())
+//wam_mux.disable()
+//wam_mux.start()
+//wam_mux.toggleControllers(strings("gravity"),strings())
+//wam_mux.toggleControllers(strings("joint_pid"),strings())
 //wam_mux.toggleControllers(strings("pose"),strings())
 //wam_mux.toggleControllers(strings("trivial"),strings("gravity"))
 //wam_mux.toggleControllers(strings("gravity"),strings("trivial"))
+*/
