@@ -6,6 +6,6 @@
   <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_simulation)/scripts/wam_stub_test.ops --" output="screen"/>
 
   <!-- WAM Stub params and transform publisher-->
-  <include ns="wam_rtt/wam" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"><arg name="robot_name" value="$(arg robot_name)"/></include>
-  <include ns="wam_rtt/wam" file="$(find bard_simulation)/launch/wam_stub.launch"/>
+  <include ns="wam_rtt" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"/>
+  <include ns="wam_rtt" file="$(find bard_simulation)/launch/wam_stub.launch"/>
 </launch>

@@ -7,7 +7,7 @@
   <!-- Root link is in the world frame-->
   <link name = "baseLink"/>
 
-  <xacro:wam_root prefix="WAM" parentLink="baseLink" xyz="0.0 0.5 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
-  <xacro:wam_7dof prefix="WAM" parentLink="WAM/FixedLink" xyz="0 0 0" rpy="0 0 0" />
-  <!--xacro:barrett_hand prefix="LeftWAM" /-->
+  <xacro:wam_root prefix="wam" parentLink="baseLink" xyz="0.0 0.5 1" rpy="0 ${-0.5*PI} ${0.5*PI}"/>
+  <xacro:wam_7dof prefix="wam" parentLink="wam/FixedLink" xyz="0 0 0" rpy="0 0 0" />
+  <!--xacro:barrett_hand prefix="wam_left" /-->
 </robot>

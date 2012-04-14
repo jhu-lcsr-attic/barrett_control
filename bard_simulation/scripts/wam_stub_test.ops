@@ -40,7 +40,7 @@ import("rtt_bard_msgs")
 //*****************************************************************************
 // Create WAM 
 loadComponent("wam","bard_simulation::WAMStub")
-setActivity("wam",0.05,HighestPriority,ORO_SCHED_RT)
+setActivity("wam",0.01,HighestPriority,ORO_SCHED_RT)
 
 // Load properties from rosparam
 loadService("wam","rosparam")
