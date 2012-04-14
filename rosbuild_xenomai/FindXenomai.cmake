@@ -12,7 +12,7 @@
 if( UNIX )
 
   # set the search paths
-  set( Xenomai_SEARCH_PATH /usr/local/xenomai /usr/xenomai /usr/include/xenomai)
+  set( Xenomai_SEARCH_PATH /usr/local/xenomai /usr/xenomai /usr/include/xenomai $ENV{XENOMAI_ROOT_DIR})
   
   # find xeno-config.h
   find_path( Xenomai_DIR
@@ -28,11 +28,11 @@ if( UNIX )
       # on ubuntu linux, xenomai install is not rooted to a single dir
       set( Xenomai_INCLUDE_DIR ${Xenomai_DIR} )
       set( Xenomai_INCLUDE_POSIX_DIR ${Xenomai_DIR}/posix )
-    else( "${Xenomai_DIR}" MATCHES "/usr/include/xenomai")
+    else()
       # elsewhere, xenomai install is packaged
       set( Xenomai_INCLUDE_DIR ${Xenomai_DIR}/include )
       set( Xenomai_INCLUDE_POSIX_DIR ${Xenomai_DIR}/include/posix )
-    endif( "${Xenomai_DIR}" MATCHES "/usr/include/xenomai")
+    endif()
     
     # find the xenomai pthread library
     find_library( Xenomai_LIBRARY_NATIVE  native  ${Xenomai_DIR}/lib )
@@ -40,17 +40,20 @@ if( UNIX )
     find_library( Xenomai_LIBRARY_PTHREAD_RT pthread_rt rtdm ${Xenomai_DIR}/lib )
     find_library( Xenomai_LIBRARY_RTDM    rtdm    ${Xenomai_DIR}/lib )
 
-    # find the posix wrappers
-    find_file(Xenomai_POSIX_WRAPPERS lib/posix.wrappers ${Xenomai_SEARCH_PATH} )
+    # Find xeno-config
+    find_program(Xenomai_XENO_CONFIG NAMES xeno-config  PATHS ${Xenomai_DIR}/bin NO_DEFAULT_PATH)
+
+    # Linker flags for the posix wrappers
+    set(Xenomai_LDFLAGS_NATIVE "")#"-lnative -lxenomai -lpthread -lrt")
+    set(Xenomai_LDFLAGS_POSIX "-Wl,@${Xenomai_DIR}/lib/posix.wrappers")#-lpthread_rt -lxenomai -lpthread -lrt")
+
+    # add compile/preprocess options
+    set(Xenomai_DEFINITONS "-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -D__XENO__")
+    set(Xenomai_DEFINITONS_POSIX ${Xenomai_DEFINITONS})
+
 
     # set the library dirs
     set( Xenomai_LIBRARY_DIRS ${Xenomai_DIR}/lib )
-
-    # set the linker flags
-    #set( Xenomai_EXE_LINKER_FLAGS "-Wl,@${Xenomai_POSIX_WRAPPERS}" )
-
-    # add compile/preprocess options
-    set(Xenomai_DEFINITIONS "-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -D__XENO__")
 
     set(Xenomai_FOUND True)
   else( Xenomai_DIR )

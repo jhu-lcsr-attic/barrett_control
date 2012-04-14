@@ -30,6 +30,9 @@ find_package(OROCOS-RTT REQUIRED ${RTT_HINTS})
 # documentation.
 include(${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake)
 
+# Find the rosbuild_xenomai package
+rosbuild_find_ros_package(rosbuild_xenomai)
+include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
 
 # Additional headers:
 # Installs in the include/orocos/bard_common/ directory
@@ -41,5 +44,8 @@ orocos_install_headers(
 # Creates a library libsupport-<target>.so and installs it in
 # lib/
 orocos_library(util src/util.cpp) 
+if($ENV{OROCOS_TARGET} STREQUAL "xenomai") 
+  rosbuild_add_xenomai_posix_flags()
+endif()
 
 orocos_generate_package()
