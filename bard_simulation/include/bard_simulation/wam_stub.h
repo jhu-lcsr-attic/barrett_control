@@ -56,6 +56,7 @@ namespace bard_simulation {
   {
     // RTT Properties
     // see bard_simulation::WAMInterface
+    double sim_timestep_;
     bool coriolis_enabled_;
     bool gravity_enabled_;
     std::vector<double> gravity_;

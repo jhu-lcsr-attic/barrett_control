@@ -4,6 +4,7 @@
 
   <group ns="$(arg robot_name)">
     <!-- Simulation Options -->
+    <param name="sim_timestep" value="0.001"/>
     <param name="coriolis_enabled" value="true"/>
     <param name="gravity_enabled" value="true"/>
     <rosparam param="gravity">{Element0: -9.8, Element1: 0.0, Element2: 0.0}</rosparam>

@@ -146,7 +146,7 @@ void WAM::updateHook()
       if(fabs(torques_(i)) > torque_limits_[i]) {
         // Truncate this joint torque
         torques_(i) = (torques_(i)>0.0)?(torque_limits_[i]):(-torque_limits_[i]);
-        // TODO: Raise warning flag
+        ROS_WARN("Commanded torques exceeded safety limits! They have been truncated.");
       }
     }
     // Send the torques

@@ -54,10 +54,8 @@ wam.rosparam.refreshProperties()
 
 // Connect WAM state to ROS topic
 stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
+// Set up the simulation clock server topic
 stream("wam.clock", ros.topic("clock"))
-
-wam.configure()
-wam.start()
 
 //*****************************************************************************
 // Create multiplexer 
@@ -171,6 +169,10 @@ stream( "wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/traje
 
 
 //*****************************************************************************
+// Start the simulator
+wam.configure()
+wam.start()
+
 
 // Start the controllers
 //wam_grav.start()

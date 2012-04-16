@@ -52,6 +52,7 @@ using namespace bard_simulation;
 WAMStub::WAMStub(string const& name) :
   WAMInterface(name)
   //RTT Properties
+  ,sim_timestep_(0.001)
   ,coriolis_enabled_(true)
   ,gravity_enabled_(true)
   ,gravity_(3,0.0)
@@ -61,6 +62,8 @@ WAMStub::WAMStub(string const& name) :
   this->init_rtt_interface();
 
   // Initialize simulator-specific interface
+  this->addProperty("sim_timestep",sim_timestep_)
+    .doc("Simulation timestep. The simulation clock will be incremented by this timestep each time this component's updateHook() is called, regardless of how fast the loop is actually running.");
   this->addProperty("coriolis_enabled",coriolis_enabled_)
     .doc("True if coriolis forces are applied to the simulated arm.");
   this->addProperty("gravity_enabled",gravity_enabled_)
@@ -70,6 +73,7 @@ WAMStub::WAMStub(string const& name) :
   this->addProperty("damping",damping_)
     .doc("Damping coefficients for each joint.");
 
+  // Initialize RTT ports
   this->ports()->addPort("clock",clock_out_port_)
     .doc("Simulation time (begins at zero).");
 
@@ -78,6 +82,13 @@ WAMStub::WAMStub(string const& name) :
 
 bool WAMStub::configureHook()
 {
+  
+  // Load properties from rosparam
+  // ops:
+  // loadService("wam","rosparam")
+  // wam.rosparam.refreshProperties()
+
+
   // Initialize the arm kinematics from the robot description
   if(!this->init_kinematics()) {
     return false;
@@ -95,6 +106,9 @@ bool WAMStub::configureHook()
   // Initialize clock
   clock_.clock = ros::Time(0);
 
+  // This is a stub, so we can always set the position
+  this->calibrate_position(initial_positions_);
+
   return true;
 }
 
@@ -108,12 +122,10 @@ bool WAMStub::startHook()
     ROS_WARN_STREAM("No connection to \"positions_out\" for WAM stub!");
   }
 
+  // Check gravity
   if(gravity_enabled_ && (fabs(gravity_[0] + gravity_[1] + gravity_[2]) < 1E-6)) {
     ROS_WARN("Gravity is enabled, but set to zero!");
   }
-
-  // This is a stub, so we can always set the position
-  this->calibrate_position(initial_positions_);
 
   ROS_INFO_STREAM("WAM stub started!");
   return true;
@@ -128,12 +140,10 @@ void WAMStub::updateHook()
       if(fabs(torques_(i)) > torque_limits_[i]) {
         // Truncate this joint torque
         torques_(i) = (torques_(i)>0.0)?(torque_limits_[i]):(-torque_limits_[i]);
-        // TODO: Raise warning flag
+        ROS_WARN("Commanded torques exceeded safety limits! They have been truncated.");
       }
     }
   }
-
-  // Initialize dynamic force vectors
 
   // Compute coriolis torques
   KDL::JntArray coriolis_torques_(n_dof_);
@@ -158,16 +168,16 @@ void WAMStub::updateHook()
   last_loop_time_ = RTT::os::TimeService::Instance()->getTicks();
   
   // Update joint positions
-  double dT = 0.001;// loop_period_;
-  Eigen::VectorXd &q = positions_.q.data;
-  Eigen::VectorXd &qdot = positions_.qdot.data;
-  Eigen::VectorXd &tau = torques_.data;
-  Eigen::MatrixXd &M = joint_inertia_.data;
+  double dT = sim_timestep_;// loop_period_;
+  Eigen::VectorXd const &q = positions_.q.data;
+  Eigen::VectorXd const &qdot = positions_.qdot.data;
+  Eigen::VectorXd const &tau = torques_.data;
+  Eigen::MatrixXd const &M = joint_inertia_.data;
   Eigen::VectorXd const &c = Eigen::Map<Eigen::VectorXd>(&damping_[0],n_dof_);
-  Eigen::VectorXd &g = gravity_torques_.data;
-  Eigen::VectorXd &r = coriolis_torques_.data;
+  Eigen::VectorXd const &g = gravity_torques_.data;
+  Eigen::VectorXd const &r = coriolis_torques_.data;
 
-  // Check sizes of matrices
+  // Check matrices
   ROS_DEBUG_STREAM("q: "<<q.transpose());
   ROS_DEBUG_STREAM("qdot:"<<qdot.transpose());
   ROS_DEBUG_STREAM("c: "<<c.transpose());
