@@ -48,10 +48,6 @@ tf.start()
 loadComponent("wam","bard_simulation::WAMStub")
 setActivity("wam",0.01,HighestPriority,ORO_SCHED_RT)
 
-// Load properties from rosparam
-loadService("wam","rosparam")
-wam.rosparam.refreshProperties()
-
 // Connect WAM state to ROS topic
 stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
 // Set up the simulation clock server topic
@@ -60,51 +56,24 @@ stream("wam.clock", ros.topic("clock"))
 //*****************************************************************************
 // Create multiplexer 
 loadComponent("wam_mux","bard_controllers::ControllerMux")
-
 setActivity("wam_mux",0,HighestPriority,ORO_SCHED_RT)
 stream("wam_mux.joint_state_out", ros.topic("wam_rtt/wam_mux/joint_states")) 
-
-
-// Configure parameters
-loadService("wam_mux","rosparam")
-wam_mux.rosparam.refreshProperties()
-wam_mux.configure()
 
 //*****************************************************************************
 // Create trivial controller 
 loadComponent("wam_trivial","bard_controllers::controllers::Trivial")
 setActivity("wam_trivial",0,HighestPriority,ORO_SCHED_RT)
 
-// Configure parameters
-loadService("wam_trivial","rosparam")
-wam_trivial.rosparam.refreshProperties()
-wam_trivial.configure()
-
-
 //*****************************************************************************
 // Create joint PID controller 
-
 loadComponent("wam_joint_pid","bard_controllers::controllers::JointPID")
 setActivity("wam_joint_pid",0,HighestPriority,ORO_SCHED_RT)
-
-// Configure parameters
-loadService("wam_joint_pid","rosparam")
-wam_joint_pid.rosparam.refreshProperties()
-wam_joint_pid.configure()
-
-// Connect WAM state to ROS topic
 stream("wam_joint_pid.joint_state_out", ros.topic("wam_rtt/wam_joint_pid/joint_states")) 
-
 
 //*****************************************************************************
 // Create gravity controller 
 loadComponent("wam_grav","bard_controllers::controllers::GravityCompensation")
 setActivity("wam_grav",0,HighestPriority,ORO_SCHED_RT)
-
-// Configure parameters
-loadService("wam_grav","rosparam")
-wam_grav.rosparam.refreshProperties()
-wam_grav.configure()
 
 //*****************************************************************************
 // Create cartesian wrench controller 
@@ -112,37 +81,30 @@ loadComponent("wam_wrench","bard_controllers::controllers::CartesianWrench")
 setActivity("wam_wrench",0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_wrench")
 
-
-// Configure parameters
-loadService("wam_wrench","rosparam")
-wam_wrench.rosparam.refreshProperties()
-wam_wrench.configure()
-
-
 //*****************************************************************************
 // Create cartesian pose  controller
 loadComponent("wam_pose","bard_controllers::controllers::CartesianPose")
 setActivity("wam_pose",1.0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_pose")
-
-// Configure parameters
-loadService("wam_pose","rosparam")
-wam_pose.rosparam.refreshProperties()
-wam_pose.configure()
-
-//connect("wam_pose.positions_out","wam_joint_pid.positions_des_in",ConnPolicy())
+stream("wam_pose.trajectories_out",ros.topic("wam_rtt/wam_pose/trajectories_out")) 
 
 //*****************************************************************************
 // Create joint trajectory controller
 loadComponent("wam_joint_traj","bard_controllers::controllers::JointTrajectory")
 setActivity("wam_joint_traj",0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_joint_traj")
+stream("wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/trajectories")) 
 
-// Configure parameters
-loadService("wam_joint_traj","rosparam")
-wam_joint_traj.rosparam.refreshProperties()
+//*****************************************************************************
+// Configure components
+wam_mux.configure()
+
+wam_trivial.configure()
+wam_joint_pid.configure()
+wam_grav.configure()
+wam_wrench.configure()
+wam_pose.configure()
 wam_joint_traj.configure()
-
 
 //*****************************************************************************
 // Load controllers into mux
@@ -155,18 +117,13 @@ wam_mux.load("joint_traj")
 
 // Connect controllers 
 connect("wam_grav.torques_out","wam_mux.gravity",ConnPolicy())
-
 connect("wam_pose.torques_out","wam_mux.pose",ConnPolicy())
-stream( "wam_pose.trajectories_out",ros.topic("wam_rtt/wam_pose/trajectories_out")) 
-
 connect("wam_wrench.torques_out","wam_mux.wrench",ConnPolicy())
 connect("wam_trivial.torques_out","wam_mux.trivial",ConnPolicy())
 connect("wam_joint_pid.torques_out","wam_mux.joint_pid",ConnPolicy())
-
 connect("wam_joint_traj.positions_out","wam_joint_pid.positions_des_in",ConnPolicy())
 connect("wam_joint_traj.trajectories_in","wam_pose.trajectories_out",ConnPolicy())
-stream( "wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/trajectories")) 
-
+//connect("wam_pose.positions_out","wam_joint_pid.positions_des_in",ConnPolicy())
 
 //*****************************************************************************
 // Start the simulator

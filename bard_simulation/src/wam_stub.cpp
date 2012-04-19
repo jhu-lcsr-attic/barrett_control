@@ -40,11 +40,15 @@
 #include <kdl/chaindynparam.hpp>
 #include <rtt/RTT.hpp>
 #include <rtt/Port.hpp>
+#include <rtt/TaskContext.hpp>
 
 #include <sensor_msgs/JointState.h>
 
 #include <bard_common/util.h>
 #include <bard_simulation/wam_stub.h>
+
+#include <rtt/scripting/Scripting.hpp>
+
 
 using namespace bard_common;
 using namespace bard_simulation;
@@ -76,19 +80,13 @@ WAMStub::WAMStub(string const& name) :
   // Initialize RTT ports
   this->ports()->addPort("clock",clock_out_port_)
     .doc("Simulation time (begins at zero).");
-
-  ROS_INFO_STREAM("WAM stub component \""<<name<<"\" constructed !");
+  
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 }
 
 bool WAMStub::configureHook()
 {
-  
-  // Load properties from rosparam
-  // ops:
-  // loadService("wam","rosparam")
-  // wam.rosparam.refreshProperties()
-
-
   // Initialize the arm kinematics from the robot description
   if(!this->init_kinematics()) {
     return false;

@@ -65,6 +65,9 @@ WAM::WAM(string const& name) :
 {
   // Initialize all the RTT properties/ports/services
   init_rtt_interface();
+  
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 
   ROS_INFO_STREAM("WAM component \""<<name<<"\" constructed !");
 }

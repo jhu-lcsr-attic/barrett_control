@@ -88,6 +88,9 @@ CartesianPose::CartesianPose(string const& name) :
 
   this->addOperation("testIK", &CartesianPose::test_ik, this, RTT::OwnThread)
     .doc("Test the IK computation.");
+  
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 }
 
 bool CartesianPose::configureHook()

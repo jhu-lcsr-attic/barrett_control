@@ -47,6 +47,8 @@
 
 namespace bard_common {
   namespace util {
+
+    bool load_rosparam_and_refresh(RTT::TaskContext *tc);
     
     // Function to create some KDL structures and get the #DOF from an URDF
     bool initialize_kinematics_from_urdf(
