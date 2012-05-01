@@ -110,6 +110,9 @@ ControllerMux::ControllerMux(std::string const& name) :
 
   this->addOperation("listControllers", &ControllerMux::list_controllers, this, RTT::ClientThread)
     .doc("List the currently enabled and disabled controllers.");
+
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 }
 
 bool ControllerMux::configureHook()

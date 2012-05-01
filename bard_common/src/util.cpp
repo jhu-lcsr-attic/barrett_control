@@ -40,6 +40,8 @@
 #include <kdl/segment.hpp>
 
 #include <rtt/RTT.hpp>
+#include <rtt/Service.hpp>
+#include <rtt/plugin/PluginLoader.hpp>
 
 #include <bard_common/util.h>
 
@@ -47,6 +49,18 @@ using namespace bard_common;
 
 util::TimeLord::time_state_t util::TimeLord::TimeState_ = util::TimeLord::UNKNOWN;
 
+bool util::load_rosparam_and_refresh(RTT::TaskContext *tc) {
+  // Load rosparam service
+  boost::shared_ptr<RTT::plugin::PluginLoader> plugin_loader_ = RTT::plugin::PluginLoader::Instance();
+  if(!plugin_loader_->loadService("rosparam", tc)) {
+    ROS_ERROR("Could not load RTT rosparam service!");
+    return false;
+  }
+  RTT::OperationCaller<bool(void)> refresh_properties = tc->provides("rosparam")->getOperation("refreshProperties");
+  
+  // Initialize properties from rosparam
+  return refresh_properties();
+}
 bool util::initialize_kinematics_from_urdf(
     const std::string &robot_description,
     const std::string &root_link,

@@ -106,6 +106,9 @@ TrajectoryDispatcher::TrajectoryDispatcher(string const& name) :
   this->ports()->addEventPort("positions_in", positions_in_port_, boost::bind(&TrajectoryDispatcher::feedback_cb, this)).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addEventPort("trajectories_in", trajectories_in_port_, boost::bind(&TrajectoryDispatcher::command_cb, this)).doc("Input port: nx1 vector of desired joint positions. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_).doc("Output port: nx1 vector of joint positions. (n joints)");
+  
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 }
 
 bool TrajectoryDispatcher::configureHook()

@@ -42,10 +42,6 @@ import("rtt_bard_msgs")
 loadComponent("wam","bard_simulation::WAMStub")
 setActivity("wam",0.01,HighestPriority,ORO_SCHED_RT)
 
-// Load properties from rosparam
-loadService("wam","rosparam")
-wam.rosparam.refreshProperties()
-
 // Connect WAM state to ROS topic
 stream("wam.joint_state_out", ros.topic("wam_rtt/wam/joint_states")) 
 stream("wam.clock", ros.topic("clock"))

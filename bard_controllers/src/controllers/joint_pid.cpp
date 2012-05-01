@@ -82,6 +82,9 @@ JointPID::JointPID(string const& name) :
   this->ports()->addPort("torques_out", torques_out_port_).doc("Output port: nx1 vector of joint torques. (n joints)");
   this->ports()->addPort("joint_state_out", joint_state_out_port_)
    .doc("Output port: sensor_msgs::JointState.");
+  
+  // Initialize properties from rosparam
+  bard_common::util::load_rosparam_and_refresh(this);
 }
 
 bool JointPID::configureHook()

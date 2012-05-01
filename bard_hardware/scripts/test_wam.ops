@@ -42,13 +42,8 @@ import("rtt_bard_msgs")
 loadComponent("wam_left","bard_hardware::WAM")
 setActivity("wam_left",0.001,HighestPriority,ORO_SCHED_RT)
 
-// Load properties from rosparam
-loadService("wam_left","rosparam")
-wam_left.rosparam.refreshProperties()
-
 // Connect WAM state to ROS topic
 stream("wam_left.joint_state_out", ros.topic("wam_rtt/wam_left/joint_states")) 
-
 
 //*****************************************************************************
 // Start Things
