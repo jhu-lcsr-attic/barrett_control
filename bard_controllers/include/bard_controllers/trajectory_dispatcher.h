@@ -60,8 +60,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BARD_CONTROLLERS_CONTROLLERS_JOINT_TRAJECTORY
-#define __BARD_CONTROLLERS_CONTROLLERS_JOINT_TRAJECTORY
+#ifndef __BARD_CONTROLLERS_TRAJECTORY_DISPATCHER
+#define __BARD_CONTROLLERS_TRAJECTORY_DISPATCHER
 
 #include <iostream>
 
@@ -80,6 +80,8 @@
 #include <trajectory_msgs/JointTrajectory.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 
+#include <bard_msgs/CartTrajectory.h>
+
 namespace bard_controllers {
   class TrajectoryDispatcher : public RTT::TaskContext
   {
@@ -89,9 +91,13 @@ namespace bard_controllers {
     std::string tip_link_;
 
     // RTT Ports
-    RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
     RTT::InputPort<trajectory_msgs::JointTrajectory> trajectories_in_port_;
+    RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
     RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
+
+    RTT::InputPort<bard_msgs::CartTrajectory> cart_trajectories_in_port_;
+    RTT::InputPort<KDL::FrameVel> pose_in_port_;
+    RTT::InputPort<KDL::FrameVel> pose_out_port_;
 
   public:
     TrajectoryDispatcher(std::string const& name);
@@ -120,7 +126,10 @@ namespace bard_controllers {
     };
     typedef std::list<Segment> SplineTrajectory;
 
-    std::string debug_iter(const SplineTrajectory::iterator &debug_it);
+    // Synchronous member function to get the next trajectory point 
+    void get_joint_point(
+        const KDL::JntArrayVel &positions_new,
+        KDL::JntArrayVel &positions_des);
 
   private:
     // The active trajectory (list of list of splines)
@@ -147,9 +156,12 @@ namespace bard_controllers {
     trajectory_msgs::JointTrajectory new_trajectory_;
     //trajectory_msgs::JointTrajectoryPoint last_point_;
     //std::list<trajectory_msgs::JointTrajectoryPoint> traj_points_;
+
+    // Debugging fnction for visually debugging an iterator
+    std::string debug_iter(const SplineTrajectory::iterator &debug_it);
   };
 }
 
 
-#endif // ifndef __BARD_CONTROLLERS_CONTROLLERS_JOINT_TRAJECTORY
+#endif // ifndef __BARD_CONTROLLERS_TRAJECTORY_DISPATCHER
 

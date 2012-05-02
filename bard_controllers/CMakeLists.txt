@@ -48,7 +48,7 @@ orocos_component(bard_controllers_components
   src/controllers/joint_pid.cpp
   src/controllers/wrench.cpp
   src/controllers/pose.cpp
-  src/controllers/joint_trajectory.cpp
+  src/trajectory_dispatcher.cpp
   ) # ...you may add multiple source files
 # You may add multiple orocos_component statements.
 

@@ -4,8 +4,9 @@
 #define __OROCOS_ROS_GENERATED_bard_msgs_TYPES_HPP
 
 // includes Types.hpp headers for all messages:
-#include "ControllerConfig.h"
 #include "MuxState.h"
+#include "CartTrajectoryPoint.h"
+#include "ControllerConfig.h"
 
 
 #endif

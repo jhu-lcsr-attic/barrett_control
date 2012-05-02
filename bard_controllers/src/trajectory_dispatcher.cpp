@@ -76,12 +76,12 @@
 #include <angles/angles.h>
 
 #include <bard_common/util.h>
-#include <bard_controllers/controllers/joint_trajectory.h>
+#include <bard_controllers/trajectory_dispatcher.h>
 
 #define _TICTOC (0) // used for testing changes
 
 using namespace bard_common;
-using namespace bard_controllers::controllers;
+using namespace bard_controllers;
 
 TrajectoryDispatcher::TrajectoryDispatcher(string const& name) :
   TaskContext(name)
@@ -100,12 +100,17 @@ TrajectoryDispatcher::TrajectoryDispatcher(string const& name) :
   this->addProperty("robot_description",robot_description_).doc("The WAM URDF xml string.");
   this->addProperty("root_link",root_link_).doc("The root link for the controller.");
   this->addProperty("tip_link",tip_link_).doc("The tip link for the controller.");
-  this->addProperty("velocity_limits",velocity_limits_).doc("The velocity limits.");
+
+  this->addProperty("velocity_limits",velocity_limits_).doc("The velocity limits in each trajectory dimension.");
 
   // Configure data ports
   this->ports()->addEventPort("positions_in", positions_in_port_, boost::bind(&TrajectoryDispatcher::feedback_cb, this)).doc("Input port: nx1 vector of joint positions. (n joints)");
   this->ports()->addEventPort("trajectories_in", trajectories_in_port_, boost::bind(&TrajectoryDispatcher::command_cb, this)).doc("Input port: nx1 vector of desired joint positions. (n joints)");
   this->ports()->addPort("positions_out", positions_out_port_).doc("Output port: nx1 vector of joint positions. (n joints)");
+
+  // Configure operations
+  this->addOperation("get_joint_point", &TrajectoryDispatcher::get_joint_point, this, RTT::ClientThread)
+    .doc("Operation to compute the newest trajectory point.");
   
   // Initialize properties from rosparam
   bard_common::util::load_rosparam_and_refresh(this);
@@ -160,22 +165,6 @@ bool TrajectoryDispatcher::startHook()
   trajectories_in_port_.clear();
 
   return true;
-}
-
-// Comparison function for binary search
-bool point_time_cmp(
-    trajectory_msgs::JointTrajectoryPoint i,
-    trajectory_msgs::JointTrajectoryPoint j)
-{
-  return (i.time_from_start < j.time_from_start);
-}
-
-// Comparison function for binary search
-bool segment_time_cmp(
-    TrajectoryDispatcher::Segment i,
-    TrajectoryDispatcher::Segment j)
-{
-  return (i.end_time < j.end_time);
 }
 
 // Generate an array of powers of a given value
@@ -275,7 +264,7 @@ static void getCubicSplineCoefficients(
 }
 
 // Sample a quintic spline with a certain duration at a given time
-void sampleSplineWithTimeBounds(
+static void sampleSplineWithTimeBounds(
     const std::vector<double>& coefficients,
     double duration,
     double time,
@@ -304,6 +293,7 @@ void sampleSplineWithTimeBounds(
   }
 }
 
+// Function to print out the name of special iterator values
 template <typename T>
 std::string iter_name(T &l, typename T::iterator &it) 
 {
@@ -316,6 +306,7 @@ std::string iter_name(T &l, typename T::iterator &it)
   }
 }
 
+// Function to output a visual representation of a spline trajectory and its iterator
 std::string TrajectoryDispatcher::debug_iter(const TrajectoryDispatcher::SplineTrajectory::iterator &debug_it) 
 {
   double now = util::ros_rt_now().toSec();
@@ -345,6 +336,7 @@ std::string TrajectoryDispatcher::debug_iter(const TrajectoryDispatcher::SplineT
   return oss.str();
 }
 
+// Callback executed when the dispatcher receives a new trajectory command
 void TrajectoryDispatcher::command_cb()
 {
   RTT::os::MutexLock lock(traj_cmd_mutex_);
@@ -711,15 +703,37 @@ void TrajectoryDispatcher::command_cb()
   traj_count_++;
 }
 
+// Callback executeed when dispatcher receives a new position/velocity feedback mesage
 void TrajectoryDispatcher::feedback_cb()
 {
-  RTT::os::MutexLock lock(traj_cmd_mutex_);
+  KDL::JntArrayVel 
+    positions(n_dof_),
+    positions_des(n_dof_);
 
   // Read in the current joint positions & velocities
-  positions_in_port_.readNewest( positions_ );
+  positions_in_port_.readNewest( positions );
+
+  // Sample a point
+  this->get_joint_point(positions, positions_des);
+  
+  // Dispatch the sampled point
+  positions_out_port_.write( positions_des );
+  
+  //ROS_DEBUG_STREAM("Done.");
+}
+
+void TrajectoryDispatcher::get_joint_point(
+   const KDL::JntArrayVel &positions_new,
+   KDL::JntArrayVel &positions_des)
+{
+  // Lock the trajectory command mutex
+  RTT::os::MutexLock lock(traj_cmd_mutex_);
 
   // Update time metrics
   ros::Time now = util::ros_rt_now();
+
+  // Update the current positions
+  positions_ = positions_new;
 
   if(spline_traj_.size()>0) {
     if(last_time_.toSec() < spline_traj_.back().end_time
@@ -730,7 +744,6 @@ void TrajectoryDispatcher::feedback_cb()
   }
 
   last_time_ = now;
-
 
   // Iterator to point to the next segment
   SplineTrajectory::iterator next_segment_it = active_segment_it_;
@@ -745,7 +758,6 @@ void TrajectoryDispatcher::feedback_cb()
     } else {
       //ROS_DEBUG_STREAM("Active end time: "<<active_segment_it_->end_time<<" but it is currently "<<now);
     }
-
     ++next_segment_it;
   } 
 
@@ -772,13 +784,10 @@ void TrajectoryDispatcher::feedback_cb()
         positions_des_.qdot(i),
         pva_des_.qdotdot(i));
   }
-  
-  // Dispatch the sampled point
-  positions_out_port_.write( positions_des_ );
-  
-  //ROS_DEBUG_STREAM("Done.");
-}
 
+  // Return the desired positions by reference
+  positions_des = positions_des_;
+}
 
 void TrajectoryDispatcher::updateHook()
 {
