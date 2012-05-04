@@ -62,7 +62,7 @@ WAMStub::WAMStub(string const& name) :
   ,gravity_(3,0.0)
   ,damping_(7,0.0)
 {
-  // Initialize all the RTT properties/ports/services
+  // Initialize all the RTT properties/ports/services for the WAM interface
   this->init_rtt_interface();
 
   // Initialize simulator-specific interface
