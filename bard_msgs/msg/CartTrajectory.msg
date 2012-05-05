@@ -1,0 +1,2 @@
+Header header
+bard_msgs/CartTrajectoryPoint points
