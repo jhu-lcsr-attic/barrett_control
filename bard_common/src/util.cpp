@@ -133,7 +133,7 @@ void util::joint_state_from_kdl_chain(
 }
 
 ros::Time util::ros_rt_now() {
-#if OROCOS_TARGET == xenomai
+#ifdef __XENO__
   // Use Xenomai 2.6 feature to get the NTP-synched real-time clock
   timespec ts = {0,0};
   clock_gettime(CLOCK_HOST_REALTIME, &ts);

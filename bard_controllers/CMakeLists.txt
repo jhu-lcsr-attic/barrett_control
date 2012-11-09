@@ -10,6 +10,10 @@ cmake_minimum_required(VERSION 2.6.3)
 #
 project(bard_controllers)
 
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
 #
 # Do setup in case of ros package, If ROS_ROOT is set, it is
 # recommended to use RTT/OCL through the ros packages.

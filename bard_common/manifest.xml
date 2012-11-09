@@ -10,7 +10,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/bard_util</url>
 
-  <depend package="eigen" />
   <depend package="kdl" />
   <depend package="kdl_parser" />
   <depend package="rtt" />

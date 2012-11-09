@@ -53,7 +53,7 @@
 using namespace bard_common;
 using namespace bard_simulation;
 
-WAMStub::WAMStub(string const& name) :
+WAMStub::WAMStub(std::string const& name) :
   WAMInterface(name)
   //RTT Properties
   ,sim_timestep_(0.001)

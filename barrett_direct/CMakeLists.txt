@@ -27,6 +27,11 @@ rosbuild_init()
 # Find the leoCAN ROS package
 rosbuild_find_ros_package(rosbuild_xenomai)
 include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
+
+find_package(Eigen REQUIRED)
+include_directories(${EIGEN_INCLUDE_DIRS})
+add_definitions(${EIGEN_DEFINITIONS})
+
  
 # Set the executable and library output paths
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
