@@ -5,7 +5,6 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/wam_direct</url>
 
-  <depend stack="eigen" />
   <depend stack="ros" />
 
 </stack>
