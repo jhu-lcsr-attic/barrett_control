@@ -1,4 +1,0 @@
-#ifndef __BARD_COMMON_TIME_LORD_H
-#define __BARD_COMMON_TIME_LORD_H
-
-#endif // ifndef __BARD_COMMON_TIME_LORD_H
