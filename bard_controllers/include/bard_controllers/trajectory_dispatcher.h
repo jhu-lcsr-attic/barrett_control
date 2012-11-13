@@ -80,7 +80,7 @@
 #include <trajectory_msgs/JointTrajectory.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 
-#include <bard_msgs/CartTrajectory.h>
+#include <cartesian_trajectory_msgs/CartTrajectory.h>
 
 namespace bard_controllers {
   class TrajectoryDispatcher : public RTT::TaskContext
@@ -95,7 +95,7 @@ namespace bard_controllers {
     RTT::InputPort<KDL::JntArrayVel> positions_in_port_;
     RTT::OutputPort<KDL::JntArrayVel> positions_out_port_;
 
-    RTT::InputPort<bard_msgs::CartTrajectory> cart_trajectories_in_port_;
+    RTT::InputPort<cartesian_trajectory_msgs::CartTrajectory> cart_trajectories_in_port_;
     RTT::InputPort<KDL::FrameVel> pose_in_port_;
     RTT::InputPort<KDL::FrameVel> pose_out_port_;
 
