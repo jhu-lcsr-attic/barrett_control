@@ -28,14 +28,13 @@
  */
 
 import("bard_simulation")
-import("bard_controllers")
+import("controllerman_controllers")
 
 import("kdl_typekit")
 
 import("rtt_sensor_msgs")
 import("rtt_trajectory_msgs")
 import("rtt_geometry_msgs")
-import("rtt_bard_msgs")
 
 // Set up TF
 import("rtt_tf")
@@ -55,42 +54,42 @@ stream("wam.clock", ros.topic("clock"))
 
 //*****************************************************************************
 // Create multiplexer 
-loadComponent("wam_mux","bard_controllers::ControllerMux")
+loadComponent("wam_mux","controllerman_controllers::ControllerMux")
 setActivity("wam_mux",0,HighestPriority,ORO_SCHED_RT)
 stream("wam_mux.joint_state_out", ros.topic("wam_rtt/wam_mux/joint_states")) 
 
 //*****************************************************************************
 // Create trivial controller 
-loadComponent("wam_trivial","bard_controllers::controllers::Trivial")
+loadComponent("wam_trivial","controllerman_controllers::controllers::Trivial")
 setActivity("wam_trivial",0,HighestPriority,ORO_SCHED_RT)
 
 //*****************************************************************************
 // Create joint PID controller 
-loadComponent("wam_joint_pid","bard_controllers::controllers::JointPID")
+loadComponent("wam_joint_pid","controllerman_controllers::controllers::JointPID")
 setActivity("wam_joint_pid",0,HighestPriority,ORO_SCHED_RT)
 stream("wam_joint_pid.joint_state_out", ros.topic("wam_rtt/wam_joint_pid/joint_states")) 
 
 //*****************************************************************************
 // Create gravity controller 
-loadComponent("wam_grav","bard_controllers::controllers::GravityCompensation")
+loadComponent("wam_grav","controllerman_controllers::controllers::GravityCompensation")
 setActivity("wam_grav",0,HighestPriority,ORO_SCHED_RT)
 
 //*****************************************************************************
 // Create cartesian wrench controller 
-loadComponent("wam_wrench","bard_controllers::controllers::CartesianWrench")
+loadComponent("wam_wrench","controllerman_controllers::controllers::CartesianWrench")
 setActivity("wam_wrench",0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_wrench")
 
 //*****************************************************************************
 // Create cartesian pose  controller
-loadComponent("wam_pose","bard_controllers::controllers::CartesianPose")
+loadComponent("wam_pose","controllerman_controllers::controllers::CartesianPose")
 setActivity("wam_pose",1.0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_pose")
 stream("wam_pose.trajectories_out",ros.topic("wam_rtt/wam_pose/trajectories_out")) 
 
 //*****************************************************************************
 // Create joint trajectory controller
-loadComponent("wam_joint_traj","bard_controllers::controllers::JointTrajectory")
+loadComponent("wam_joint_traj","controllerman_controllers::controllers::JointTrajectory")
 setActivity("wam_joint_traj",0,HighestPriority,ORO_SCHED_RT)
 connectPeers("tf","wam_joint_traj")
 stream("wam_joint_traj.trajectories_in",ros.topic("wam_rtt/wam_joint_traj/trajectories")) 

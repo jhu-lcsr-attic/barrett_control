@@ -8,7 +8,7 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/bard_integration_tests</url>
-  <depend package="bard_controllers"/>
+  <depend package="controllerman_controllers"/>
   <depend package="bard_hardware"/>
   <depend package="bard_simulation"/>
 

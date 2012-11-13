@@ -7,5 +7,5 @@
   <include ns="wam_rtt/wam" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"/>
 
   <!-- Controllers -->
-  <include ns="wam_rtt" file="$(find bard_controllers)/launch/controllers.launch"/> 
+  <include ns="wam_rtt" file="$(find controllerman_controllers)/launch/controllers.launch"/> 
 </launch>
