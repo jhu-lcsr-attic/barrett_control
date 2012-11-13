@@ -35,7 +35,6 @@ import("kdl_typekit")
 import("rtt_sensor_msgs")
 import("rtt_trajectory_msgs")
 import("rtt_geometry_msgs")
-import("rtt_bard_msgs")
 
 //*****************************************************************************
 // Create WAM 
