@@ -16,7 +16,23 @@
 
   <xacro:macro name="wam_root" params="prefix parentLink xyz rpy">
     <!-- Create the $(arg robot_name) WAM -->
-    <link name = "${prefix}/FixedLink" />
+    <link name = "${prefix}/FixedLink">
+      <visual>
+        <material name="WAMGrey" />
+        <!--  this orgin is not centered because the origin in our model is not at the same spot as the origin barret uses for inertia-->
+        <origin xyz="0 0.346 0" rpy="${PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamBase.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 .189 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamBase.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
     <joint name="${prefix}/FixedJoint" type="fixed">
       <parent link="${parentLink}"/>
       <child link="${prefix}/FixedLink"/>
