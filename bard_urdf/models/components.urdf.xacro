@@ -55,7 +55,9 @@
           izz=".09046330" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <!--  this orgin is not centered because the origin in our model is not at the same spot as the origin barret uses for inertia-->
         <origin xyz="0 .189 0" rpy="${PI} 0 0" />
         <geometry>
@@ -86,10 +88,12 @@
     </joint>
     <link name="${prefix}/UpperArmInShoulderLink" >
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="${PI} 0 0" />
         <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperArmInShoulderLink.DAE"/>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperArmInShoulderLink.dae"/>
         </geometry>
       </visual>
       <inertial>
@@ -109,7 +113,7 @@
     <xacro:gazeboReferenceDAE name="${prefix}/UpperArmInShoulderLink"/>
     <xacro:control topicName="${prefix}/ShoulderPitch" name="DarmSim_${prefix}Arm_WAM_ShoulderPitch" linkName="${prefix}/UpperArmInShoulderLink" jointName="${prefix}/ShoulderPitchJoint" />
   </xacro:macro>
-
+  
   <xacro:macro name="UpperArm" params="prefix">
     <joint name="${prefix}/ShoulderYawJoint" type="revolute">
       <parent link="${prefix}/UpperArmInShoulderLink"/>
@@ -129,10 +133,12 @@
           izz=".05927043" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperArmLink3.DAE"/>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperArmLink3.dae"/>
         </geometry>
       </visual>
       <collision>
@@ -167,7 +173,9 @@
           izz="0.00294463" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="-${PI} 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamForeArmLink4.DAE"/>
@@ -203,7 +211,9 @@
           izz="0.00006270" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0.02711 0" rpy="${PI} 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamUpperWristYawLink.DAE"/>
@@ -219,7 +229,6 @@
     <xacro:gazeboReferenceDAE name="${prefix}/UpperWristYawLink" />
     <xacro:control topicName="${prefix}/UpperWristYaw" name="DarmSim_${prefix}Arm_WAM_UpperWristYaw" linkName="${prefix}/UpperWristYawLink" jointName="${prefix}/UpperWristYawJoint" />
   </xacro:macro>
-
 
   <!-- Forearm macros -->
   <xacro:macro name="ForeArm" params="prefix">
@@ -242,7 +251,9 @@
           izz="0.00294463" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="-${PI} 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamForeArmLink4.DAE"/>
@@ -259,6 +270,7 @@
     <xacro:control topicName="${prefix}/ElbowPitch" name="DarmSim_${prefix}Arm_WAM_ElbowPitch" linkName="${prefix}/ForeArmLink" jointName="${prefix}/ElbowJoint" />
   </xacro:macro>
 
+  <!-- DEBUG HERE -->
   <xacro:macro name="UpperWristYaw" params="prefix">
     <joint name="${prefix}/UpperWristYawJoint" type="revolute">
       <parent link="${prefix}/ForeArmLink"/>
@@ -278,7 +290,9 @@
           izz="0.00006270" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0.02711 0" rpy="${PI} 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamUpperWristYawLink.DAE"/>
@@ -314,10 +328,12 @@
           izz="0.00045358" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="${0.5 * PI} 0 ${0.5 * PI}" />
         <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperWristPitchLink6.DAE"/>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamUpperWristPitchLink6.dae"/>
         </geometry>
       </visual>
       <collision>
@@ -352,7 +368,9 @@
           izz="0.00010851" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamLowerWristLink7.dae" scale="0.01 0.01 0.01"/>
@@ -389,7 +407,9 @@
           izz="0.00010851" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/forceTorqueSensor.DAE"/>
@@ -419,7 +439,9 @@
     </joint>
     <link name="${prefix}/BHand/Finger${number}/KnuckleOneLink">
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="${0.5 * PI} 0 -${0.5 * PI}" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/firstFingerLink.DAE"/>
@@ -459,7 +481,9 @@
     </joint>
     <link name="${prefix}/BHand/Finger${number}/KnuckleTwoLink">
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="${PI} ${0.5 * PI} 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/secondFingerLink.DAE"/>
@@ -500,7 +524,9 @@
     </joint>
     <link name="${prefix}/BHand/Finger${number}/KnuckleThreeLink">
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 ${0.5 * PI} 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/thirdFingerLink.DAE"/>

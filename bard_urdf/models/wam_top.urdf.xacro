@@ -17,8 +17,18 @@
   <xacro:macro name="wam_root" params="prefix parentLink xyz rpy">
     <!-- Create the $(arg robot_name) WAM -->
     <link name = "${prefix}/FixedLink">
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value="100" />
+        <inertia
+          ixx="1" ixy="0"   ixz="0"
+                  iyy="1"   iyz="0"
+                            izz="1" />
+      </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <!--  this orgin is not centered because the origin in our model is not at the same spot as the origin barret uses for inertia-->
         <origin xyz="0 0.346 0" rpy="${PI/2} 0 0"/>
         <geometry>
@@ -26,7 +36,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 .189 0" rpy="0 0 0" />
+        <origin xyz="0 0.346 0" rpy="${PI/2} 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/wamBase.stl"/>
         </geometry>
@@ -40,11 +50,11 @@
     </joint>
 
     <!-- Simulation stuff -->
-    <gazebo>
+    <!--gazebo>
       <controller:gazebo_ros_controller_manager name="gazebo_ros_controller_manager" plugin="libgazebo_ros_controller_manager.so">
         <alwaysOn>true</alwaysOn>
         <updateRate>1000.0</updateRate>
       </controller:gazebo_ros_controller_manager>
-    </gazebo>
+    </gazebo-->
   </xacro:macro>
 </robot>

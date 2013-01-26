@@ -46,7 +46,7 @@
         ${material}
       </material>
       <turnGravityOff>
-        true
+        false
       </turnGravityOff>
       <selfCollide>
         true
@@ -57,7 +57,7 @@
   <xacro:macro name="gazeboReferenceDAE" params="name">
     <gazebo reference="${name}">
       <turnGravityOff>
-        true
+        false
       </turnGravityOff>
       <selfCollide>
         true
@@ -67,6 +67,7 @@
 
   <!-- Controller macros -->
   <xacro:macro name="control" params="name topicName linkName jointName">
+    <!--
     <transmission type="pr2_mechanism_model/SimpleTransmission" name="${name}_trans">
       <actuator name="${name}_motor" />
       <joint name="${jointName}" />
@@ -74,5 +75,6 @@
       <motorTorqueConstant>1</motorTorqueConstant>
       <pulsesPerRevolution>90000</pulsesPerRevolution>
     </transmission>
+    -->
   </xacro:macro>
 </robot>

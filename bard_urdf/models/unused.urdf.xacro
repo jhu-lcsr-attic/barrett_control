@@ -9,7 +9,9 @@
           izz="0.01292" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/lowerPanUnit.DAE"/>
@@ -44,7 +46,9 @@
           izz="0.00151618" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsLink.DAE"/>
@@ -72,7 +76,9 @@
   <xacro:macro name="lowerTiltBeamsFront">
     <link name="DarmSim/lowerTiltBeamsFrontLink">
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsFrontLink.DAE"/>

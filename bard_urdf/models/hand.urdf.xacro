@@ -78,7 +78,9 @@
           izz="0.00068788" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/palm.DAE"/>
@@ -141,7 +143,9 @@
           izz="0.00068788" />
       </inertial>
       <visual>
-        <material name="WAMGrey" />
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="${homeDirectory}/models/componentSTL/palm.DAE"/>

@@ -8,7 +8,7 @@
     </contributor>
     <created>2011-02-01T18:24:28</created>
     <modified>2011-02-01T18:24:28</modified>
-    <unit name="inch" meter="0.0254"/>
+    <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
   <library_effects>
