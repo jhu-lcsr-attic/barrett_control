@@ -5,10 +5,20 @@
   <include filename="$(find bard_urdf)/models/wam_top.urdf.xacro"/>
 
   <!-- Root link is in the world frame-->
+
+  <link name="world"/>
+  <!-- Fix this robot to the world -->
+  <joint name="world_joint"  type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world"/>
+    <child link="baseLink"/>
+  </joint>
+
+
   <link name = "baseLink">
     <inertial>
       <origin xyz="-1 0 0" />
-      <mass value="1000" />
+      <mass value="100" />
       <inertia
         ixx="1" ixy="0"   ixz="0"
                 iyy="1"   iyz="0"

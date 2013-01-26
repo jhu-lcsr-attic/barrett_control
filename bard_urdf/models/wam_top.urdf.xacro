@@ -27,7 +27,7 @@
       </inertial>
       <visual>
         <material name="WAMGrey">
-          <color rgba="0.9 0.9 0.9 1.0"/>
+          <color rgba="0.9 0.9 0.9 0.0"/>
         </material>
         <!--  this orgin is not centered because the origin in our model is not at the same spot as the origin barret uses for inertia-->
         <origin xyz="0 0.346 0" rpy="${PI/2} 0 0"/>
