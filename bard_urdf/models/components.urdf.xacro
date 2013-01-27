@@ -351,15 +351,15 @@
     <joint name="${prefix}/LowerWristYawJoint" type="revolute">
       <parent link="${prefix}/UpperWristPitchLink"/>
       <child link="${prefix}/LowerWristYawLink"/>
-      <origin xyz="0 0 0.065" rpy="0 0 0"/>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit effort="5" lower="-2.95" upper="2.95" velocity="0.20"/><!-- 2.95 is a limit taken in from 3 due to saftey and differences between arms. -->
       <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
-      <dynamics damping="1.0" friction="100.0"/>
+      <!--dynamics damping="1.0" friction="100.0"/-->
     </joint>
     <link name="${prefix}/LowerWristYawLink" >
       <inertial>
-        <origin xyz="-0.00000134 -0.00228167 -0.00000141" rpy="0 0 0" />
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
         <mass value="0.08286134" />
         <inertia  ixx="0.00010859" ixy="0.00000000"  ixz="-0.00000000"
           iyy="0.00020683"  iyz="-0.0000000"
@@ -384,46 +384,6 @@
     <xacro:gazeboReferenceDAE name="${prefix}/LowerWristYawLink"/>
     <xacro:control topicName="${prefix}/LowerWristYaw" name="DarmSim_${prefix}Arm_WAM_LowerWristYaw" linkName="${prefix}/LowerWristYawLink" jointName="${prefix}/LowerWristYawJoint" />
   </xacro:macro>
-
-  <!-- Palm without force-torque sensor -->
-  <xacro:macro name="LowerWrist" params="prefix">
-    <joint name="${prefix}/LowerWristYawJoint" type="revolute">
-      <parent link="${prefix}/UpperWristPitchLink"/>
-      <child link="${prefix}/LowerWristYawLink"/>
-      <origin xyz="0 0 0.065" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit effort="5" lower="-2.95" upper="2.95" velocity="0.20"/><!-- 2.95 is a limit taken in from 3 due to saftey and differences between arms. -->
-      <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
-      <dynamics damping="1.0" friction="100.0"/>
-    </joint>
-    <link name="${prefix}/LowerWristYawLink" >
-      <inertial>
-        <origin xyz="-0.00000134 -0.00228167 -0.00000141" rpy="0 0 0" />
-        <mass value="0.08286134" />
-        <inertia  ixx="0.00010859" ixy="0.00000000"  ixz="-0.00000000"
-          iyy="0.00020683"  iyz="-0.0000000"
-          izz="0.00010851" />
-      </inertial>
-      <visual>
-        <material name="WAMGrey">
-          <color rgba="0.9 0.9 0.9 1.0"/>
-        </material>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/wamLowerWristLink7.dae"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="${homeDirectory}/models/componentSTL/wamLowerWristLink7.stl"/>
-        </geometry>
-      </collision>
-    </link>
-    <xacro:gazeboReferenceDAE name="${prefix}/LowerWristYawLink"/>
-    <xacro:control topicName="${prefix}/LowerWristYaw" name="DarmSim_${prefix}Arm_WAM_LowerWristYaw" linkName="${prefix}/LowerWristYawLink" jointName="${prefix}/LowerWristYawJoint" />
-  </xacro:macro>
-
 
   <!-- Palm with ForceTorque macros -->
   <xacro:macro name="LowerWristFT" params="prefix">
