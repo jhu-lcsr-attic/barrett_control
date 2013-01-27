@@ -63,7 +63,7 @@
     <xacro:ForeArm prefix="${prefix}"/>
     <xacro:UpperWristYaw prefix="${prefix}"/>
     <xacro:UpperWristPitch prefix="${prefix}"/>
-    <xacro:LowerWrist prefix="${prefix}"/>
+    <!--xacro:LowerWrist prefix="${prefix}"/-->
   </xacro:macro>
 
   <!-- Define a macro to construct the arm with a Barrett BHand on the end of it -->
