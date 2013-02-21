@@ -1,0 +1,14 @@
+<package>
+  <description brief="bard_kinematics">
+
+     bard_kinematics
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/bard_kinematics</url>
+
+</package>
+
+

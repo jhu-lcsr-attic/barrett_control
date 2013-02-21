@@ -1,0 +1,14 @@
+<launch>
+  <!-- Use simulation time -->
+  <param name="use_sim_time" value="true"/>
+
+  <!-- Orocos Node -->
+  <node pkg="ocl" name="wam_rtt" type="deployer-$(env OROCOS_TARGET)" args="-s $(find bard_integration_tests)/scripts/test_wam_controllers.ops --" output="screen"/>
+
+  <!-- WAM Stub -->
+  <include ns="wam_rtt" file="$(find bard_simulation)/launch/wam_stub.launch"/>
+  <include ns="wam_rtt/wam" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"/>
+
+  <!-- Controllers -->
+  <include ns="wam_rtt" file="$(find controllerman_controllers)/launch/controllers.launch"/> 
+</launch>

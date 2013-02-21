@@ -1,0 +1,234 @@
+
+  <xacro:macro name="lowerPanUnit" params="xyz rpy parent">
+    <link name="DarmSim/lowerPanUnitLink" >
+      <inertial>
+        <origin xyz="0.00001 0.07282 -0.03237" />
+        <mass value="5.21134" />
+        <inertia  ixx="0.01476" ixy="0.00000" ixz="0.00000"
+          iyy="0.01308" iyz="0.00026"
+          izz="0.01292" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerPanUnit.DAE"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerPanUnit.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/lowerPanUnitLink"/>
+    <xacro:control name="DarmSim_lowerPan" topicName="DarmSim/lowerPan" linkName="DarmSim/lowerPanUnitLink" jointName="DarmSim/LowerPanTilt/Pan" />
+    <joint name="DarmSim/LowerPanTilt/Pan" type="revolute">
+      <parent link="${parent}"/>
+      <child link="DarmSim/lowerPanUnitLink"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <axis xyz="0 -1 0"/>
+      <limit effort="30" lower="-2.98215314" upper="2.98215314" velocity="3.27"/>
+      <dynamics damping="0.301"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="lowerTiltBeams">
+    <link name="DarmSim/lowerTiltBeamsLink" >
+      <inertial>
+        <origin xyz="0 0.05569085 0" />
+        <mass value="0.23295" />
+        <inertia  ixx="0.00074525" ixy="0.00000000" ixz="0.00000000"
+          iyy="0.00086895" iyz="0.00000000"
+          izz="0.00151618" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsLink.DAE"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsLink.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/lowerTiltBeamsLink"/>
+    <xacro:control name="DarmSim_lowerTilt" topicName="DarmSim/lowerTilt" linkName="DarmSim/lowerTiltBeamsLink" jointName="DarmSim/LowerPanTilt/Tilt" />
+    <joint name="DarmSim/LowerPanTilt/Tilt" type="revolute">
+      <parent link="DarmSim/lowerPanUnitLink"/>
+      <child link="DarmSim/lowerTiltBeamsLink"/>
+      <origin xyz="0 .127 0" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit effort="30" lower="-1.358996939" upper="1.358996939" velocity="3.27"/>
+      <dynamics damping="0.301"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="lowerTiltBeamsFront">
+    <link name="DarmSim/lowerTiltBeamsFrontLink">
+      <visual>
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 1.0"/>
+        </material>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsFrontLink.DAE"/>
+        </geometry>
+        <material name="base">
+          <color rgba="0 255 255 1.0"/>
+        </material>
+      </visual>
+      <inertial>
+        <origin xyz="-0.02081566 0.07765392 0" />
+        <mass value="0.18024349" />
+        <inertia  ixx="0.00040661" ixy="0.00004989"  ixz="0.0"
+          iyy="0.00008067"  iyz="0.0"
+          izz="0.00037761" />
+      </inertial>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsFrontLink.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/lowerTiltBeamsFrontLink"/>
+    <xacro:control name="DarmSim_lowerTiltFront" topicName="DarmSim/lowerTiltFront" linkName="DarmSim/lowerTiltBeamsFrontLink" jointName="DarmSim/lowerTiltFrontJoint" />
+    <joint name="DarmSim/lowerTiltFrontJoint" type="revolute">
+      <parent link="DarmSim/lowerPanUnitLink"/>
+      <child link="DarmSim/lowerTiltBeamsFrontLink"/>
+      <origin xyz="0 0.127 0.04953" rpy="0 ${0.5 * PI} 0"/>
+      <axis xyz="0 0 -1"/>
+      <limit effort="30" lower="-1.358996939" upper="1.358996939" velocity="3.27"/>
+      <dynamics damping="0.301"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="lowerTiltBeamsTop">
+    <link name="DarmSim/lowerTiltBeamsTopLink">
+      <visual>
+        <material name="WAMGrey" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsTopLink.DAE"/>
+        </geometry>
+        <material name="base">
+          <color rgba="0 255 255 1.0"/>
+        </material>
+      </visual>
+      <inertial>
+        <origin xyz="0.00764212 0.02983896 0.02908565" />
+        <mass value="0.86295437" />
+        <inertia  ixx="0.00080256" ixy="0.00005477"  ixz="-0.00006009"
+          iyy="0.00100235"  iyz="0.00000187"
+          izz="0.00074854" />
+      </inertial>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/lowerTiltBeamsTopLink.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/lowerTiltBeamsTopLink"/>
+    <xacro:control name="DarmSim_lowerTiltTop" topicName="DarmSim/lowerTiltTop" linkName="DarmSim/lowerTiltBeamsTopLink" jointName="DarmSim/lowerTiltTopJoint" />
+    <!-- The following gazebo block is passed directly to gazebo to close the 4-bar linkage in the head -->
+    <gazebo>
+      <joint:hinge name="DarmSim/lowerTiltFrontTopJoint">
+        <body1>DarmSim/lowerTiltBeamsFrontLink</body1>
+        <body2>DarmSim/lowerTiltBeamsTopLink</body2>
+        <anchor>DarmSim/lowerTiltBeamsTopLink</anchor>
+        <axis>-1 0 0</axis>
+        <damping>0.301</damping>
+        <anchorOffset>0 0 0.04953</anchorOffset>
+      </joint:hinge>
+    </gazebo>
+    <joint name="DarmSim/lowerTiltTopJoint" type="revolute">
+      <parent link="DarmSim/lowerTiltBeamsLink"/>
+      <child link="DarmSim/lowerTiltBeamsTopLink"/>
+      <origin xyz="0 0.1524 0" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit effort="30" lower="-1.358996939" upper="1.358996939" velocity="3.27"/>
+      <dynamics damping="0.301"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="upperTiltUnit">
+    <link name="DarmSim/upperTiltUnitLink" >
+      <inertial>
+        <origin xyz="-0.00174164 0.02676162 -0.01954200" />
+        <mass value="0.68038877" />
+        <inertia  ixx="0.00065547" ixy="0.00001112" ixz="-0.00000794"
+          iyy="0.00064556" iyz="0.00008438"
+          izz="0.00037446" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey" />
+        <origin xyz="0 0 0.0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/upperTiltUnitLink.DAE"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/upperTiltUnitLink.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/upperTiltUnitLink"/>
+    <xacro:control name="DarmSim_upperTilt" topicName="DarmSim/upperTilt" linkName="DarmSim/upperTiltUnitLink" jointName="DarmSim/UpperPanTilt/Pan" />
+    <joint name="DarmSim/UpperPanTilt/Pan" type="revolute">
+      <parent link="DarmSim/lowerTiltBeamsTopLink"/>
+      <child link="DarmSim/upperTiltUnitLink"/>
+      <origin xyz = "0 .059182 .04953" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="30" lower="-${0.5 * PI + 0.15}" upper="${0.5 * PI + 0.15}" velocity="3.27"/>
+      <dynamics damping="0.101"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="head">
+    <link name="DarmSim/headLink">
+      <inertial>
+        <origin xyz="-0.00010270 0.12983722 0.01665482" />
+        <mass value="1.99572228" />
+        <inertia  ixx="0.01220438" ixy="-0.00000904" ixz="0.00000750"
+          iyy="0.00646285" iyz="-0.00066863"
+          izz="0.00926422" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/Re2_Head.DAE"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/skinMeshCollision.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:gazeboReferenceDAE name="DarmSim/headLink"/>
+    <xacro:control name="DarmSim_headPitch" topicName="DarmSim/headPitch" linkName="DarmSim/headLink" jointName="DarmSim/UpperPanTilt/Tilt" />
+    <joint name="DarmSim/UpperPanTilt/Tilt" type="revolute">
+      <parent link="DarmSim/upperTiltUnitLink"/>
+      <child link="DarmSim/headLink"/>
+      <origin xyz="0 0.04371 0" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit effort="30" lower="-1.35899694" upper="0.573598776" velocity="3.27"/>
+      <dynamics damping="0.101"/>
+    </joint>
+  </xacro:macro>
+

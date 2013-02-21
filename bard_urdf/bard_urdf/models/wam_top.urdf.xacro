@@ -1,0 +1,60 @@
+<robot 
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller">
+
+  <!-- Some macros used by the WAM urdf -->
+  <include filename="$(find bard_urdf)/models/common.urdf.xacro"/>
+  <!-- Definition of a single WAM arm -->
+  <include filename="$(find bard_urdf)/models/arm.urdf.xacro"/>
+  <!-- Definition of all the different parts of a WAM arm -->
+  <include filename="$(find bard_urdf)/models/components.urdf.xacro"/>
+
+  <!-- Materials -->
+  <material name="WAMGrey">
+    <color rgba="0.9 0.9 0.9 1.0"/>
+  </material>
+
+  <xacro:macro name="wam_root" params="prefix parentLink xyz rpy">
+    <!-- Create the $(arg robot_name) WAM -->
+    <link name = "${prefix}/FixedLink">
+      <inertial>
+        <origin xyz="0 0 0" />
+        <mass value="100" />
+        <inertia
+          ixx="1" ixy="0"   ixz="0"
+                  iyy="1"   iyz="0"
+                            izz="1" />
+      </inertial>
+      <visual>
+        <material name="WAMGrey">
+          <color rgba="0.9 0.9 0.9 0.0"/>
+        </material>
+        <!--  this orgin is not centered because the origin in our model is not at the same spot as the origin barret uses for inertia-->
+        <origin xyz="0 0.346 0" rpy="${PI/2} 0 0"/>
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamBase.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0.346 0" rpy="${PI/2} 0 0" />
+        <geometry>
+          <mesh filename="${homeDirectory}/models/componentSTL/wamBase.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}/FixedJoint" type="fixed">
+      <parent link="${parentLink}"/>
+      <child link="${prefix}/FixedLink"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <!-- Simulation stuff -->
+    <!--gazebo>
+      <controller:gazebo_ros_controller_manager name="gazebo_ros_controller_manager" plugin="libgazebo_ros_controller_manager.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>1000.0</updateRate>
+      </controller:gazebo_ros_controller_manager>
+    </gazebo-->
+  </xacro:macro>
+</robot>

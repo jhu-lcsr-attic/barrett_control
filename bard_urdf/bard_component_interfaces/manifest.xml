@@ -1,0 +1,32 @@
+<package>
+  <description brief="Orocos bard_component_interfaces Component package">
+    This package contains Orocos/RTT component interfaces for various elements
+    of the bard stack.
+
+    Interfaces for hardware or simulation:
+      - Barrett WAM
+      - Barrett BHand
+
+    Interfaces for controllers:
+      - feedback controller
+      - feedforward controller
+  </description>
+  <license>BSD</license>
+  <author>Jonathan Bohren, jbo@jhu.edu</author>
+
+  <depend package="kdl" />
+  <depend package="kdl_parser" />
+  <depend package="rtt" />
+  <depend package="rtt_rosnode"/>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="geometry_msgs" />
+  <depend package="trajectory_msgs" />
+  <depend package="tf" />
+  <depend package="tf_conversions" />
+  <depend package="angles" />
+
+  <depend package="bard_common"/>
+
+</package>
+

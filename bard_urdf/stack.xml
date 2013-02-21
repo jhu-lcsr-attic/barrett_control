@@ -1,0 +1,10 @@
+<stack>
+  <description brief="bard">BARD is a package for direct CANBus control of a Barrett WAM arm, or BARret Direct.</description>
+  <author>Maintained by Jonathan Bohren / jbo@jhu.edu</author>
+  <license>CISST (http://www.cisst.org/cisst/license.txt)</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/wam_direct</url>
+
+  <depend stack="ros" />
+
+</stack>
