@@ -41,7 +41,7 @@ class SemiAbsoluteJointHandle : public hardware_interface::JointHandle
 {
 public:
   SemiAbsoluteJointHandle() {};
-  SemiAbsoluteJointHandle(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, bool* is_calibrated)
+  SemiAbsoluteJointHandle(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, int* is_calibrated)
     : hardware_interface::JointHandle(js), 
     resolver_angle_(resolver_angle),
     joint_offset_(joint_offset),
@@ -56,18 +56,18 @@ public:
     *joint_offset_ = joint_offset;
   }
 
-  void setCalibrated(const bool is_calibrated) {
-    *is_calibrated_ = is_calibrated_;
+  void setCalibrated(const int is_calibrated) {
+    *is_calibrated_ = is_calibrated;
   }
 
-  bool isCalibrated() const {
+  int isCalibrated() const {
     return *is_calibrated_;
   }
 
 private:
   double* resolver_angle_;
   double* joint_offset_;
-  bool* is_calibrated_;
+  int* is_calibrated_;
 };
 
 
@@ -100,7 +100,7 @@ public:
    * \param name The name of the new joint
    * \param cmd A pointer to the storage for this joint's output command
    */
-  void registerJoint(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, bool* is_calibrated)
+  void registerJoint(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, int* is_calibrated)
   {
     SemiAbsoluteJointHandle handle(js, resolver_angle, joint_offset, is_calibrated);
     HandleMap::iterator it = handle_map_.find(js.getName());

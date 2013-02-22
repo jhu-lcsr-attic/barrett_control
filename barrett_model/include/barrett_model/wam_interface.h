@@ -45,6 +45,8 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
 
+#include <barrett_model/semi_absolute_joint_interface.h>
+
 
 namespace barrett_model {
   class WAMInterface : public hardware_interface::RobotHW
@@ -113,7 +115,9 @@ namespace barrett_model {
 
     // Calibration
     barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
-    KDL::JntArray motor_angles_;
+    KDL::JntArray resolver_angles_;
+    KDL::JntArray joint_offsets_;
+    std::vector<int> calibrated_joints_;
 
     // Common initialization code
     virtual void load_params()
@@ -156,7 +160,9 @@ namespace barrett_model {
       torques_.resize(n_dof_);
       joint_state_.resize(n_dof_);
       joint_state_new_.resize(n_dof_);
-      motor_angles_.resize(n_dof_);
+      resolver_angles_.resize(n_dof_);
+      joint_offsets_.resize(n_dof_);
+      calibrated_joints_.assign(n_dof_,false);
 
       // Zero out joint arrays
       // TODO: why can't we call KDL::SetToZero(joint_state_)?
@@ -165,7 +171,9 @@ namespace barrett_model {
       KDL::SetToZero(joint_state_.qdot);
       KDL::SetToZero(joint_state_new_.q);
       KDL::SetToZero(joint_state_new_.qdot);
-      KDL::SetToZero(motor_angles_);
+      KDL::SetToZero(resolver_angles_);
+      KDL::SetToZero(joint_offsets_);
+
 
       return true;
     }
@@ -187,8 +195,10 @@ namespace barrett_model {
             &torques_(j));
 
         semi_absolute_interface_.registerJoint(
-            effort_command_interface_.getSemiAbsoluteJointHandle(joint_names_[j]),
-            &motor_angles_(j));
+            effort_command_interface_.getJointHandle(joint_names_[j]),
+            &resolver_angles_(j),
+            &joint_offsets_(j),
+            &calibrated_joints_[j]);
       }
 
       // Register interfaces

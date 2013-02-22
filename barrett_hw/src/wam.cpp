@@ -167,7 +167,7 @@ void WAM::read(const ros::Time time, const ros::Duration period)
 
   // If not calibrated, also compute the motor angles
   if( !calibrated_) {
-    if( robot_->GetPositionOffsets( motor_angles_.data ) != barrett_direct::WAM::ESUCCESS) {
+    if( robot_->GetPositionOffsets( resolver_angles_.data ) != barrett_direct::WAM::ESUCCESS) {
       ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }
   }
