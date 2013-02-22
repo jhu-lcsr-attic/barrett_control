@@ -11,5 +11,8 @@
     joint_state_controller:
       type: joint_state_controller/JointStateController
       publish_rate: 50
+    calibration_controller:
+      type: barrett_controllers/CalibrationController
+      publish_rate: 50
   </rosparam>
 </launch>

@@ -29,4 +29,4 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_add_library(barrett_controllers src/calibration_controller.cpp include/barrett_controllers/calibration_controller.h)
+rosbuild_add_library(barrett_controllers src/calibration_controller.cpp )

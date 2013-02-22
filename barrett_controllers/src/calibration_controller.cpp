@@ -32,6 +32,7 @@
 
 #include <barrett_controllers/calibration_controller.h>
 #include <barrett_control_msgs/SemiAbsoluteCalibrationState.h>
+#include <pluginlib/class_list_macros.h>
 
 
 
@@ -102,7 +103,8 @@ namespace barrett_controllers
 }
 
 
-PLUGINLIB_DECLARE_CLASS(barrett_controllers,
+PLUGINLIB_DECLARE_CLASS(
+    barrett_controllers,
     CalibrationController,
     barrett_controllers::CalibrationController,
     controller_interface::ControllerBase)
