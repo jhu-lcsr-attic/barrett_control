@@ -36,6 +36,8 @@ int main( int argc, char** argv ){
     now(ts.tv_sec, ts.tv_nsec);
   ros::Duration period(0.0);
 
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
 
   wam_hw.configure();
 
