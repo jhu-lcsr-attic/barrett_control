@@ -1,0 +1,19 @@
+<package>
+  <description brief="barrett_hw">
+
+     barrett_hw
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/barrett_hw</url>
+
+  <depend package="hardware_interface"/>
+  <depend package="barrett_direct"/>
+  <depend package="barrett_model"/>
+  <depend package="kdl_urdf_tools"/>
+  <depend package="terse_roscpp"/>
+</package>
+
+

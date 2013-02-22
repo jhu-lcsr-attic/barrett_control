@@ -12,6 +12,10 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/barrett_model</url>
 
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+
 </package>
 
 
