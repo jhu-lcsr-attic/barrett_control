@@ -112,26 +112,19 @@ namespace barrett_model {
     hardware_interface::EffortJointInterface effort_command_interface_;
 
     // Common initialization code
-    virtual bool load_params()
+    virtual void load_params()
     {
       using namespace terse_roscpp;
 
-      try {
-        require_param(nh_,"robot_description",robot_description_,
-                      "The WAM URDF xml string.");
-        require_param(nh_,"initial_posisions",initial_positions_,
-                      "The calibration position of the robot.");
-        require_param(nh_,"root_link",root_link_,
-                      "The root link for the controller.");
-        require_param(nh_,"tip_link",tip_link_,
-                      "The tip link for the controller.");
+      require_param(nh_,"robot_description",robot_description_,
+                    "The WAM URDF xml string.");
+      require_param(nh_,"initial_posisions",initial_positions_,
+                    "The calibration position of the robot.");
+      require_param(nh_,"root_link",root_link_,
+                    "The root link for the controller.");
+      require_param(nh_,"tip_link",tip_link_,
+                    "The tip link for the controller.");
 
-      } catch( ros::InvalidParameterException &ex) {
-        ROS_ERROR_STREAM(ex.what());
-        return false;
-      }
-
-      return true;
     }
 
     virtual bool init_kinematics()

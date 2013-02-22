@@ -1,11 +1,15 @@
 <launch>
-  <!--node pkg="ocl" name="wam_rtt" launch-prefix="screen" type="deployer-xenomai" args="-s $(find bard_components)/scripts/wam_test.ops "/-->
-  <node pkg="ocl" name="wam_rtt" type="deployer-xenomai" args="-s $(find bard_hardware)/scripts/test_wam.ops --" output="screen"/>
+  <!-- WAM Server -->
+  <node pkg="barrett_hw" type="wam_server" name="wam_server"/>
 
-  <!-- WAM Stub -->
-  <include ns="wam_rtt" file="$(find bard_hardware)/launch/wam_component.launch"/>
-  <include ns="wam_rtt/wam" file="$(find bard_component_interfaces)/launch/wam_7dof_params.launch"/>
+  <!-- WAM Parameters -->
+  <include ns="wam" file="$(find barrett_model)/launch/wam_7dof_params.launch"/>
+  <rosparam name="wam/can_dev_name" value="rtcan1"/>
 
   <!-- Controllers -->
-  <include ns="wam_rtt" file="$(find controllerman_controllers)/launch/controllers.launch"/> 
+  <rosparam ns="wam">
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 50
+  </rosparam>
 </launch>

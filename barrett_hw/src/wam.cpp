@@ -62,9 +62,17 @@ WAM::WAM(ros::NodeHandle nh) :
 
 bool WAM::configure()
 {
+  using namespace terse_roscpp;
+
   // Initialize properties from rosparam
-  if(!this->load_params())
+  try {
+    this->load_params();
+    require_param(nh_,"can_dev_name",can_dev_name_,
+                  "The CANBus device name (rtcan0, rtcan1, etc).");
+  } catch( ros::InvalidParameterException &ex) {
+    ROS_ERROR_STREAM(ex.what());
     return false;
+  }
 
   // Initialize the arm kinematics from the robot description
   if(!this->init_kinematics())
