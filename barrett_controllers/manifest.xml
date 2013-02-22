@@ -1,0 +1,14 @@
+<package>
+  <description brief="barrett_controllers">
+
+     barrett_controllers
+
+  </description>
+  <author>Jonathan Bohren</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/barrett_controllers</url>
+
+</package>
+
+
