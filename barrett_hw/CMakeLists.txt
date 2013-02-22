@@ -29,8 +29,18 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
+# Find the rosbuild_xenomai ROS package
+rosbuild_find_ros_package(rosbuild_xenomai)
+include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
+
 find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
 rosbuild_add_library(barrett_hw src/wam.cpp)
+
+# Add xenomai flags
+rosbuild_add_xenomai_flags()
+
+rosbuild_add_executable(wam_server src/wam_server.cpp)
+target_link_libraries(wam_server xenomai native rtdm)

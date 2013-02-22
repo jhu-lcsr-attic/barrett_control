@@ -54,6 +54,7 @@ namespace barrett_model {
     enum {
       IDLE,
       CONFIGURED,
+      CALIBRATED,
       STARTED
     };
 

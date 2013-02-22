@@ -24,7 +24,7 @@ rosbuild_init()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-# Find the leoCAN ROS package
+# Find the rosbuild_xenomai ROS package
 rosbuild_find_ros_package(rosbuild_xenomai)
 include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
 
