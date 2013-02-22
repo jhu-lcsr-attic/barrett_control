@@ -5,6 +5,15 @@
 #include <time.h>
 #include <barrett_hw/wam.h>
 #include <controller_manager/controller_manager.h>
+#include <signal.h>
+#include <realtime_tools/realtime_publisher.h>
+#include <std_msgs/Duration.h>
+
+bool g_quit = false;
+
+void quitRequested(int sig) {
+  g_quit = true;
+}
 
 int main( int argc, char** argv ){
 
@@ -14,7 +23,11 @@ int main( int argc, char** argv ){
   rt_task_shadow( &task, "GroupWAM", 99, 0 );
 
   // Initialize ROS
-  ros::init(argc, argv, "wam_server");
+  ros::init(argc, argv, "wam_server", ros::init_options::NoSigintHandler);
+
+  signal(SIGTERM, quitRequested);
+  signal(SIGINT, quitRequested);
+  signal(SIGHUP, quitRequested);
 
   // Construct the wam structure
   ros::NodeHandle wam_nh("wam");
@@ -36,8 +49,19 @@ int main( int argc, char** argv ){
     now(ts.tv_sec, ts.tv_nsec);
   ros::Duration period(0.0);
 
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
+  realtime_tools::RealtimePublisher<std_msgs::Duration> publisher(wam_nh, "loop_rate", 2);
+
+  wam_hw.configure();
+
+  wam_hw.start();
+
+  uint32_t count = 0;
+
   // Run as fast as possible
-  while( ros::ok() ) {
+  while( !g_quit ) {
     // Get the time / period
     if (!clock_gettime(CLOCK_REALTIME, &ts)) {
       now.sec = ts.tv_sec;
@@ -57,8 +81,28 @@ int main( int argc, char** argv ){
 
     // Write the command to the WAM
     wam_hw.write(now, period);
+
+    if(count++ > 1000) {
+      if(publisher.trylock()) {
+        count = 0;
+        publisher.msg_.data = period;
+        publisher.unlockAndPublish();
+      }
+    }
   }
 
+  publisher.stop();
+
+  std::cerr<<"Stpping spinner..."<<std::endl;
+  spinner.stop();
+
+  std::cerr<<"Stopping WAM..."<<std::endl;
+  wam_hw.stop();
+
+  std::cerr<<"Cleaning up WAM..."<<std::endl;
+  wam_hw.cleanup();
+
+  std::cerr<<"Goodbye!"<<std::endl;
   return 0;
 }
 

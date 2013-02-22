@@ -37,10 +37,11 @@ find_package(Eigen REQUIRED)
 include_directories(${EIGEN_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
-rosbuild_add_library(barrett_hw src/wam.cpp)
-
 # Add xenomai flags
 rosbuild_add_xenomai_flags()
 
+rosbuild_add_library(barrett_hw src/wam.cpp include/barrett_hw/wam.h)
+
+#add_definitions(-D__XENO__)
 rosbuild_add_executable(wam_server src/wam_server.cpp)
-target_link_libraries(wam_server xenomai native rtdm)
+target_link_libraries(wam_server xenomai native rtdm barrett_hw)
