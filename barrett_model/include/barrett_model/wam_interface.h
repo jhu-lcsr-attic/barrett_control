@@ -118,7 +118,7 @@ namespace barrett_model {
 
       require_param(nh_,"robot_description",robot_description_,
                     "The WAM URDF xml string.");
-      require_param(nh_,"initial_posisions",initial_positions_,
+      require_param(nh_,"initial_positions",initial_positions_,
                     "The calibration position of the robot.");
       require_param(nh_,"root_link",root_link_,
                     "The root link for the controller.");

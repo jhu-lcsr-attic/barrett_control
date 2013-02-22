@@ -4,7 +4,7 @@
 
   <!-- WAM Parameters -->
   <include ns="wam" file="$(find barrett_model)/launch/wam_7dof_params.launch"/>
-  <rosparam name="wam/can_dev_name" value="rtcan1"/>
+  <param name="wam/can_dev_name" value="rtcan1"/>
 
   <!-- Controllers -->
   <rosparam ns="wam">

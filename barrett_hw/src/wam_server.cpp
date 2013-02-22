@@ -36,6 +36,11 @@ int main( int argc, char** argv ){
     now(ts.tv_sec, ts.tv_nsec);
   ros::Duration period(0.0);
 
+
+  wam_hw.configure();
+
+  wam_hw.start();
+
   // Run as fast as possible
   while( ros::ok() ) {
     // Get the time / period
@@ -58,6 +63,10 @@ int main( int argc, char** argv ){
     // Write the command to the WAM
     wam_hw.write(now, period);
   }
+
+  wam_hw.stop();
+
+  wam_hw.cleanup();
 
   return 0;
 }
