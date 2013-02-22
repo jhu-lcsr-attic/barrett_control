@@ -6,6 +6,8 @@
 #include <barrett_hw/wam.h>
 #include <controller_manager/controller_manager.h>
 #include <signal.h>
+#include <realtime_tools/realtime_publisher.h>
+#include <std_msgs/Duration.h>
 
 bool g_quit = false;
 
@@ -50,9 +52,13 @@ int main( int argc, char** argv ){
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
+  realtime_tools::RealtimePublisher<std_msgs::Duration> publisher(wam_nh, "loop_rate", 2);
+
   wam_hw.configure();
 
   wam_hw.start();
+
+  uint32_t count = 0;
 
   // Run as fast as possible
   while( !g_quit ) {
@@ -75,7 +81,17 @@ int main( int argc, char** argv ){
 
     // Write the command to the WAM
     wam_hw.write(now, period);
+
+    if(count++ > 1000) {
+      if(publisher.trylock()) {
+        count = 0;
+        publisher.msg_.data = period;
+        publisher.unlockAndPublish();
+      }
+    }
   }
+
+  publisher.stop();
 
   std::cerr<<"Stpping spinner..."<<std::endl;
   spinner.stop();
