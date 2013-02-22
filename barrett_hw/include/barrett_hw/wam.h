@@ -83,7 +83,7 @@ namespace barrett_hw {
     boost::scoped_ptr<leoCAN::CANBus> canbus_;
     boost::scoped_ptr<barrett_direct::WAM> robot_;
 
-    // Other members
+    // Calibration 
     bool calibrated_;
 
   };

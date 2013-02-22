@@ -9,6 +9,12 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/barrett_controllers</url>
 
+  <depend package="realtime_tools"/>
+  <depend package="barrett_model"/>
+  <depend package="hardware_interface"/>
+  <depend package="controller_interface"/>
+  <depend package="barrett_control_msgs"/>
+
 </package>
 
 

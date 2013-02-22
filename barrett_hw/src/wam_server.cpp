@@ -25,6 +25,7 @@ int main( int argc, char** argv ){
   // Initialize ROS
   ros::init(argc, argv, "wam_server", ros::init_options::NoSigintHandler);
 
+  // Add custom signal handlers
   signal(SIGTERM, quitRequested);
   signal(SIGINT, quitRequested);
   signal(SIGHUP, quitRequested);
@@ -102,7 +103,7 @@ int main( int argc, char** argv ){
   std::cerr<<"Cleaning up WAM..."<<std::endl;
   wam_hw.cleanup();
 
-  std::cerr<<"Goodbye!"<<std::endl;
+  std::cerr<<"Poka!"<<std::endl;
   return 0;
 }
 
