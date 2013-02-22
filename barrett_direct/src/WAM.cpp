@@ -255,6 +255,44 @@ WAM::Errno WAM::GetMode( WAM::Mode& mode ){
 
 }
 
+WAM::Errno WAM::GetPositionOffsets( Eigen::VectorXd& jq ) {
+  // TODO: Servo the updated calibration position so to not violate the
+  // velocity constraints
+
+  // Total counts
+  static const Barrett::Value MAX_COUNTS = 4096;
+
+  // Initialize output
+  Eigen::VectorXd mq = Eigen::VectorXd::Zero(WAM::DOF(configuration));
+
+  for(size_t i=0; i<pucks.size(); i++){
+    Barrett::Value count;
+
+    // Get the magnetic absolute encoder reading
+    if( pucks[i].GetProperty( Barrett::MECHANGLE, count) != Puck::ESUCCESS ) {
+      std::cerr << "Failed to get megnetic encoder reading of puck: "
+        << (int)pucks[i].GetID() << std::endl;
+      return WAM::EFAILURE;
+    } 
+
+    // Calculate the error magnitude
+    //mag_error[i] = mag_zero[i] - count;
+
+    //if( std::abs(mag_error[i]) > MAX_COUNTS/2 ) {
+    //  mag_error[i] -= std::copysign(1.0, mag_error)*MAX_COUNTS;
+    //} 
+
+    // Convert to angle
+    mq[i] = count * M_PI * 2.0 / (double)MAX_COUNTS;
+
+  }
+
+  // Get the joint offsets from the motor positions
+  jq = MotorsPos2JointsPos(mq);
+
+  return WAM::ESUCCESS;
+}
+
 // set the motor positions 
 WAM::Errno WAM::SetPositions( const Eigen::VectorXd& jq ){
 
@@ -277,6 +315,7 @@ WAM::Errno WAM::SetPositions( const Eigen::VectorXd& jq ){
 
   // convert the joints positions to motor positions
   Eigen::VectorXd mq = JointsPos2MotorsPos( jq );
+
 
   // for each puck, send a position 
   for(size_t i=0; i<pucks.size(); i++){

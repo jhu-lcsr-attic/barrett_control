@@ -180,6 +180,17 @@ namespace barrett_direct {
       */
     WAM::Errno GetPositions( Eigen::VectorXd& positions );
 
+    //! Get joints magnetic encoder angles
+    /**
+      The WAM has magnetic semi-absolute encoders, which means that within a
+      few joint degrees, we can calibrate the joints absolutely.
+
+      This function computes the joint-space offset
+
+      \param jq[out] The joint offset within one motor revolution
+      */
+    WAM::Errno GetPositionOffsets( Eigen::VectorXd& jq );
+
     //! Send joints positions
     /**
       The WAM has relative encoders, which means that you must "zero" the 
