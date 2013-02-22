@@ -5,6 +5,13 @@
 #include <time.h>
 #include <barrett_hw/wam.h>
 #include <controller_manager/controller_manager.h>
+#include <signal.h>
+
+bool g_quit = false;
+
+void quitRequested(int sig) {
+  g_quit = true;
+}
 
 int main( int argc, char** argv ){
 
@@ -14,7 +21,11 @@ int main( int argc, char** argv ){
   rt_task_shadow( &task, "GroupWAM", 99, 0 );
 
   // Initialize ROS
-  ros::init(argc, argv, "wam_server");
+  ros::init(argc, argv, "wam_server", ros::init_options::NoSigintHandler);
+
+  signal(SIGTERM, quitRequested);
+  signal(SIGINT, quitRequested);
+  signal(SIGHUP, quitRequested);
 
   // Construct the wam structure
   ros::NodeHandle wam_nh("wam");
@@ -44,7 +55,7 @@ int main( int argc, char** argv ){
   wam_hw.start();
 
   // Run as fast as possible
-  while( ros::ok() ) {
+  while( !g_quit ) {
     // Get the time / period
     if (!clock_gettime(CLOCK_REALTIME, &ts)) {
       now.sec = ts.tv_sec;
@@ -66,10 +77,16 @@ int main( int argc, char** argv ){
     wam_hw.write(now, period);
   }
 
+  std::cerr<<"Stpping spinner..."<<std::endl;
+  spinner.stop();
+
+  std::cerr<<"Stopping WAM..."<<std::endl;
   wam_hw.stop();
 
+  std::cerr<<"Cleaning up WAM..."<<std::endl;
   wam_hw.cleanup();
 
+  std::cerr<<"Goodbye!"<<std::endl;
   return 0;
 }
 
