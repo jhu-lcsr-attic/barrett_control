@@ -1,0 +1,12 @@
+<library path="lib/libbarrett_controllers">
+
+  <class 
+    name="barrett_controllers/CalibrationController"
+    type="barrett_controllers::CalibrationController"
+    base_class_type="controller_interface::ControllerBase">
+    <description>
+      This is a calibration controller for a semi-absolute-jointed robot.
+    </description>
+  </class>
+
+</library>

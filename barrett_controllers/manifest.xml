@@ -15,6 +15,10 @@
   <depend package="controller_interface"/>
   <depend package="barrett_control_msgs"/>
 
+  <export>
+    <controller_interface plugin="${prefix}/.xml" />
+  </export>
+
 </package>
 
 

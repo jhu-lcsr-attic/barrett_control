@@ -126,7 +126,7 @@ bool WAM::configure()
 bool WAM::start()
 {
   // Check calibration
-  if(!calibrated_) {
+  if(0 && !calibrated_) {
     // Set the joints to the calibration position
     calibrated_ = this->calibrate_position(initial_positions_);
     // Return if we can't calibrate
