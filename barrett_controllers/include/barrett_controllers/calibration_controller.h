@@ -15,9 +15,6 @@ namespace barrett_controllers {
   class CalibrationController : public controller_interface::Controller<barrett_model::SemiAbsoluteJointInterface>
   {
   public:
-    CalibrationController();
-    ~CalibrationController();
-
     virtual bool init(
         barrett_model::SemiAbsoluteJointInterface* hw,
         ros::NodeHandle &n);
