@@ -255,12 +255,23 @@ WAM::Errno WAM::GetMode( WAM::Mode& mode ){
 
 }
 
+
+const Barrett::Value WAM::MAX_COUNTS;
+
+WAM::Errno WAM::GetResolverRanges( Eigen::VectorXd& resolver_ranges ) {
+  Eigen::VectorXd mq = Eigen::VectorXd::Zero(WAM::DOF(configuration));
+  mq.setConstant(M_PI * 2.0);
+  resolver_ranges = MotorsPos2JointsPos(mq);
+
+  return WAM::ESUCCESS;
+}
+
 WAM::Errno WAM::GetPositionOffsets( Eigen::VectorXd& jq ) {
   // TODO: Servo the updated calibration position so to not violate the
   // velocity constraints
 
   // Total counts
-  static const Barrett::Value MAX_COUNTS = 4096;
+  //static const Barrett::Value MAX_COUNTS = 4096;
 
   // Initialize output
   Eigen::VectorXd mq = Eigen::VectorXd::Zero(WAM::DOF(configuration));

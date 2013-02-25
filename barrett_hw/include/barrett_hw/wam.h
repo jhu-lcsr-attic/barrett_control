@@ -48,6 +48,8 @@
 
 #include <barrett_model/wam_interface.h>
 
+#include <barrett_model/semi_absolute_joint_interface.h>
+
 namespace barrett_hw {
   class WAM : public barrett_model::WAMInterface
   {
@@ -85,6 +87,12 @@ namespace barrett_hw {
 
     // Calibration 
     bool calibrated_;
+
+    // Calibration
+    barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
+    KDL::JntArray resolver_angles_;
+    KDL::JntArray resolver_ranges_;
+    KDL::JntArray joint_offsets_;
 
   };
 }

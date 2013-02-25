@@ -47,6 +47,7 @@
 #endif
 
 #include <barrett_hw/wam.h>
+#include <control_toolbox/filters.h>
 
 using namespace barrett_hw;
 
@@ -69,6 +70,12 @@ bool WAM::configure()
     this->load_params();
     require_param(nh_,"can_dev_name",can_dev_name_,
                   "The CANBus device name (rtcan0, rtcan1, etc).");
+    nh_.param("calibrated",calibrated_,false);
+    if(calibrated_) {
+      ROS_INFO("WAM is already calibrated.");
+    } else {
+      ROS_WARN("WAM is uncalibrated!");
+    }
   } catch( ros::InvalidParameterException &ex) {
     ROS_ERROR_STREAM(ex.what());
     return false;
@@ -78,23 +85,16 @@ bool WAM::configure()
   if(!this->init_kinematics())
     return false;
   
-  // Initialize the ros_control interfaces
-  if(!this->register_hardware_interfaces())
-    return false;
-  
-  // Initialize the ROS Control hardware interface
-  this->register_hardware_interfaces();
-
   // Try to connect and initialize hardware
   try{
     // Construct CAN structure
-#ifdef __XENO__
+    #ifdef __XENO__
     canbus_.reset(new leoCAN::RTSocketCAN(can_dev_name_, leoCAN::CANBus::RATE_1000 ));
-#else
+    #else
     // TODO: port a non-realtime canbus to leoCAN
     ROS_FATAL("This component cannot be used without the xenomai libraries and rtsocketcan!");
     return false;
-#endif
+    #endif
 
     // Open the canbus
     if( canbus_->Open() != leoCAN::CANBus::ESUCCESS ){
@@ -110,11 +110,42 @@ bool WAM::configure()
       ROS_ERROR_STREAM("Failed to initialize WAM");
       throw std::exception();
     }
+
+
   } catch(std::exception &ex) {
     // Free the device handles
     this->cleanup_internal();
     return false;
   }
+
+  // Initialize the ros_control interfaces
+  if(!(this->register_hardware_interfaces())) {
+    return false;
+  }
+
+  // Initialize calibration structures / interface
+  resolver_angles_.resize(n_dof_);
+  resolver_ranges_.resize(n_dof_);
+  joint_offsets_.resize(n_dof_);
+  KDL::SetToZero(resolver_angles_);
+  KDL::SetToZero(resolver_ranges_);
+  KDL::SetToZero(joint_offsets_);
+
+  robot_->GetResolverRanges(resolver_ranges_.data);
+
+  for(unsigned j=0; j<n_dof_; j++) {
+    semi_absolute_interface_.registerJoint(
+        effort_command_interface_.getJointHandle(joint_names_[j]),
+        resolver_ranges_(j),
+        &resolver_angles_(j),
+        &joint_offsets_(j),
+        &calibrated_joints_[j]);
+    ROS_INFO_STREAM("JOINT: "<<joint_names_[j]
+        <<" RESOLVER_RANGE: "<<resolver_ranges_(j));
+  }
+
+  // Register interfaces
+  this->registerInterface(&semi_absolute_interface_);
 
   ROS_INFO_STREAM("WAM connected on CAN device \""<<can_dev_name_<<"\"!");
 
@@ -126,11 +157,12 @@ bool WAM::configure()
 bool WAM::start()
 {
   // Check calibration
-  if(0 && !calibrated_) {
+  if(!calibrated_) {
     // Set the joints to the calibration position
     calibrated_ = this->calibrate_position(initial_positions_);
     // Return if we can't calibrate
     if(!calibrated_) {
+      ROS_ERROR("Could not calibrate position!");
       return false;
     }
   }
@@ -156,17 +188,19 @@ void WAM::read(const ros::Time time, const ros::Duration period)
   }
 
   // Compute joint velocities
+  // TODO: actually filter these
   for(unsigned int i=0; i<n_dof_; i++) {
-    joint_state_.qdot(i) = 
-      (joint_state_new_.q(i) - joint_state_.q(i))
-      /period.toSec();
+    joint_state_.qdot(i) = filters::exponentialSmoothing(
+      (joint_state_new_.q(i) - joint_state_.q(i))/ period.toSec(),
+      joint_state_.qdot(i),
+      0.5);
   }
 
   // Update positions
   joint_state_.q = joint_state_new_.q;
 
   // If not calibrated, also compute the motor angles
-  if( !calibrated_) {
+  if( true || !calibrated_) {
     if( robot_->GetPositionOffsets( resolver_angles_.data ) != barrett_direct::WAM::ESUCCESS) {
       ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }

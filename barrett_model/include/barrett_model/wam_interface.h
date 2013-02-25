@@ -45,8 +45,6 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
 
-#include <barrett_model/semi_absolute_joint_interface.h>
-
 
 namespace barrett_model {
   class WAMInterface : public hardware_interface::RobotHW
@@ -113,10 +111,6 @@ namespace barrett_model {
     hardware_interface::JointStateInterface joint_state_interface_;
     hardware_interface::EffortJointInterface effort_command_interface_;
 
-    // Calibration
-    barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
-    KDL::JntArray resolver_angles_;
-    KDL::JntArray joint_offsets_;
     std::vector<int> calibrated_joints_;
 
     // Common initialization code
@@ -160,8 +154,6 @@ namespace barrett_model {
       torques_.resize(n_dof_);
       joint_state_.resize(n_dof_);
       joint_state_new_.resize(n_dof_);
-      resolver_angles_.resize(n_dof_);
-      joint_offsets_.resize(n_dof_);
       calibrated_joints_.assign(n_dof_,false);
 
       // Zero out joint arrays
@@ -171,15 +163,14 @@ namespace barrett_model {
       KDL::SetToZero(joint_state_.qdot);
       KDL::SetToZero(joint_state_new_.q);
       KDL::SetToZero(joint_state_new_.qdot);
-      KDL::SetToZero(resolver_angles_);
-      KDL::SetToZero(joint_offsets_);
-
 
       return true;
     }
 
     virtual bool register_hardware_interfaces()
     {
+      ROS_INFO("Registering hardware interfaces...");
+
       // Register the joints
       for(unsigned int j=0; j < n_dof_; j++) {
         // Register this joint with the joint state interface
@@ -193,18 +184,11 @@ namespace barrett_model {
         effort_command_interface_.registerJoint(
             joint_state_interface_.getJointStateHandle(joint_names_[j]),
             &torques_(j));
-
-        semi_absolute_interface_.registerJoint(
-            effort_command_interface_.getJointHandle(joint_names_[j]),
-            &resolver_angles_(j),
-            &joint_offsets_(j),
-            &calibrated_joints_[j]);
       }
 
       // Register interfaces
-      registerInterface(&joint_state_interface_);
-      registerInterface(&effort_command_interface_);
-      registerInterface(&semi_absolute_interface_);
+      this->registerInterface(&joint_state_interface_);
+      this->registerInterface(&effort_command_interface_);
 
       return true;
     }

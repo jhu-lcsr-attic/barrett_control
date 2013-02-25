@@ -29,7 +29,7 @@
 #define __BARRETT_MODEL_JOINT_CALIBRATION_INTERFACE_H
 
 #include <hardware_interface/joint_command_interface.h>
-
+#include <angles/angles.h>
 
 namespace barrett_model
 {
@@ -41,8 +41,9 @@ class SemiAbsoluteJointHandle : public hardware_interface::JointHandle
 {
 public:
   SemiAbsoluteJointHandle() {};
-  SemiAbsoluteJointHandle(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, int* is_calibrated)
+  SemiAbsoluteJointHandle(const hardware_interface::JointHandle& js, double resolver_range, double* resolver_angle, double* joint_offset, int* is_calibrated)
     : hardware_interface::JointHandle(js), 
+    resolver_range_(resolver_range),
     resolver_angle_(resolver_angle),
     joint_offset_(joint_offset),
     is_calibrated_(is_calibrated)
@@ -56,6 +57,10 @@ public:
     *joint_offset_ = joint_offset;
   }
 
+  double getOffset() const {
+    return *joint_offset_;
+  }
+
   void setCalibrated(const int is_calibrated) {
     *is_calibrated_ = is_calibrated;
   }
@@ -64,7 +69,15 @@ public:
     return *is_calibrated_;
   }
 
+  inline double getShortestDistance(double from, double to) const
+  {
+    return resolver_range_/2.0/M_PI * angles::shortest_angular_distance(
+        2.0*M_PI/resolver_range_*from, 
+        2.0*M_PI/resolver_range_*to);
+  }
+
 private:
+  double resolver_range_;
   double* resolver_angle_;
   double* joint_offset_;
   int* is_calibrated_;
@@ -100,9 +113,9 @@ public:
    * \param name The name of the new joint
    * \param cmd A pointer to the storage for this joint's output command
    */
-  void registerJoint(const hardware_interface::JointHandle& js, double* resolver_angle, double* joint_offset, int* is_calibrated)
+  void registerJoint(const hardware_interface::JointHandle& js, double resolver_range, double* resolver_angle, double* joint_offset, int* is_calibrated)
   {
-    SemiAbsoluteJointHandle handle(js, resolver_angle, joint_offset, is_calibrated);
+    SemiAbsoluteJointHandle handle(js, resolver_range, resolver_angle, joint_offset, is_calibrated);
     HandleMap::iterator it = handle_map_.find(js.getName());
     if (it == handle_map_.end())
       handle_map_.insert(std::make_pair(js.getName(), handle));

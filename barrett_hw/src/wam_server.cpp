@@ -34,10 +34,6 @@ int main( int argc, char** argv ){
   ros::NodeHandle wam_nh("wam");
   barrett_hw::WAM wam_hw( wam_nh );
 
-  // Construct the controller manager
-  ros::NodeHandle nh;
-  controller_manager::ControllerManager manager(&wam_hw, nh);
-
   // Timer variables
   struct timespec ts = {0,0};
 
@@ -55,9 +51,19 @@ int main( int argc, char** argv ){
 
   realtime_tools::RealtimePublisher<std_msgs::Duration> publisher(wam_nh, "loop_rate", 2);
 
-  wam_hw.configure();
+  if(!wam_hw.configure()) {
+    ROS_FATAL("Could not configure WAM!");
+    return -1;
+  }
 
-  wam_hw.start();
+  if(!wam_hw.start()) {
+    ROS_FATAL("Could not start WAM!");
+    return -1;
+  }
+
+  // Construct the controller manager
+  ros::NodeHandle nh;
+  controller_manager::ControllerManager manager(&wam_hw, nh);
 
   uint32_t count = 0;
 
@@ -104,6 +110,7 @@ int main( int argc, char** argv ){
   wam_hw.cleanup();
 
   std::cerr<<"Poka!"<<std::endl;
+
   return 0;
 }
 

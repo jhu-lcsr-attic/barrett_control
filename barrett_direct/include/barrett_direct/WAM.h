@@ -66,6 +66,8 @@ namespace barrett_direct {
       };
     }
 
+    static const Barrett::Value MAX_COUNTS = 4096;
+
   private:
 
     WAM::Configuration configuration;
@@ -180,6 +182,7 @@ namespace barrett_direct {
       */
     WAM::Errno GetPositions( Eigen::VectorXd& positions );
 
+    WAM::Errno GetResolverRanges( Eigen::VectorXd& resolver_ranges );
     //! Get joints magnetic encoder angles
     /**
       The WAM has magnetic semi-absolute encoders, which means that within a
@@ -189,6 +192,10 @@ namespace barrett_direct {
 
       \param jq[out] The joint offset within one motor revolution
       */
+    WAM::Errno GetResolverAngles( Eigen::VectorXd& jq ) {
+      return this->GetPositionOffsets( jq );
+    }
+
     WAM::Errno GetPositionOffsets( Eigen::VectorXd& jq );
 
     //! Send joints positions

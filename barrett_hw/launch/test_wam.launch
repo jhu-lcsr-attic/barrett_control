@@ -1,6 +1,8 @@
 <launch>
+  <arg name="JOINT_PREFIX" default="wam"/>
+
   <!-- WAM Server -->
-  <node pkg="barrett_hw" type="wam_server" name="wam_server"/>
+  <node pkg="barrett_hw" type="wam_server" name="wam_server" output="screen"/>
 
   <!-- WAM Parameters -->
   <include ns="wam" file="$(find barrett_model)/launch/wam_7dof_params.launch"/>
@@ -14,5 +16,26 @@
     calibration_controller:
       type: barrett_controllers/CalibrationController
       publish_rate: 50
+      joint_names: ['wam/LowerWristYawJoint', ]
+      static_thresholds: [0.0005]
+      upper_limits: [2.970]
+      lower_limits: [-2.970]
+      limit_search_efforts: [0.1]
+      home_positions: [0.0]
+      resolver_offsets: [-0.054]
+      p_gains: [2.0]
+      i_gains: [0.01]
+      d_gains: [0.05]
+      trap_max_vels: [8.0]
+      trap_max_accs: [0.8]
+      trap_durations: [1.0]
+    effort_controller:
+      type: effort_controllers/JointEffortController
+      joint: wam/ElbowJoint 
   </rosparam>
+
+  <!-- Start these controllers by default -->
+  <node name="default_controller_spawner"
+    pkg="controller_manager" type="spawner" output="screen"
+    args="wam/joint_state_controller wam/calibration_controller"/>
 </launch>

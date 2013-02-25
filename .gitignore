@@ -1,0 +1,6 @@
+*.swp
+*/build
+*/lib
+*/bin
+*/msg_gen
+*/srv_gen

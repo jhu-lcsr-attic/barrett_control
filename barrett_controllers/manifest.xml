@@ -14,6 +14,9 @@
   <depend package="hardware_interface"/>
   <depend package="controller_interface"/>
   <depend package="barrett_control_msgs"/>
+  <depend package="control_toolbox"/>
+  <depend package="terse_roscpp"/>
+  <depend package="kdl"/>
 
   <export>
     <controller_interface plugin="${prefix}/controllers_plugins.xml" />

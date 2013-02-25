@@ -34,19 +34,59 @@
 #include <barrett_control_msgs/SemiAbsoluteCalibrationState.h>
 #include <pluginlib/class_list_macros.h>
 
+#include <terse_roscpp/params.h>
+
+#include <list>
 
 
 namespace barrett_controllers
 {
 
+  CalibrationController::CalibrationController()
+    : command_()
+  {
+
+  }
+
+  CalibrationController::~CalibrationController()
+  {
+    command_sub_.shutdown();
+  }
+
   bool CalibrationController::init(
       barrett_model::SemiAbsoluteJointInterface* hw, 
       ros::NodeHandle &nh)
   {
+    using namespace terse_roscpp;
+
     // get all joint states from the hardware interface
-    const std::vector<std::string>& joint_names = hw->getJointNames();
-    for (unsigned i=0; i<joint_names.size(); i++)
-      ROS_DEBUG("Got joint %s", joint_names[i].c_str());
+    const std::vector<std::string>& available_joint_names = hw->getJointNames();
+    for (unsigned i=0; i<available_joint_names.size(); i++)
+      ROS_DEBUG("Got joint %s", available_joint_names[i].c_str());
+
+    // Get the list of joints to be calibrated
+    require_param(nh, "joint_names", joint_names_,
+        "The list of joints to be calibrated.");
+    require_param(nh, "static_thresholds", static_thresholds_,
+        "The position change threshold to determine if a joint is stationary (has reached a limit).");
+    require_param(nh, "upper_limits", upper_limits_,
+        "The upper limits of the joints.");
+    require_param(nh, "lower_limits", lower_limits_,
+        "The lower limits of the joints.");
+    require_param(nh, "limit_search_efforts", limit_search_efforts_,
+        "The effort to apply to reach the limit of a given joint.");
+    require_param(nh, "home_positions", home_positions_,
+        "The positions that the joints should be in when they're calibrated.");
+    require_param(nh, "resolver_offsets", resolver_offsets_,
+        "The absolute resolver angles at the home positions.");
+
+    require_param(nh, "p_gains", p_gains_, "PID Proportial gains.");
+    require_param(nh, "i_gains", i_gains_, "PID Integral gains.");
+    require_param(nh, "d_gains", d_gains_, "PID Derivative gains.");
+
+    require_param(nh, "trap_max_vels", trap_max_vels_);
+    require_param(nh, "trap_max_accs", trap_max_accs_);
+    require_param(nh, "trap_durations", trap_durations_);
 
     // get publishing period
     if (!nh.getParam("publish_rate", publish_rate_)){
@@ -60,27 +100,125 @@ namespace barrett_controllers
           nh, "joint_calibration_state", 4));
 
     // get joints and allocate message
-    for (unsigned i=0; i<joint_names.size(); i++){
-      joint_handles_.push_back(hw->getSemiAbsoluteJointHandle(joint_names[i]));
-      realtime_pub_->msg_.name.push_back(joint_names[i]);
+    joint_handles_.resize(joint_names_.size());
+    command_.resize(joint_names_.size());
+    calibration_states_.assign(joint_names_.size(),UNCALIBRATED);
+    position_history_.assign(joint_names_.size(),std::list<double>());
+    pids_.resize(joint_names_.size());
+    trajectories_.resize(joint_names_.size());
+    trajectory_start_times_.resize(joint_names_.size());
+    for (unsigned i=0; i<joint_names_.size(); i++){
+      pids_[i] = control_toolbox::Pid(p_gains_[i], i_gains_[i], d_gains_[i]);
+      trajectories_[i] = KDL::VelocityProfile_Trap(trap_max_vels_[i], trap_max_accs_[i]);
+      joint_handles_[i] = hw->getSemiAbsoluteJointHandle(joint_names_[i]);
+      realtime_pub_->msg_.name.push_back(joint_names_[i]);
+      realtime_pub_->msg_.effort.push_back(0.0);
       realtime_pub_->msg_.resolver_angle.push_back(0.0);
-      realtime_pub_->msg_.calibrated.push_back(false);
+      realtime_pub_->msg_.calibration_state.push_back(UNCALIBRATED);
     }    
+
+    // ROS API
+    command_sub_ = nh.subscribe("command", 1, &CalibrationController::command_cb, this);
+    calibrate_srv_ = nh.advertiseService("calibrate", &CalibrationController::calibrate_srv_cb, this);
 
     return true;
   }
 
   void CalibrationController::starting(const ros::Time& time)
   {
-    // initialize time
+    // Initialize time
     last_publish_time_ = time;
+    // Zero the command
+    command_.assign(command_.size(), 0.0);
   }
 
   void CalibrationController::update(const ros::Time& time, const ros::Duration& period)
   {
-    // limit rate of publishing
-    if (publish_rate_ > 0.0 && last_publish_time_ + ros::Duration(1.0/publish_rate_) < time){
+    for(std::vector<int>::iterator jid_it = active_joints_.begin();
+        jid_it != active_joints_.end();
+        ++jid_it)
+    {
+      int jid = *jid_it;
+      barrett_model::SemiAbsoluteJointHandle &joint = joint_handles_[jid];
 
+      switch(calibration_states_[jid]) {
+        case UNCALIBRATED:
+          break;
+        case LIMIT_SEARCH:
+          // Find the positive or negative limit of this joint
+
+          // Check if we've reached the limits
+          if(is_static(jid, joint.getPosition())) {
+            // Clear the position buffer
+            position_history_[jid].clear();
+            // Store the offset to get the approximate position
+            joint.setOffset(upper_limits_[jid] - joint.getPosition());
+            // Create the trajectory
+            trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
+            trajectory_start_times_[jid] = time;
+            // Go to the next step
+            calibration_states_[jid] = APPROACH_CALIB_REGION;
+          } else {
+            // Drive towards the limit
+            command_[jid] =  limit_search_efforts_[jid];
+          }
+
+          break;
+        case APPROACH_CALIB_REGION:
+          if(is_static(jid, joint.getPosition())) {
+            // Clear the position buffer
+            position_history_[jid].clear();
+            // Set the exact offset
+            joint.setOffset(joint.getOffset() 
+                + joint.getShortestDistance(resolver_offsets_[jid],joint.getResolverAngle()));
+            // Create the trajectory
+            trajectories_[jid].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
+            trajectory_start_times_[jid] = time;
+            // Go to the next step
+            calibration_states_[jid] = GO_HOME;
+          } else {
+            command_[jid] = 
+                pids_[jid].computeCommand(
+                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
+                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                  period);
+          }
+
+          break;
+        case GO_HOME:
+          if(is_static(jid, joint.getPosition())) {
+            position_history_[jid].clear();
+            joint.setCalibrated(true);
+            // Go to the next step
+            calibration_states_[jid] = CALIBRATED;
+          } else {
+            command_[jid] = 
+                pids_[jid].computeCommand(
+                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
+                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                  period);
+          }
+          break;
+        case CALIBRATED:
+          command_[jid] = 
+            pids_[jid].computeCommand(
+                home_positions_[jid] - (joint.getOffset() + joint.getPosition()),
+                0.0 - joint.getVelocity(),
+                period);
+          break;
+      };
+    }
+
+    // Set the manual effort command
+    for (unsigned i=0; i<joint_handles_.size(); i++){
+      joint_handles_[i].setCommand(command_[i]);
+    }
+
+
+    // limit rate of publishing
+    if (publish_rate_ > 0.0 
+        && time - last_publish_time_ < ros::Duration(1.0/publish_rate_) )
+    {
       // try to publish
       if (realtime_pub_->trylock()){
         // we're actually publishing, so increment time
@@ -90,7 +228,8 @@ namespace barrett_controllers
         realtime_pub_->msg_.header.stamp = time;
         for (unsigned i=0; i<joint_handles_.size(); i++){
           realtime_pub_->msg_.resolver_angle[i] = joint_handles_[i].getResolverAngle();
-          realtime_pub_->msg_.calibrated[i] = joint_handles_[i].isCalibrated();
+          realtime_pub_->msg_.effort[i] = command_[i];
+          realtime_pub_->msg_.calibration_state[i] = calibration_states_[i];
         }
         realtime_pub_->unlockAndPublish();
       }
@@ -100,6 +239,35 @@ namespace barrett_controllers
   void CalibrationController::stopping(const ros::Time& time)
   {}
 
+  bool CalibrationController::calibrate_srv_cb(
+      barrett_control_msgs::Calibrate::Request &req,
+      barrett_control_msgs::Calibrate::Response &resp)
+  {
+    active_joints_.clear();
+    if(active_joints_.size() > 0) {
+      resp.ok = false;
+      ROS_WARN("Only one joint can be calibrated at a time.");
+    } else {
+      for(unsigned int i=0; i<joint_handles_.size(); i++) {
+        if(joint_handles_[i].getName() == req.joint_name) {
+          active_joints_.push_back(i);
+          calibration_states_[i] = LIMIT_SEARCH;
+          resp.ok = true;
+          break;
+        }
+      }
+    }
+
+    return resp.ok;
+  }
+
+
+  void CalibrationController::command_cb(const barrett_control_msgs::JointEffortCommandConstPtr & msg)
+  {
+    for(unsigned int i=0; i<command_.size() && i <msg->effort.size(); i++) {
+      command_[i] = msg->effort[i];
+    }
+  }
 }
 
 
