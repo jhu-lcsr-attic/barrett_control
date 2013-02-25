@@ -53,6 +53,10 @@ namespace barrett_controllers
     command_sub_.shutdown();
   }
 
+  void load_params() {
+
+  }
+
   bool CalibrationController::init(
       barrett_model::SemiAbsoluteJointInterface* hw, 
       ros::NodeHandle &nh)
@@ -134,15 +138,12 @@ namespace barrett_controllers
 
   void CalibrationController::update(const ros::Time& time, const ros::Duration& period)
   {
-    for(std::vector<int>::iterator jid_it = active_joints_.begin();
-        jid_it != active_joints_.end();
-        ++jid_it)
-    {
-      int jid = *jid_it;
+    for(unsigned jid=0; jid < joint_handles_.size(); jid++) {
       barrett_model::SemiAbsoluteJointHandle &joint = joint_handles_[jid];
 
       switch(calibration_states_[jid]) {
         case UNCALIBRATED:
+          // TODO: hold fixed
           break;
         case LIMIT_SEARCH:
           // Find the positive or negative limit of this joint
@@ -152,9 +153,14 @@ namespace barrett_controllers
             // Clear the position buffer
             position_history_[jid].clear();
             // Store the offset to get the approximate position
-            joint.setOffset(upper_limits_[jid] - joint.getPosition());
             // Create the trajectory
-            trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
+            if(limit_search_efforts_[jid] > 0) {
+              joint.setOffset(upper_limits_[jid] - joint.getPosition());
+              trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
+            } else {
+              joint.setOffset(lower_limits_[jid] - joint.getPosition());
+              trajectories_[jid].SetProfile(lower_limits_[jid], home_positions_[jid]);
+            }
             trajectory_start_times_[jid] = time;
             // Go to the next step
             calibration_states_[jid] = APPROACH_CALIB_REGION;
@@ -207,13 +213,10 @@ namespace barrett_controllers
                 period);
           break;
       };
-    }
 
-    // Set the manual effort command
-    for (unsigned i=0; i<joint_handles_.size(); i++){
-      joint_handles_[i].setCommand(command_[i]);
+      // Set the actual commands
+      joint_handles_[jid].setCommand(command_[jid]);
     }
-
 
     // limit rate of publishing
     if (publish_rate_ > 0.0 
@@ -243,18 +246,11 @@ namespace barrett_controllers
       barrett_control_msgs::Calibrate::Request &req,
       barrett_control_msgs::Calibrate::Response &resp)
   {
-    active_joints_.clear();
-    if(active_joints_.size() > 0) {
-      resp.ok = false;
-      ROS_WARN("Only one joint can be calibrated at a time.");
-    } else {
-      for(unsigned int i=0; i<joint_handles_.size(); i++) {
-        if(joint_handles_[i].getName() == req.joint_name) {
-          active_joints_.push_back(i);
-          calibration_states_[i] = LIMIT_SEARCH;
-          resp.ok = true;
-          break;
-        }
+    for(unsigned int i=0; i<joint_handles_.size(); i++) {
+      if(joint_handles_[i].getName() == req.joint_name) {
+        calibration_states_[i] = LIMIT_SEARCH;
+        resp.ok = true;
+        break;
       }
     }
 

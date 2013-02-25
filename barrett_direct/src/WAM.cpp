@@ -148,6 +148,15 @@ WAM::Errno WAM::Initialize(){
       jpos2mpos.setZero( 7, 7 );
       jtrq2mtrq.setZero( 7, 7 );
 
+      /*
+      mpos2jpos << -0.0238095,        0.0,        0.0,        0.0,        0.0,        0.0,        0.0,
+                          0.0,  0.0176991, -0.0176991,        0.0,        0.0,        0.0,        0.0,
+                          0.0, -0.0297345, -0.0297345,        0.0,        0.0,        0.0,        0.0,
+                          0.0,        0.0,        0.0, -0.0555556,        0.0,        0.0,        0.0,
+                          0.0,        0.0,        0.0,        0.0,  0.0527426,  0.0527426,        0.0,
+                          0.0,        0.0,        0.0,        0.0, -0.0527426,  0.0527426,        0.0,
+                          0.0,        0.0,        0.0,        0.0,        0.0,        0.0, -0.0669792;
+      */
       mpos2jpos(0,0) = -0.0238095;
       mpos2jpos(1,1) =  0.0176991;   mpos2jpos(1,2) = -0.0176991;
       mpos2jpos(2,1) = -0.0297345;   mpos2jpos(2,2) = -0.0297345;
@@ -259,9 +268,8 @@ WAM::Errno WAM::GetMode( WAM::Mode& mode ){
 const Barrett::Value WAM::MAX_COUNTS;
 
 WAM::Errno WAM::GetResolverRanges( Eigen::VectorXd& resolver_ranges ) {
-  Eigen::VectorXd mq = Eigen::VectorXd::Zero(WAM::DOF(configuration));
-  mq.setConstant(M_PI * 2.0);
-  resolver_ranges = MotorsPos2JointsPos(mq);
+  Eigen::VectorXd mq = Eigen::VectorXd::Constant(WAM::DOF(configuration), 2.0*M_PI);
+  resolver_ranges = mpos2jpos.diagonal().array() * mq.array();
 
   return WAM::ESUCCESS;
 }
@@ -269,9 +277,6 @@ WAM::Errno WAM::GetResolverRanges( Eigen::VectorXd& resolver_ranges ) {
 WAM::Errno WAM::GetPositionOffsets( Eigen::VectorXd& jq ) {
   // TODO: Servo the updated calibration position so to not violate the
   // velocity constraints
-
-  // Total counts
-  //static const Barrett::Value MAX_COUNTS = 4096;
 
   // Initialize output
   Eigen::VectorXd mq = Eigen::VectorXd::Zero(WAM::DOF(configuration));
