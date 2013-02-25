@@ -22,10 +22,11 @@ namespace barrett_controllers {
 
     typedef enum {
       UNCALIBRATED = 0,
-      LIMIT_SEARCH = 1,
-      APPROACH_CALIB_REGION = 2,
-      GO_HOME = 3,
-      CALIBRATED
+      START_CALIBRATION = 1,
+      LIMIT_SEARCH = 2,
+      APPROACH_CALIB_REGION = 3,
+      GO_HOME = 4,
+      CALIBRATED = 5
     } calibration_state_t;
 
     CalibrationController();
@@ -51,11 +52,11 @@ namespace barrett_controllers {
       double max_pos = *std::max_element(position_history_[jid].begin(), position_history_[jid].end());
 
       position_history_[jid].push_back(position);
-      while(position_history_[jid].size() > 100) {
+      while(position_history_[jid].size() > 50) {
         position_history_[jid].pop_front();
       }
 
-      if(position_history_[jid].size() == 100
+      if(position_history_[jid].size() == 50
           && max_pos - min_pos < static_thresholds_[jid]) {
         return true;
       }
@@ -74,7 +75,7 @@ namespace barrett_controllers {
       static_thresholds_,
       upper_limits_,
       lower_limits_,
-      limit_search_efforts_,
+      limit_search_directions_,
       home_positions_,
       resolver_offsets_,
       p_gains_,
@@ -98,6 +99,7 @@ namespace barrett_controllers {
     std::vector<double> command_;
     ros::Subscriber command_sub_;
     ros::ServiceServer calibrate_srv_;
+    bool auto_advance_;
   };
 
 }

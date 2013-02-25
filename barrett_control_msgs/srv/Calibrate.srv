@@ -1,3 +1,4 @@
 string joint_name
+uint32 calibration_state
 ---
 bool ok

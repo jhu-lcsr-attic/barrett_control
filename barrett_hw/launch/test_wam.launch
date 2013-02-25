@@ -20,7 +20,7 @@
       static_thresholds: [0.0005,0.0005, 0.0005, 0.0005]
       upper_limits: [3.141,1.24, 1.5708, 2.970]
       lower_limits: [-0.9,-4.76, -1.5708, -2.970]
-      limit_search_efforts: [-4.0,0.6,0.8,0.1]
+      limit_search_directions_: [-1,1,1,1]
       home_positions: [0.0,-1.5708,0.0,0.0]
       resolver_offsets: [0.0,0.220,-0.159,-0.054]
       p_gains: [10.0,10.0,20.0,2.0]

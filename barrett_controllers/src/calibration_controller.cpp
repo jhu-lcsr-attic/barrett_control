@@ -43,7 +43,7 @@ namespace barrett_controllers
 {
 
   CalibrationController::CalibrationController()
-    : command_()
+    : command_(), auto_advance_(false)
   {
 
   }
@@ -77,8 +77,8 @@ namespace barrett_controllers
         "The upper limits of the joints.");
     require_param(nh, "lower_limits", lower_limits_,
         "The lower limits of the joints.");
-    require_param(nh, "limit_search_efforts", limit_search_efforts_,
-        "The effort to apply to reach the limit of a given joint.");
+    require_param(nh, "limit_search_directions", limit_search_directions_,
+        "The direction to move to reach the limit of a given joint.");
     require_param(nh, "home_positions", home_positions_,
         "The positions that the joints should be in when they're calibrated.");
     require_param(nh, "resolver_offsets", resolver_offsets_,
@@ -145,6 +145,20 @@ namespace barrett_controllers
         case UNCALIBRATED:
           // TODO: hold fixed
           break;
+        case START_CALIBRATION:
+          // Create the trajectory
+          // Relative move to limit
+          if(limit_search_directions_[jid] > 0) {
+            trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + upper_limits_[jid]-lower_limits_[jid]);
+          } else {
+            trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + lower_limits_[jid]-upper_limits_[jid]);
+          }
+
+          trajectory_start_times_[jid] = time;
+
+          if(auto_advance_) { calibration_states_[jid] = LIMIT_SEARCH; }
+
+          break;
         case LIMIT_SEARCH:
           // Find the positive or negative limit of this joint
 
@@ -154,7 +168,7 @@ namespace barrett_controllers
             position_history_[jid].clear();
             // Store the offset to get the approximate position
             // Create the trajectory
-            if(limit_search_efforts_[jid] > 0) {
+            if(limit_search_directions_[jid] > 0) {
               joint.setOffset(upper_limits_[jid] - joint.getPosition());
               trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
             } else {
@@ -163,10 +177,14 @@ namespace barrett_controllers
             }
             trajectory_start_times_[jid] = time;
             // Go to the next step
-            calibration_states_[jid] = APPROACH_CALIB_REGION;
+            if(auto_advance_) { calibration_states_[jid] = APPROACH_CALIB_REGION; }
           } else {
             // Drive towards the limit
-            command_[jid] =  limit_search_efforts_[jid];
+            command_[jid] = 
+                pids_[jid].computeCommand(
+                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition(),
+                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                  period);
           }
 
           break;
@@ -181,7 +199,7 @@ namespace barrett_controllers
             trajectories_[jid].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
             trajectory_start_times_[jid] = time;
             // Go to the next step
-            calibration_states_[jid] = GO_HOME;
+            if(auto_advance_) { calibration_states_[jid] = GO_HOME; }
           } else {
             command_[jid] = 
                 pids_[jid].computeCommand(
@@ -196,7 +214,7 @@ namespace barrett_controllers
             position_history_[jid].clear();
             joint.setCalibrated(true);
             // Go to the next step
-            calibration_states_[jid] = CALIBRATED;
+            if(auto_advance_) { calibration_states_[jid] = CALIBRATED; }
           } else {
             command_[jid] = 
                 pids_[jid].computeCommand(
@@ -248,7 +266,7 @@ namespace barrett_controllers
   {
     for(unsigned int i=0; i<joint_handles_.size(); i++) {
       if(joint_handles_[i].getName() == req.joint_name) {
-        calibration_states_[i] = LIMIT_SEARCH;
+        calibration_states_[i] = (calibration_state_t)req.calibration_state;
         resp.ok = true;
         break;
       }
