@@ -57,8 +57,12 @@ namespace barrett_controllers {
       }
 
       if(position_history_[jid].size() == 50
+          && bomb_armed_[jid]
           && max_pos - min_pos < static_thresholds_[jid]) {
+        bomb_armed_[jid] = false;
         return true;
+      } else if(max_pos - min_pos > static_thresholds_[jid]) {
+        bomb_armed_[jid] = true;
       }
 
       return false;
@@ -83,7 +87,8 @@ namespace barrett_controllers {
       d_gains_,
       trap_max_vels_,
       trap_max_accs_,
-      trap_durations_;
+      trap_durations_,
+      bomb_armed_;
     std::vector<calibration_state_t> calibration_states_;
     std::vector<control_toolbox::Pid> pids_;
 

@@ -18,16 +18,16 @@
       publish_rate: 50
       joint_names: ['wam/ElbowJoint','wam/UpperWristYawJoint','wam/UpperWristPitchJoint','wam/LowerWristYawJoint']
       static_thresholds: [0.0005,0.0005, 0.0005, 0.0005]
-      upper_limits: [3.141,1.24, 1.5708, 2.970]
+      upper_limits: [3.16,1.24, 1.5708, 2.970]
       lower_limits: [-0.9,-4.76, -1.5708, -2.970]
-      limit_search_directions_: [-1,1,1,1]
+      limit_search_directions: [1.0,1.0,1.0,1.0]
       home_positions: [0.0,-1.5708,0.0,0.0]
-      resolver_offsets: [0.0,0.220,-0.159,-0.054]
-      p_gains: [10.0,10.0,20.0,2.0]
+      resolver_offsets: [-0.289,0.215,-0.125,-0.054]
+      p_gains: [30.0,10.0,20.0,2.0]
       i_gains: [0.01,0.01,0.01,0.01]
-      d_gains: [0.05,0.05,0.05,0.05]
-      trap_max_vels: [1.0,4.0,2.0,8.0]
-      trap_max_accs: [0.4,0.8,0.4,0.8]
+      d_gains: [1.0,0.05,0.05,0.05]
+      trap_max_vels: [0.4,4.0,1.0,8.0]
+      trap_max_accs: [0.4,0.4,0.4,0.4]
       trap_durations: [1.0,1.0,1.0,1.0]
     effort_controller:
       type: effort_controllers/JointEffortController

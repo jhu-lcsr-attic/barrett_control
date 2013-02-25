@@ -108,6 +108,7 @@ namespace barrett_controllers
     command_.resize(joint_names_.size());
     calibration_states_.assign(joint_names_.size(),UNCALIBRATED);
     position_history_.assign(joint_names_.size(),std::list<double>());
+    bomb_armed_.assign(joint_names_.size(),false);
     pids_.resize(joint_names_.size());
     trajectories_.resize(joint_names_.size());
     trajectory_start_times_.resize(joint_names_.size());
@@ -148,7 +149,7 @@ namespace barrett_controllers
         case START_CALIBRATION:
           // Create the trajectory
           // Relative move to limit
-          if(limit_search_directions_[jid] > 0) {
+          if(limit_search_directions_[jid] > 0.0) {
             trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + upper_limits_[jid]-lower_limits_[jid]);
           } else {
             trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + lower_limits_[jid]-upper_limits_[jid]);
@@ -156,7 +157,7 @@ namespace barrett_controllers
 
           trajectory_start_times_[jid] = time;
 
-          if(auto_advance_) { calibration_states_[jid] = LIMIT_SEARCH; }
+          calibration_states_[jid] = LIMIT_SEARCH;
 
           break;
         case LIMIT_SEARCH:
@@ -168,7 +169,7 @@ namespace barrett_controllers
             position_history_[jid].clear();
             // Store the offset to get the approximate position
             // Create the trajectory
-            if(limit_search_directions_[jid] > 0) {
+            if(limit_search_directions_[jid] > 0.0) {
               joint.setOffset(upper_limits_[jid] - joint.getPosition());
               trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
             } else {
@@ -177,7 +178,7 @@ namespace barrett_controllers
             }
             trajectory_start_times_[jid] = time;
             // Go to the next step
-            if(auto_advance_) { calibration_states_[jid] = APPROACH_CALIB_REGION; }
+            calibration_states_[jid] = APPROACH_CALIB_REGION;
           } else {
             // Drive towards the limit
             command_[jid] = 
@@ -199,7 +200,7 @@ namespace barrett_controllers
             trajectories_[jid].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
             trajectory_start_times_[jid] = time;
             // Go to the next step
-            if(auto_advance_) { calibration_states_[jid] = GO_HOME; }
+            calibration_states_[jid] = GO_HOME; 
           } else {
             command_[jid] = 
                 pids_[jid].computeCommand(
@@ -214,7 +215,7 @@ namespace barrett_controllers
             position_history_[jid].clear();
             joint.setCalibrated(true);
             // Go to the next step
-            if(auto_advance_) { calibration_states_[jid] = CALIBRATED; }
+            calibration_states_[jid] = CALIBRATED; 
           } else {
             command_[jid] = 
                 pids_[jid].computeCommand(
