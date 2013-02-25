@@ -256,9 +256,6 @@ namespace barrett_controllers
       bool s = is_static(jid, joint_handles_[jid].getPosition());
       if(calibration_states_[jid] == CALIBRATING) {
         all_joints_static = all_joints_static && s;
-        if(s) {
-          ROS_INFO_STREAM("Static: "<<jid);
-        }
       }
     }
 

@@ -269,10 +269,19 @@ const Barrett::Value WAM::MAX_COUNTS;
 
 WAM::Errno WAM::GetResolverRanges( Eigen::VectorXd& resolver_ranges ) {
   Eigen::VectorXd mq = Eigen::VectorXd::Constant(WAM::DOF(configuration), 2.0*M_PI);
-  resolver_ranges = mpos2jpos.diagonal().array() * mq.array();
+  resolver_ranges = (mpos2jpos.diagonal().array() * mq.array()).cwiseAbs();
 
   return WAM::ESUCCESS;
 }
+
+#if 0
+WAM::Errno WAM::GetJointToActuator( size_t i, size_t j, Eigen::Matrix4d& jta ) {
+  jta << jpos2mpos(i,i), jpos2mpos(i,j),
+          jpos2mpos(j,i), jpos2mpos(j,j);
+
+  return WAM::ESUCCESS;
+}
+#endif
 
 WAM::Errno WAM::GetPositionOffsets( Eigen::VectorXd& jq ) {
   // TODO: Servo the updated calibration position so to not violate the
