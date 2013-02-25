@@ -43,7 +43,7 @@ namespace barrett_controllers
 {
 
   CalibrationController::CalibrationController()
-    : command_(), auto_advance_(false)
+    : calibration_step_(IDLE), command_()
   {
 
   }
@@ -137,6 +137,7 @@ namespace barrett_controllers
     command_.assign(command_.size(), 0.0);
   }
 
+
   void CalibrationController::update(const ros::Time& time, const ros::Duration& period)
   {
     for(unsigned jid=0; jid < joint_handles_.size(); jid++) {
@@ -144,98 +145,147 @@ namespace barrett_controllers
 
       switch(calibration_states_[jid]) {
         case UNCALIBRATED:
-          // TODO: hold fixed
-          break;
-        case START_CALIBRATION:
-          // Create the trajectory
-          // Relative move to limit
-          if(limit_search_directions_[jid] > 0.0) {
-            trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + upper_limits_[jid]-lower_limits_[jid]);
-          } else {
-            trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + lower_limits_[jid]-upper_limits_[jid]);
-          }
-
-          trajectory_start_times_[jid] = time;
-
-          calibration_states_[jid] = LIMIT_SEARCH;
-
-          break;
-        case LIMIT_SEARCH:
-          // Find the positive or negative limit of this joint
-
-          // Check if we've reached the limits
-          if(is_static(jid, joint.getPosition())) {
-            // Clear the position buffer
-            position_history_[jid].clear();
-            // Store the offset to get the approximate position
-            // Create the trajectory
-            if(limit_search_directions_[jid] > 0.0) {
-              joint.setOffset(upper_limits_[jid] - joint.getPosition());
-              trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
-            } else {
-              joint.setOffset(lower_limits_[jid] - joint.getPosition());
-              trajectories_[jid].SetProfile(lower_limits_[jid], home_positions_[jid]);
-            }
-            trajectory_start_times_[jid] = time;
-            // Go to the next step
-            calibration_states_[jid] = APPROACH_CALIB_REGION;
-          } else {
-            // Drive towards the limit
-            command_[jid] = 
-                pids_[jid].computeCommand(
-                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition(),
-                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                  period);
-          }
-
-          break;
-        case APPROACH_CALIB_REGION:
-          if(is_static(jid, joint.getPosition())) {
-            // Clear the position buffer
-            position_history_[jid].clear();
-            // Set the exact offset
-            joint.setOffset(joint.getOffset() 
-                + joint.getShortestDistance(resolver_offsets_[jid],joint.getResolverAngle()));
-            // Create the trajectory
-            trajectories_[jid].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
-            trajectory_start_times_[jid] = time;
-            // Go to the next step
-            calibration_states_[jid] = GO_HOME; 
-          } else {
-            command_[jid] = 
-                pids_[jid].computeCommand(
-                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
-                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                  period);
-          }
-
-          break;
-        case GO_HOME:
-          if(is_static(jid, joint.getPosition())) {
-            position_history_[jid].clear();
-            joint.setCalibrated(true);
-            // Go to the next step
-            calibration_states_[jid] = CALIBRATED; 
-          } else {
-            command_[jid] = 
-                pids_[jid].computeCommand(
-                  trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
-                  trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                  period);
-          }
+          //TODO: hold fixed
           break;
         case CALIBRATED:
+          // Hold fixed in home position
           command_[jid] = 
             pids_[jid].computeCommand(
                 home_positions_[jid] - (joint.getOffset() + joint.getPosition()),
                 0.0 - joint.getVelocity(),
                 period);
           break;
+        case CALIBRATING:
+          // All actively calibrating joints are in the same step at a time
+          switch(calibration_step_) {
+            case IDLE:
+              { break; }
+            case START_LIMIT_SEARCH: 
+              {
+                // Reset offset
+                joint.setOffset(0.0);
+                // Create the trajectory
+                // Relative move to limit
+                if(limit_search_directions_[jid] > 0.0) {
+                  trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + upper_limits_[jid]-lower_limits_[jid]);
+                } else {
+                  trajectories_[jid].SetProfile(joint.getPosition(), joint.getPosition() + lower_limits_[jid]-upper_limits_[jid]);
+                }
+
+                // Clear the position buffer
+                position_history_[jid].clear();
+                bomb_armed_[jid] = false;
+                trajectory_start_times_[jid] = time;
+              }
+            case LIMIT_SEARCH: 
+              {
+                // Find the positive or negative limit of this joint
+                // Drive towards the limit
+                command_[jid] = 
+                  pids_[jid].computeCommand(
+                      trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition(),
+                      trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                      period);
+                break;
+              }
+            case START_APPROACH_CALIB_REGION:
+              {
+                // Store the offset to get the approximate position
+                // Create the trajectory
+                if(limit_search_directions_[jid] > 0.0) {
+                  joint.setOffset(upper_limits_[jid] - joint.getPosition());
+                  trajectories_[jid].SetProfile(upper_limits_[jid], home_positions_[jid]);
+                } else {
+                  joint.setOffset(lower_limits_[jid] - joint.getPosition());
+                  trajectories_[jid].SetProfile(lower_limits_[jid], home_positions_[jid]);
+                }
+                // Clear the position buffer
+                position_history_[jid].clear();
+                bomb_armed_[jid] = false;
+                trajectory_start_times_[jid] = time;
+              }
+            case APPROACH_CALIB_REGION: 
+              {
+                  command_[jid] = 
+                    pids_[jid].computeCommand(
+                        trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
+                        trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                        period);
+                  break;
+              }
+            case START_GO_HOME:
+              {
+                // Set the exact offset
+                // TODO: deal with differential
+                joint.setOffset(joint.getOffset() 
+                    + joint.getShortestDistance(resolver_offsets_[jid],joint.getResolverAngle()));
+                // Create the trajectory
+                trajectories_[jid].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
+                // Clear the position buffer
+                position_history_[jid].clear();
+                bomb_armed_[jid] = false;
+                trajectory_start_times_[jid] = time;
+              }
+            case GO_HOME: 
+              {
+                command_[jid] = 
+                  pids_[jid].computeCommand(
+                      trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
+                      trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
+                      period);
+                break;
+              }
+            case END_CALIBRATION: 
+              {
+                // Mark this joint as calibrated
+                calibration_states_[jid] = CALIBRATED; 
+                joint_handles_[jid].setCalibrated(true);
+                break;
+              }
+          };
+          break;
       };
 
       // Set the actual commands
       joint_handles_[jid].setCommand(command_[jid]);
     }
+
+    // Flag to determine if all calibrating joints are static
+    bool all_joints_static = true;
+    for(unsigned jid=0; jid < joint_handles_.size(); jid++) {
+      bool s = is_static(jid, joint_handles_[jid].getPosition());
+      if(calibration_states_[jid] == CALIBRATING) {
+        all_joints_static = all_joints_static && s;
+        if(s) {
+          ROS_INFO_STREAM("Static: "<<jid);
+        }
+      }
+    }
+
+    switch(calibration_step_) {
+      case IDLE:
+        // No-op
+        break;
+      case START_LIMIT_SEARCH: 
+        calibration_step_ = LIMIT_SEARCH; break;
+      case LIMIT_SEARCH:
+        calibration_step_ = all_joints_static ? START_APPROACH_CALIB_REGION : LIMIT_SEARCH; break;
+
+      case START_APPROACH_CALIB_REGION:
+        calibration_step_ = APPROACH_CALIB_REGION; break;
+      case APPROACH_CALIB_REGION:
+        calibration_step_ = all_joints_static ? START_GO_HOME : APPROACH_CALIB_REGION; break;
+
+      case START_GO_HOME:
+        calibration_step_ = GO_HOME; break;
+      case GO_HOME:
+        calibration_step_ = all_joints_static ? END_CALIBRATION : GO_HOME; break;
+
+      case END_CALIBRATION:
+        calibration_step_ = IDLE;
+        break;
+    };
+
 
     // limit rate of publishing
     if (publish_rate_ > 0.0 
@@ -253,6 +303,7 @@ namespace barrett_controllers
           realtime_pub_->msg_.effort[i] = command_[i];
           realtime_pub_->msg_.calibration_state[i] = calibration_states_[i];
         }
+        realtime_pub_->msg_.calibration_step = calibration_step_;
         realtime_pub_->unlockAndPublish();
       }
     }
@@ -265,12 +316,25 @@ namespace barrett_controllers
       barrett_control_msgs::Calibrate::Request &req,
       barrett_control_msgs::Calibrate::Response &resp)
   {
-    for(unsigned int i=0; i<joint_handles_.size(); i++) {
-      if(joint_handles_[i].getName() == req.joint_name) {
-        calibration_states_[i] = (calibration_state_t)req.calibration_state;
-        resp.ok = true;
-        break;
+    if(calibration_step_ != IDLE) {
+      ROS_ERROR("Please wait for the active joints to finish calibrating...");
+      resp.ok = false;
+    } else {
+      for(std::vector<std::string>::iterator req_name = req.joint_names.begin();
+          req_name != req.joint_names.end();
+          ++req_name)
+      {
+        for(unsigned int i=0; i<joint_handles_.size(); i++) {
+          if(joint_handles_[i].getName() == *req_name) {
+            calibration_states_[i] = CALIBRATING;
+            resp.ok = true;
+            break;
+          }
+        }
       }
+
+      // Begin calibration
+      calibration_step_ = START_LIMIT_SEARCH;
     }
 
     return resp.ok;

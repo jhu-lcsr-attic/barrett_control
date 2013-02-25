@@ -209,10 +209,14 @@ void WAM::read(const ros::Time time, const ros::Duration period)
 
 void WAM::write(const ros::Time time, const ros::Duration period)
 {
+  static int warning = 0;
   // Apply torque limits
   for(unsigned int i=0; i<n_dof_; i++) {
     if(fabs(torques_(i)) > torque_limits_[i]) {
-      ROS_WARN("Commanded torques exceeded safety limits! They have been truncated.");
+      if(warning++ > 1000) {
+        ROS_WARN("Commanded torques exceeded safety limits! They have been truncated.");
+        warning = 0.0;
+      }
       // Truncate this joint torque
       torques_(i) = std::max(std::min(torques_(i),
                                       torque_limits_[i]),

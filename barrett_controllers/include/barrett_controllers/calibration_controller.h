@@ -21,12 +21,20 @@ namespace barrett_controllers {
   public:
 
     typedef enum {
+      IDLE = 0,
+      START_LIMIT_SEARCH,
+      LIMIT_SEARCH,
+      START_APPROACH_CALIB_REGION,
+      APPROACH_CALIB_REGION,
+      START_GO_HOME,
+      GO_HOME,
+      END_CALIBRATION
+    } calibration_step_t;
+
+    typedef enum {
       UNCALIBRATED = 0,
-      START_CALIBRATION = 1,
-      LIMIT_SEARCH = 2,
-      APPROACH_CALIB_REGION = 3,
-      GO_HOME = 4,
-      CALIBRATED = 5
+      CALIBRATING = 1,
+      CALIBRATED = 2
     } calibration_state_t;
 
     CalibrationController();
@@ -52,17 +60,17 @@ namespace barrett_controllers {
       double max_pos = *std::max_element(position_history_[jid].begin(), position_history_[jid].end());
 
       position_history_[jid].push_back(position);
-      while(position_history_[jid].size() > 50) {
+      while(position_history_[jid].size() > 100) {
         position_history_[jid].pop_front();
       }
 
-      if(position_history_[jid].size() == 50
-          && bomb_armed_[jid]
-          && max_pos - min_pos < static_thresholds_[jid]) {
-        bomb_armed_[jid] = false;
-        return true;
-      } else if(max_pos - min_pos > static_thresholds_[jid]) {
-        bomb_armed_[jid] = true;
+      if(position_history_[jid].size() == 100) {
+        if(max_pos - min_pos > static_thresholds_[jid]) {
+          bomb_armed_[jid] = true;
+          return false;
+        } else if(bomb_armed_[jid] && max_pos - min_pos < static_thresholds_[jid]) {
+          return true;
+        } 
       }
 
       return false;
@@ -91,6 +99,8 @@ namespace barrett_controllers {
       bomb_armed_;
     std::vector<calibration_state_t> calibration_states_;
     std::vector<control_toolbox::Pid> pids_;
+    calibration_step_t calibration_step_;
+    std::vector<bool> static_joints_;
 
     std::vector<std::list<double> > position_history_;
     std::vector<double> approximate_offsets_;
