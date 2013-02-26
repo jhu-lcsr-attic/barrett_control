@@ -87,6 +87,7 @@ namespace barrett_controllers
     require_param(nh, "p_gains", p_gains_, "PID Proportial gains.");
     require_param(nh, "i_gains", i_gains_, "PID Integral gains.");
     require_param(nh, "d_gains", d_gains_, "PID Derivative gains.");
+    require_param(nh, "i_max", i_max_, "PID Integral gain bounds.");
 
     require_param(nh, "trap_max_vels", trap_max_vels_);
     require_param(nh, "trap_max_accs", trap_max_accs_);
@@ -112,12 +113,16 @@ namespace barrett_controllers
     pids_.resize(joint_names_.size());
     trajectories_.resize(joint_names_.size());
     trajectory_start_times_.resize(joint_names_.size());
+    position_errors_.resize(joint_names_.size());
+    velocity_errors_.resize(joint_names_.size());
     for (unsigned i=0; i<joint_names_.size(); i++){
-      pids_[i] = control_toolbox::Pid(p_gains_[i], i_gains_[i], d_gains_[i]);
+      pids_[i] = control_toolbox::Pid(p_gains_[i], i_gains_[i], d_gains_[i], i_max_[i], -i_max_[i]);
       trajectories_[i] = KDL::VelocityProfile_Trap(trap_max_vels_[i], trap_max_accs_[i]);
       joint_handles_[i] = hw->getSemiAbsoluteJointHandle(joint_names_[i]);
       realtime_pub_->msg_.name.push_back(joint_names_[i]);
       realtime_pub_->msg_.effort.push_back(0.0);
+      realtime_pub_->msg_.position_errors.push_back(0.0);
+      realtime_pub_->msg_.velocity_errors.push_back(0.0);
       realtime_pub_->msg_.resolver_angle.push_back(0.0);
       realtime_pub_->msg_.calibration_state.push_back(UNCALIBRATED);
     }    
@@ -135,6 +140,8 @@ namespace barrett_controllers
     last_publish_time_ = time;
     // Zero the command
     command_.assign(command_.size(), 0.0);
+    position_errors_.assign(command_.size(), 0.0);
+    velocity_errors_.assign(command_.size(), 0.0);
   }
 
 
@@ -176,16 +183,17 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
+                pids_[jid].reset();
               }
             case LIMIT_SEARCH: 
               {
                 // Find the positive or negative limit of this joint
                 // Drive towards the limit
+                position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition();
+                velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
                 command_[jid] = 
                   pids_[jid].computeCommand(
-                      trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition(),
-                      trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                      period);
+                      position_errors_[jid], velocity_errors_[jid], period);
                 break;
               }
             case START_APPROACH_CALIB_REGION:
@@ -203,16 +211,18 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
+                pids_[jid].reset();
                 break;
               }
             case APPROACH_CALIB_REGION: 
               {
-                  command_[jid] = 
-                    pids_[jid].computeCommand(
-                        trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
-                        trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                        period);
-                  break;
+                position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition());
+                velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
+
+                command_[jid] = 
+                  pids_[jid].computeCommand(
+                      position_errors_[jid], velocity_errors_[jid], period);
+                break;
               }
             case START_GO_HOME:
               {
@@ -226,15 +236,17 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
+                pids_[jid].reset();
                 break;
               }
             case GO_HOME: 
               {
+                position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition());
+                velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
+
                 command_[jid] = 
                   pids_[jid].computeCommand(
-                      trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition()),
-                      trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity(),
-                      period);
+                      position_errors_[jid], velocity_errors_[jid], period);
                 break;
               }
             case END_CALIBRATION: 
@@ -242,6 +254,7 @@ namespace barrett_controllers
                 // Mark this joint as calibrated
                 calibration_states_[jid] = CALIBRATED; 
                 joint_handles_[jid].setCalibrated(true);
+                pids_[jid].reset();
                 break;
               }
           };
@@ -256,8 +269,12 @@ namespace barrett_controllers
     bool all_joints_static = true;
     for(unsigned jid=0; jid < joint_handles_.size(); jid++) {
       bool s = is_static(jid, joint_handles_[jid].getPosition());
+
       if(calibration_states_[jid] == CALIBRATING) {
         all_joints_static = all_joints_static && s;
+        if(calibration_step_ != LIMIT_SEARCH) {
+          all_joints_static = all_joints_static && fabs(position_errors_[jid]) < 0.05;
+        }
       }
     }
 
@@ -300,6 +317,8 @@ namespace barrett_controllers
         for (unsigned i=0; i<joint_handles_.size(); i++){
           realtime_pub_->msg_.resolver_angle[i] = joint_handles_[i].getResolverAngle();
           realtime_pub_->msg_.effort[i] = command_[i];
+          realtime_pub_->msg_.position_errors[i] = position_errors_[i];
+          realtime_pub_->msg_.velocity_errors[i] = velocity_errors_[i];
           realtime_pub_->msg_.calibration_state[i] = calibration_states_[i];
         }
         realtime_pub_->msg_.calibration_step = calibration_step_;

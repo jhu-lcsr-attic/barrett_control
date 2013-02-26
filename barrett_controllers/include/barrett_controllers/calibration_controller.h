@@ -93,10 +93,13 @@ namespace barrett_controllers {
       p_gains_,
       i_gains_,
       d_gains_,
+      i_max_,
       trap_max_vels_,
       trap_max_accs_,
       trap_durations_,
-      bomb_armed_;
+      bomb_armed_,
+      position_errors_,
+      velocity_errors_;
     std::vector<calibration_state_t> calibration_states_;
     std::vector<control_toolbox::Pid> pids_;
     calibration_step_t calibration_step_;

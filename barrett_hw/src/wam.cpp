@@ -214,7 +214,7 @@ void WAM::write(const ros::Time time, const ros::Duration period)
   for(unsigned int i=0; i<n_dof_; i++) {
     if(fabs(torques_(i)) > torque_limits_[i]) {
       if(warning++ > 1000) {
-        ROS_WARN("Commanded torques exceeded safety limits! They have been truncated.");
+        ROS_WARN_STREAM("Commanded torque ("<<torques_(i)<<") of joint ("<<i<<") exceeded safety limits! They have been truncated to: +/- "<<torque_limits_[i]);
         warning = 0.0;
       }
       // Truncate this joint torque
