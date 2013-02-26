@@ -41,7 +41,7 @@
       <child link="${prefix}/ShoulderLink"/>
       <origin xyz="${xyz}" rpy="${rpy}"/>
       <axis xyz="0 -1 0"/>
-      <limit effort="30" lower="-2.6" upper="2.6" velocity="0.50"/>
+      <limit effort="40" lower="-2.6" upper="2.6" velocity="0.50"/>
       <!-- <safety_controller k_position="10000000" k_velocity="10000000" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
       <dynamics damping="1.0" friction="100.0"/>
     </joint>
@@ -82,7 +82,7 @@
       <child link="${prefix}/UpperArmInShoulderLink"/>
       <origin xyz="0 0 0" rpy="${0.5 * PI} 0 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="30" lower="-1.985" upper="1.985" velocity="0.5"/>
+      <limit effort="40" lower="-1.985" upper="1.985" velocity="0.5"/>
       <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
       <dynamics damping="1.0" friction="100.0"/>
     </joint>
@@ -237,7 +237,7 @@
       <child link="${prefix}/ForeArmLink"/>
       <origin xyz="0.045 -0.55 0" rpy="${0.5 * PI} 0 0"/>
       <axis xyz="0 1 0"/>
-      <limit effort="15" lower="-0.9" upper="${PI}" velocity="0.20"/>
+      <limit effort="25" lower="-0.9" upper="${PI}" velocity="0.20"/>
       <!-- <safety_controller k_position="100" k_velocity="3" soft_lower_limit="-100.0" soft_upper_limit="100.0" /> -->
       <dynamics damping="1.0" friction="100.0"/>
     </joint>

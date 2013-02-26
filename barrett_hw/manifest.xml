@@ -17,6 +17,7 @@
   <depend package="controller_manager"/>
   <depend package="barrett_controllers"/>
   <depend package="control_toolbox"/>
+  <depend package="rospy"/>
 </package>
 
 
