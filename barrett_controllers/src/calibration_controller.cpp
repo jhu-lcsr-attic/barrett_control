@@ -203,6 +203,7 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
+                break;
               }
             case APPROACH_CALIB_REGION: 
               {
@@ -225,6 +226,7 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
+                break;
               }
             case GO_HOME: 
               {
