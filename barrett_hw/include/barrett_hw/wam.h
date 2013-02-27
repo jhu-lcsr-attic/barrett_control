@@ -58,7 +58,7 @@ namespace barrett_hw {
     WAM(ros::NodeHandle nh);
     bool configure();
     bool start();
-    void read(const ros::Time time, const ros::Duration period); 
+    bool read(const ros::Time time, const ros::Duration period); 
     void write(const ros::Time time, const ros::Duration period);
     void stop();
     void cleanup();

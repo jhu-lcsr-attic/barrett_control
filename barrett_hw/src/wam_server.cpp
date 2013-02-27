@@ -44,21 +44,30 @@ int main( int argc, char** argv ){
   ros::Time 
     last(ts.tv_sec, ts.tv_nsec),
     now(ts.tv_sec, ts.tv_nsec);
-  ros::Duration period(0.0);
+  ros::Duration period(1.0);
 
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
   realtime_tools::RealtimePublisher<std_msgs::Duration> publisher(wam_nh, "loop_rate", 2);
 
-  if(!wam_hw.configure()) {
-    ROS_FATAL("Could not configure WAM!");
-    return -1;
-  }
+  bool wam_ok = false;
+  while(!g_quit && !wam_ok) {
+    if(!wam_hw.configure()) {
+      ROS_ERROR("Could not configure WAM!");
+    } else if(!wam_hw.start()) {
+      ROS_ERROR("Could not start WAM!");
+    } else {
+      ros::Duration(1.0).sleep();
 
-  if(!wam_hw.start()) {
-    ROS_FATAL("Could not start WAM!");
-    return -1;
+      if(!wam_hw.read(now, period)) {
+        ROS_ERROR("Could not read from WAM!");
+      } else {
+        wam_ok = true;
+      }
+    }
+
+    ros::Duration(1.0).sleep();
   }
 
   // Construct the controller manager
@@ -78,10 +87,13 @@ int main( int argc, char** argv ){
     } else {
       ROS_FATAL("Failed to poll realtime clock!");
       break;
-    }
+    } 
 
     // Read the state from the WAM
-    wam_hw.read(now, period);
+    if(!wam_hw.read(now, period)) {
+      g_quit=true;
+      break;
+    }
 
     // Update the controllers
     manager.update(now, period);

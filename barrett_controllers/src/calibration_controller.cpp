@@ -211,7 +211,8 @@ namespace barrett_controllers
                 position_history_[jid].clear();
                 bomb_armed_[jid] = false;
                 trajectory_start_times_[jid] = time;
-                pids_[jid].reset();
+                //NOTE: Don't reset gains here to create a smooth transition
+                //between these two states
                 break;
               }
             case APPROACH_CALIB_REGION: 

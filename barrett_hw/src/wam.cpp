@@ -180,11 +180,12 @@ bool WAM::start()
   return true;
 }
 
-void WAM::read(const ros::Time time, const ros::Duration period)
+bool WAM::read(const ros::Time time, const ros::Duration period)
 {
   // Get joint positions
   if( robot_->GetPositions( joint_state_new_.q.data ) != barrett_direct::WAM::ESUCCESS) {
     ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
+    return false;
   }
 
   // Compute joint velocities
@@ -205,6 +206,8 @@ void WAM::read(const ros::Time time, const ros::Duration period)
       ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }
   }
+
+  return true;
 }
 
 void WAM::write(const ros::Time time, const ros::Duration period)
@@ -232,28 +235,32 @@ void WAM::write(const ros::Time time, const ros::Duration period)
 
 void WAM::stop()
 {
-  // Set the robot to IDLE
-  if( robot_->SetMode(barrett_direct::WAM::MODE_IDLE) != barrett_direct::WAM::ESUCCESS ){
-    ROS_ERROR_STREAM("Failed to IDLE WAM Robot on CAN device \""<<can_dev_name_<<"\"");
-  }
+  if(run_state_ == WAM::STARTED) {
+    // Set the robot to IDLE
+    if( robot_->SetMode(barrett_direct::WAM::MODE_IDLE) != barrett_direct::WAM::ESUCCESS ){
+      ROS_ERROR_STREAM("Failed to IDLE WAM Robot on CAN device \""<<can_dev_name_<<"\"");
+    }
 
-  run_state_ = WAM::CONFIGURED;
+    run_state_ = WAM::CONFIGURED;
+  }
 }
 
 void WAM::cleanup()
 {
-  // Close the CANBus
-  if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
-    ROS_ERROR_STREAM("Failed to close CAN device \""<<can_dev_name_<<"\"");
+  if(run_state_ == WAM::CONFIGURED) {
+    // Close the CANBus
+    if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
+      ROS_ERROR_STREAM("Failed to close CAN device \""<<can_dev_name_<<"\"");
+    }
+
+    // Reset calibration flag
+    calibrated_ = false;
+
+    // Free the device handles
+    this->cleanup_internal();
+
+    run_state_ = WAM::IDLE;
   }
-
-  // Reset calibration flag
-  calibrated_ = false;
-
-  // Free the device handles
-  this->cleanup_internal();
-
-  run_state_ = WAM::IDLE;
 }
 
 bool WAM::calibrate_position(std::vector<double> &actual_positions)
