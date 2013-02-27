@@ -9,7 +9,7 @@
 #include <boost/shared_ptr.hpp>
 #include <barrett_model/semi_absolute_joint_interface.h>
 #include <barrett_control_msgs/SemiAbsoluteCalibrationState.h>
-#include <barrett_control_msgs/JointEffortCommand.h>
+#include <barrett_control_msgs/JointCommand.h>
 #include <barrett_control_msgs/Calibrate.h>
 #include <control_toolbox/pid.h>
 #include <kdl/velocityprofile_trap.hpp>
@@ -51,7 +51,8 @@ namespace barrett_controllers {
         barrett_control_msgs::Calibrate::Request &req,
         barrett_control_msgs::Calibrate::Response &resp);
 
-    void command_cb(const barrett_control_msgs::JointEffortCommandConstPtr & msg);
+    void effort_command_cb(const barrett_control_msgs::JointCommandConstPtr & msg);
+    void position_command_cb(const barrett_control_msgs::JointCommandConstPtr & msg);
   private:
 
     bool is_static(const int jid, const double position) {
@@ -114,8 +115,10 @@ namespace barrett_controllers {
 
     std::vector<int> active_joints_;
 
-    std::vector<double> command_;
-    ros::Subscriber command_sub_;
+    std::vector<double> effort_command_;
+    std::vector<double> position_command_;
+    ros::Subscriber effort_command_sub_;
+    ros::Subscriber position_command_sub_;
     ros::ServiceServer calibrate_srv_;
     bool auto_advance_;
   };

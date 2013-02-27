@@ -63,6 +63,11 @@ WAM::WAM(ros::NodeHandle nh) :
 
 bool WAM::configure()
 {
+  if(run_state_ != WAM::IDLE) {
+    ROS_ERROR("WAM needs to be IDLE to configure.");
+    return false;
+  }
+
   using namespace terse_roscpp;
 
   // Initialize properties from rosparam
@@ -82,8 +87,10 @@ bool WAM::configure()
   }
 
   // Initialize the arm kinematics from the robot description
-  if(!this->init_kinematics())
+  if(!this->init_kinematics()) {
+    ROS_ERROR("Could not initialize kinematics!");
     return false;
+  }
   
   // Try to connect and initialize hardware
   try{
@@ -131,6 +138,7 @@ bool WAM::configure()
   KDL::SetToZero(resolver_ranges_);
   KDL::SetToZero(joint_offsets_);
 
+  // Get the resolver ranges (aka transmission reductions)
   robot_->GetResolverRanges(resolver_ranges_.data);
 
   for(unsigned j=0; j<n_dof_; j++) {
@@ -140,7 +148,8 @@ bool WAM::configure()
         &resolver_angles_(j),
         &joint_offsets_(j),
         &calibrated_joints_[j]);
-    ROS_INFO_STREAM("JOINT: "<<joint_names_[j]
+
+    ROS_DEBUG_STREAM("JOINT: "<<joint_names_[j]
         <<" RESOLVER_RANGE: "<<resolver_ranges_(j));
   }
 
@@ -156,7 +165,14 @@ bool WAM::configure()
 
 bool WAM::start()
 {
+  if(run_state_ != WAM::CONFIGURED) {
+    ROS_ERROR("WAM must be configured before it can be started.");
+    return false;
+  }
+
   // Check calibration
+  // TODO: DISABLED
+#if 0
   if(!calibrated_) {
     // Set the joints to the calibration position
     calibrated_ = this->calibrate_position(initial_positions_);
@@ -166,6 +182,7 @@ bool WAM::start()
       return false;
     }
   }
+#endif
 
   // Set the robot to Activated
   if( robot_->SetMode(barrett_direct::WAM::MODE_ACTIVATED) != barrett_direct::WAM::ESUCCESS ){
@@ -176,12 +193,15 @@ bool WAM::start()
   ROS_INFO_STREAM("WAM started on CAN device \""<<can_dev_name_<<"\"!");
 
   run_state_ = WAM::STARTED;
-
   return true;
 }
 
 bool WAM::read(const ros::Time time, const ros::Duration period)
 {
+  if(run_state_ != WAM::STARTED) {
+    return false;
+  }
+
   // Get joint positions
   if( robot_->GetPositions( joint_state_new_.q.data ) != barrett_direct::WAM::ESUCCESS) {
     ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
@@ -200,8 +220,7 @@ bool WAM::read(const ros::Time time, const ros::Duration period)
   // Update positions
   joint_state_.q = joint_state_new_.q;
 
-  // If not calibrated, also compute the motor angles
-  if( true || !calibrated_) {
+  if(!calibrated_) {
     if( robot_->GetPositionOffsets( resolver_angles_.data ) != barrett_direct::WAM::ESUCCESS) {
       ROS_ERROR_STREAM("Failed to get positions of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
     }
@@ -231,6 +250,37 @@ void WAM::write(const ros::Time time, const ros::Duration period)
   if( robot_->SetTorques( torques_.data ) != barrett_direct::WAM::ESUCCESS ) {
     ROS_ERROR_STREAM("Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
   }
+
+  // If not calibrated, servo estimated pose to calibration position
+  if( !calibrated_) {
+    // Check if each joint is calibrated, if
+    bool all_joints_calibrated = false;
+    for(unsigned i=0; i<n_dof_; i++) {
+      all_joints_calibrated = all_joints_calibrated || calibrated_joints_[i] == 1;
+    }
+
+    if(calibrated_joints_[6] == 1) {
+      static int decimate =0;
+
+      // Setting the positions cannot violate the velocity limits
+      double minimum_time = joint_offsets_.data.cwiseQuotient(velocity_limits_).cwiseAbs().maxCoeff();
+      double step = std::min(1.0,std::max(period.toSec()/minimum_time,0.0));
+
+      joint_state_.q.data += (step) * joint_offsets_.data;
+      joint_offsets_.data -= (step) * joint_offsets_.data;
+
+      if(decimate++ > 100) {
+        ROS_INFO_STREAM("Adjusting offset by: "<<step<<" minimum time: "<<minimum_time);
+        decimate = 0;
+      }
+
+      // Assign the positions to the current robot configuration
+      if(robot_->SetPositions(joint_state_.q.data) != barrett_direct::WAM::ESUCCESS) {
+        ROS_ERROR_STREAM("Failed to calibrate encoders!");
+      }
+    }
+  }
+
 }
 
 void WAM::stop()
@@ -248,19 +298,21 @@ void WAM::stop()
 void WAM::cleanup()
 {
   if(run_state_ == WAM::CONFIGURED) {
-    // Close the CANBus
-    if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
-      ROS_ERROR_STREAM("Failed to close CAN device \""<<can_dev_name_<<"\"");
-    }
-
-    // Reset calibration flag
-    calibrated_ = false;
-
-    // Free the device handles
-    this->cleanup_internal();
-
-    run_state_ = WAM::IDLE;
+    return;
   }
+
+  // Close the CANBus
+  if( canbus_->Close() != leoCAN::CANBus::ESUCCESS ){
+    ROS_ERROR_STREAM("Failed to close CAN device \""<<can_dev_name_<<"\"");
+  }
+
+  // Reset calibration flag
+  calibrated_ = false;
+
+  // Free the device handles
+  this->cleanup_internal();
+
+  run_state_ = WAM::IDLE;
 }
 
 bool WAM::calibrate_position(std::vector<double> &actual_positions)

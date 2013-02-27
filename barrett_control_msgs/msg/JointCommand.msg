@@ -1,2 +1,2 @@
 std_msgs/Header header
-float64[] effort
+float64[] command

@@ -41,7 +41,12 @@ class SemiAbsoluteJointHandle : public hardware_interface::JointHandle
 {
 public:
   SemiAbsoluteJointHandle() {};
-  SemiAbsoluteJointHandle(const hardware_interface::JointHandle& js, double resolver_range, double* resolver_angle, double* joint_offset, int* is_calibrated)
+  SemiAbsoluteJointHandle(
+      const hardware_interface::JointHandle& js,
+      double resolver_range, 
+      double* resolver_angle, 
+      double* joint_offset, 
+      int* is_calibrated)
     : hardware_interface::JointHandle(js), 
     resolver_range_(resolver_range),
     resolver_angle_(resolver_angle),

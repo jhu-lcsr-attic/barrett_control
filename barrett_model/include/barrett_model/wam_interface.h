@@ -100,7 +100,8 @@ namespace barrett_model {
     KDL::Chain kdl_chain_;
     urdf::Model urdf_model_;
     std::vector<std::string> joint_names_;
-    std::vector<double> torque_limits_;
+    Eigen::VectorXd torque_limits_;
+    Eigen::VectorXd velocity_limits_;
 
     // Dataport message temporary storage
     KDL::JntArray torques_;
@@ -141,13 +142,17 @@ namespace barrett_model {
       }
 
       // Get torque limits from urdf
-      torque_limits_.clear();
+      torque_limits_.setZero(n_dof_);
+      velocity_limits_.setZero(n_dof_);
+      unsigned j=0;
       for(std::vector<KDL::Segment>::const_iterator segment=kdl_chain_.segments.begin();
           segment != kdl_chain_.segments.end();
           segment++)
       {
         joint_names_.push_back(segment->getJoint().getName());
-        torque_limits_.push_back(urdf_model_.getJoint(joint_names_.back())->limits->effort);
+        torque_limits_[j] = urdf_model_.getJoint(joint_names_.back())->limits->effort;
+        velocity_limits_[j] = urdf_model_.getJoint(joint_names_.back())->limits->velocity;
+        j++;
       }
 
       // Resize joint arrays

@@ -114,6 +114,8 @@ def main():
             ['wam/ShoulderPitchJoint'],
             ['wam/YawJoint']]
 
+    calibration_order = [['wam/LowerWristYawJoint']]
+
     calibrator.calibrate(calibration_order)
     
 if __name__ == '__main__':

@@ -43,14 +43,15 @@ namespace barrett_controllers
 {
 
   CalibrationController::CalibrationController()
-    : calibration_step_(IDLE), command_()
+    : calibration_step_(IDLE), effort_command_()
   {
 
   }
 
   CalibrationController::~CalibrationController()
   {
-    command_sub_.shutdown();
+    effort_command_sub_.shutdown();
+    position_command_sub_.shutdown();
   }
 
   void load_params() {
@@ -106,7 +107,7 @@ namespace barrett_controllers
 
     // get joints and allocate message
     joint_handles_.resize(joint_names_.size());
-    command_.resize(joint_names_.size());
+    effort_command_.resize(joint_names_.size());
     calibration_states_.assign(joint_names_.size(),UNCALIBRATED);
     position_history_.assign(joint_names_.size(),std::list<double>());
     bomb_armed_.assign(joint_names_.size(),false);
@@ -121,6 +122,7 @@ namespace barrett_controllers
       joint_handles_[i] = hw->getSemiAbsoluteJointHandle(joint_names_[i]);
       realtime_pub_->msg_.name.push_back(joint_names_[i]);
       realtime_pub_->msg_.effort.push_back(0.0);
+      realtime_pub_->msg_.offsets.push_back(0.0);
       realtime_pub_->msg_.position_errors.push_back(0.0);
       realtime_pub_->msg_.velocity_errors.push_back(0.0);
       realtime_pub_->msg_.resolver_angle.push_back(0.0);
@@ -128,7 +130,8 @@ namespace barrett_controllers
     }    
 
     // ROS API
-    command_sub_ = nh.subscribe("command", 1, &CalibrationController::command_cb, this);
+    effort_command_sub_ = nh.subscribe("effort_cmd", 1, &CalibrationController::effort_command_cb, this);
+    position_command_sub_ = nh.subscribe("position_cmd", 1, &CalibrationController::position_command_cb, this);
     calibrate_srv_ = nh.advertiseService("calibrate", &CalibrationController::calibrate_srv_cb, this);
 
     return true;
@@ -139,9 +142,9 @@ namespace barrett_controllers
     // Initialize time
     last_publish_time_ = time;
     // Zero the command
-    command_.assign(command_.size(), 0.0);
-    position_errors_.assign(command_.size(), 0.0);
-    velocity_errors_.assign(command_.size(), 0.0);
+    effort_command_.assign(effort_command_.size(), 0.0);
+    position_errors_.assign(effort_command_.size(), 0.0);
+    velocity_errors_.assign(effort_command_.size(), 0.0);
   }
 
 
@@ -156,7 +159,7 @@ namespace barrett_controllers
           break;
         case CALIBRATED:
           // Hold fixed in home position
-          command_[jid] = 
+          effort_command_[jid] = 
             pids_[jid].computeCommand(
                 home_positions_[jid] - (joint.getOffset() + joint.getPosition()),
                 0.0 - joint.getVelocity(),
@@ -191,7 +194,7 @@ namespace barrett_controllers
                 // Drive towards the limit
                 position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - joint.getPosition();
                 velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
-                command_[jid] = 
+                effort_command_[jid] = 
                   pids_[jid].computeCommand(
                       position_errors_[jid], velocity_errors_[jid], period);
                 break;
@@ -220,7 +223,7 @@ namespace barrett_controllers
                 position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition());
                 velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
 
-                command_[jid] = 
+                effort_command_[jid] = 
                   pids_[jid].computeCommand(
                       position_errors_[jid], velocity_errors_[jid], period);
                 break;
@@ -245,7 +248,7 @@ namespace barrett_controllers
                 position_errors_[jid] = trajectories_[jid].Pos((time - trajectory_start_times_[jid]).toSec()) - (joint.getOffset() + joint.getPosition());
                 velocity_errors_[jid] = trajectories_[jid].Vel((time - trajectory_start_times_[jid]).toSec()) - joint.getVelocity();
 
-                command_[jid] = 
+                effort_command_[jid] = 
                   pids_[jid].computeCommand(
                       position_errors_[jid], velocity_errors_[jid], period);
                 break;
@@ -254,7 +257,7 @@ namespace barrett_controllers
               {
                 // Mark this joint as calibrated
                 calibration_states_[jid] = CALIBRATED; 
-                joint_handles_[jid].setCalibrated(true);
+                joint_handles_[jid].setCalibrated(1);
                 pids_[jid].reset();
                 break;
               }
@@ -263,7 +266,7 @@ namespace barrett_controllers
       };
 
       // Set the actual commands
-      joint_handles_[jid].setCommand(command_[jid]);
+      joint_handles_[jid].setCommand(effort_command_[jid]);
     }
 
     // Flag to determine if all calibrating joints are static
@@ -317,7 +320,8 @@ namespace barrett_controllers
         realtime_pub_->msg_.header.stamp = time;
         for (unsigned i=0; i<joint_handles_.size(); i++){
           realtime_pub_->msg_.resolver_angle[i] = joint_handles_[i].getResolverAngle();
-          realtime_pub_->msg_.effort[i] = command_[i];
+          realtime_pub_->msg_.effort[i] = effort_command_[i];
+          realtime_pub_->msg_.offsets[i] = joint_handles_[i].getOffset();
           realtime_pub_->msg_.position_errors[i] = position_errors_[i];
           realtime_pub_->msg_.velocity_errors[i] = velocity_errors_[i];
           realtime_pub_->msg_.calibration_state[i] = calibration_states_[i];
@@ -360,10 +364,19 @@ namespace barrett_controllers
   }
 
 
-  void CalibrationController::command_cb(const barrett_control_msgs::JointEffortCommandConstPtr & msg)
+  void CalibrationController::effort_command_cb(const barrett_control_msgs::JointCommandConstPtr & msg)
   {
-    for(unsigned int i=0; i<command_.size() && i <msg->effort.size(); i++) {
-      command_[i] = msg->effort[i];
+    for(unsigned int i=0; i<effort_command_.size() && i <msg->command.size(); i++) {
+      effort_command_[i] = msg->command[i];
+    }
+  }
+
+  void CalibrationController::position_command_cb(const barrett_control_msgs::JointCommandConstPtr & msg)
+  {
+    for(unsigned int i=0; i<position_command_.size() && i <msg->command.size(); i++) {
+      if(calibration_states_[i] == CALIBRATED) {
+        //trajectories_[i].SetProfile(joint.getOffset() + joint.getPosition(), home_positions_[jid]);
+      }
     }
   }
 }
