@@ -122,6 +122,7 @@ namespace barrett_controllers
       joint_handles_[i] = hw->getSemiAbsoluteJointHandle(joint_names_[i]);
       realtime_pub_->msg_.name.push_back(joint_names_[i]);
       realtime_pub_->msg_.effort.push_back(0.0);
+      realtime_pub_->msg_.calib_position.push_back(0.0);
       realtime_pub_->msg_.offsets.push_back(0.0);
       realtime_pub_->msg_.position_errors.push_back(0.0);
       realtime_pub_->msg_.velocity_errors.push_back(0.0);
@@ -321,6 +322,7 @@ namespace barrett_controllers
         for (unsigned i=0; i<joint_handles_.size(); i++){
           realtime_pub_->msg_.resolver_angle[i] = joint_handles_[i].getResolverAngle();
           realtime_pub_->msg_.effort[i] = effort_command_[i];
+          realtime_pub_->msg_.calib_position[i] = joint_handles_[i].getOffset() + joint_handles_[i].getPosition();
           realtime_pub_->msg_.offsets[i] = joint_handles_[i].getOffset();
           realtime_pub_->msg_.position_errors[i] = position_errors_[i];
           realtime_pub_->msg_.velocity_errors[i] = velocity_errors_[i];

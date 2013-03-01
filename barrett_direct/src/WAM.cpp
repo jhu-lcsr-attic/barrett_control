@@ -71,6 +71,11 @@ WAM::Errno WAM::Initialize(){
     return WAM::EFAILURE;
   }
 
+  if( safetymodule.IgnoreFault( 8 ) != Puck::ESUCCESS ){
+    std::cerr << "Failed to configure the safety module" << std::endl;
+    return WAM::EFAILURE;
+  }
+
   // initialize each puck
   for( size_t i=0; i<pucks.size(); i++ ){
     if( pucks[i].InitializeMotor() != Puck::ESUCCESS ){
@@ -191,7 +196,6 @@ WAM::Errno WAM::Initialize(){
   return WAM::ESUCCESS;
 
 }
-
 
 WAM::Errno WAM::SetVelocityWarning( Barrett::Value vw ){
 
@@ -351,7 +355,7 @@ WAM::Errno WAM::SetPositions( const Eigen::VectorXd& jq ){
         << (int)pucks[i].GetID()
         << std::endl;
     }
-
+    usleep(1000);
   }
 
   // let the safety module ignore a few faults

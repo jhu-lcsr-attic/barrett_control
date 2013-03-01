@@ -6,7 +6,7 @@
 
   <!-- WAM Parameters -->
   <include ns="wam" file="$(find barrett_model)/launch/wam_7dof_params.launch"/>
-  <param name="wam/can_dev_name" value="rtcan1"/>
+  <param name="wam/can_dev_name" value="rtcan0"/>
 
   <!-- Controllers -->
   <rosparam ns="wam">
@@ -21,16 +21,16 @@
       upper_limits:            [ 2.7,  2.0,  2.9, 3.16,  1.34,  1.5708,  2.970]
       lower_limits:            [-2.7, -2.0, -2.9, -0.9, -4.76, -1.5708, -2.970]
       limit_search_directions: [1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-      home_positions:          [0.0, 0.0, 0.0, 0.0, -1.5708, 0.0, 0.0]
-      resolver_offsets:        [0.1449, 0.2149, -0.1656, -0.28954, 0.2419, -0.09215, -0.054]
+      home_positions:          [0.0, -1.5708, 0.0, 0.0, -1.5708, 0.0, 0.0]
+      resolver_offsets:        [-0.0224, 0.0179, -0.1656, -0.28954, 0.2419, -0.09215, -0.054]
       home_positions_:          [0.0, -1.5708, 0.0, 0.0, -1.5708, 0.0, 0.0]
       resolver_offsets_:        [0.0, 0.053, -0.170, -0.289, 0.240, -0.094, -0.054]
-      p_gains:                 [250.0, 250.0, 100.0, 60.0, 20.0, 30.0, 2.0]
-      i_gains:                 [70.0, 70.0, 70.0, 70.0, 10.0, 10.0, 10.0]
+      p_gains:                 [280.0, 250.0, 100.0, 60.0, 20.0, 30.0, 2.0]
+      i_gains:                 [100.0, 70.0, 70.0, 70.0, 10.0, 10.0, 10.0]
       i_max:                   [20.0, 20.0, 20.0, 20.0, 1.0, 1.0, 0.2]
       d_gains:                 [20.0, 20.0, 2.0, 2.0, 0.5, 0.5, 0.05]
-      trap_max_vels:           [0.4, 0.4, 1.5, 0.8, 4.0, 4.0, 8.0]
-      trap_max_accs:           [0.4, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
+      trap_max_vels:           [0.2, 0.4, 1.5, 0.8, 4.0, 4.0, 8.0]
+      trap_max_accs:           [0.2, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
       trap_durations:          [15.0, 15.0, 15.0, 15.0, 5.0, 5.0, 5.0]
     effort_controller:
       type: effort_controllers/JointEffortController

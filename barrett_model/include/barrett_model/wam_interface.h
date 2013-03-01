@@ -113,6 +113,7 @@ namespace barrett_model {
     hardware_interface::EffortJointInterface effort_command_interface_;
 
     std::vector<int> calibrated_joints_;
+    Eigen::VectorXd calibration_burn_offsets_;
 
     // Common initialization code
     virtual void load_params()
@@ -159,7 +160,8 @@ namespace barrett_model {
       torques_.resize(n_dof_);
       joint_state_.resize(n_dof_);
       joint_state_new_.resize(n_dof_);
-      calibrated_joints_.assign(n_dof_,false);
+      calibrated_joints_.assign(n_dof_,0);
+      calibration_burn_offsets_ = Eigen::VectorXd::Zero(n_dof_);
 
       // Zero out joint arrays
       // TODO: why can't we call KDL::SetToZero(joint_state_)?

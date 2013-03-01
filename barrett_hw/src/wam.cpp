@@ -251,35 +251,54 @@ void WAM::write(const ros::Time time, const ros::Duration period)
     ROS_ERROR_STREAM("Failed to set torques of WAM Robot on CAN device \""<<can_dev_name_<<"\"");
   }
 
-  // If not calibrated, servo estimated pose to calibration position
-  if( !calibrated_) {
+  // If not calibrated, servo estimated position to calibration position
+  static int calib_decimate = 0;
+  if(!calibrated_ && calib_decimate++ > 0) {
+    calib_decimate = 0;
+
     // Check if each joint is calibrated, if
-    bool all_joints_calibrated = false;
+    bool all_joints_calibrated = true;
     for(unsigned i=0; i<n_dof_; i++) {
-      all_joints_calibrated = all_joints_calibrated || calibrated_joints_[i] == 1;
+      if(!all_joints_calibrated) {
+        calibration_burn_offsets_ = joint_state_.q.data;
+      }
+      all_joints_calibrated = all_joints_calibrated && calibrated_joints_[i] == 1;
     }
 
-    if(calibrated_joints_[6] == 1) {
-      static int decimate =0;
+    if(all_joints_calibrated) {
 
+#if 0
       // Setting the positions cannot violate the velocity limits
-      double minimum_time = joint_offsets_.data.cwiseQuotient(velocity_limits_).cwiseAbs().maxCoeff();
+      // We need to update them incrementally
+      double minimum_time = calibration_burn_offsets_.cwiseQuotient(velocity_limits_).cwiseAbs().maxCoeff();
       double step = std::min(1.0,std::max(period.toSec()/minimum_time,0.0));
 
-      joint_state_.q.data += (step) * joint_offsets_.data;
-      joint_offsets_.data -= (step) * joint_offsets_.data;
+      calibration_burn_offsets_ -= (step)*calibration_burn_offsets_;
+      joint_offsets_.data += (step)*calibration_burn_offsets_;
 
+      static int decimate =0;
       if(decimate++ > 100) {
         ROS_INFO_STREAM("Adjusting offset by: "<<step<<" minimum time: "<<minimum_time);
         decimate = 0;
       }
+#endif
+
+      calibration_burn_offsets_ = Eigen::VectorXd::Zero(n_dof_);
 
       // Assign the positions to the current robot configuration
-      if(robot_->SetPositions(joint_state_.q.data) != barrett_direct::WAM::ESUCCESS) {
+      if(robot_->SetPositions(calibration_burn_offsets_) != barrett_direct::WAM::ESUCCESS) {
         ROS_ERROR_STREAM("Failed to calibrate encoders!");
+      } else {
+        ROS_INFO("Zeroed joints.");
       }
+
+      //if(std::abs(step-1.0) < 1E-4) {
+        calibrated_ = true;
+      //}
+
     }
   }
+
 
 }
 

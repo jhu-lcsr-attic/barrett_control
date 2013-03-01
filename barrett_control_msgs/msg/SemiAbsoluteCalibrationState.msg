@@ -1,6 +1,7 @@
 std_msgs/Header header
 string[] name
 float64[] resolver_angle
+float64[] calib_position
 float64[] offsets
 float64[] effort
 float64[] position_errors
