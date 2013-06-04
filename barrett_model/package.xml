@@ -1,0 +1,24 @@
+<package>
+  <name>barrett_model</name>
+  <version>0.1.0</version>
+  <description>This package contains URDF files for the Barrett WAM robot and BHand in 
+    several configurations.
+
+    models: urdf components and CAD models
+    robots: ready-to-use xacro URDFs and examples</description>
+  <maintainer email="jbo@jhu.edu">Jonathan Bohren</maintainer>
+
+  <license>GPL</license>
+
+  <url type="website">http://ros.org/wiki/barrett_model</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Jonathan Bohren</author>
+  <author>RE2 (original URDF)</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
+</package>

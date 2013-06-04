@@ -18,7 +18,7 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef __BARRETT_DIRECT_PUCK_H
 #define __BARRETT_DIRECT_PUCK_H
 
-#include <leoCAN/CANBus.h>
+#include <leo_can/CANBus.h>
 #include <barrett_direct/Barrett.h>
 
 //! Implements a Barrett puck
@@ -87,7 +87,7 @@ namespace barrett_direct {
       (each puck has a CAN device). Rather, this is the can device used to 
       communicate "with" the puck.
       */
-    leoCAN::CANBus*   canbus;
+    leo_can::CANBus*   canbus;
 
     //! The ID of the puck
     Puck::ID  id;
@@ -116,7 +116,7 @@ namespace barrett_direct {
     /**
       Convert the ID of a puck to a CAN ID used in a CAN frame
       */
-    static leoCAN::CANBusFrame::id_t CANID( Puck::ID id );
+    static leo_can::CANBusFrame::id_t CANID( Puck::ID id );
 
     //! Does the data contain a set property command
     /**
@@ -127,7 +127,7 @@ namespace barrett_direct {
       \param canframe A CAN frame with a read/write command
       \return true if the command is a write. false if the command is a read
       */
-    static bool IsSetFrame( const leoCAN::CANBusFrame& canframe );
+    static bool IsSetFrame( const leo_can::CANBusFrame& canframe );
 
     //! pack a CAN frame
     /**
@@ -138,7 +138,7 @@ namespace barrett_direct {
       \param set True of the property must be set. False for a query
       \return false if no error occurred. true otherwise
       */
-    Puck::Errno PackProperty( leoCAN::CANBusFrame& canframe,
+    Puck::Errno PackProperty( leo_can::CANBusFrame& canframe,
         Barrett::Command command,
         Barrett::ID id,
         Barrett::Value val = 0 );
@@ -155,7 +155,7 @@ namespace barrett_direct {
       \param puckid The ID of the puck
       \param can The CAN device used to communicate with the puck
       */
-    Puck( Puck::ID id, leoCAN::CANBus* can, bool createfilter=true );
+    Puck( Puck::ID id, leo_can::CANBus* can, bool createfilter=true );
 
     //! Return the puck ID
     Puck::ID GetID() const;
@@ -168,9 +168,9 @@ namespace barrett_direct {
       Call this method to obtain the origin puck ID in a CAN ID.
       \param canid The CAN id
       \return The origin puck ID of the CAN ID
-      \sa Origin( leoCAN::CANBusFrame )
+      \sa Origin( leo_can::CANBusFrame )
       */
-    static Puck::ID OriginID( leoCAN::CANBusFrame::id_t id );
+    static Puck::ID OriginID( leo_can::CANBusFrame::id_t id );
 
     //! Return the origin ID of the CAN frame
     /**
@@ -180,9 +180,9 @@ namespace barrett_direct {
       Call this method to obtain the origin puck ID in a CAN frame.
       \param canid The CAN frame
       \return The origin puck ID of the CAN frame
-      \sa Origin( leoCAN::CANBusID )
+      \sa Origin( leo_can::CANBusID )
       */
-    static Puck::ID OriginID( const leoCAN::CANBusFrame& canframe );
+    static Puck::ID OriginID( const leo_can::CANBusFrame& canframe );
 
     //! Return the destination ID of the CAN id
     /**
@@ -192,9 +192,9 @@ namespace barrett_direct {
       Call this method to obtain the destination puck ID in a CAN ID.
       \param canid The CAN id
       \return The origin puck ID of the CAN ID
-      \sa Origin( leoCAN::CANBusFrame )
+      \sa Origin( leo_can::CANBusFrame )
       */
-    static Puck::ID DestinationID( leoCAN::CANBusFrame::id_t id );
+    static Puck::ID DestinationID( leo_can::CANBusFrame::id_t id );
 
     //! Return the destination ID of the CAN frame
     /**
@@ -204,9 +204,9 @@ namespace barrett_direct {
       Call this method to obtain the destination puck ID in a CAN frame.
       \param canid The CAN frame
       \return The origin puck ID of the CAN frame
-      \sa Destination( leoCAN::CANBusID )
+      \sa Destination( leo_can::CANBusID )
       */
-    static Puck::ID DestinationID( const leoCAN::CANBusFrame& canframe );
+    static Puck::ID DestinationID( const leo_can::CANBusFrame& canframe );
 
     //! Return the index of the puck within its group
     /**
@@ -306,7 +306,7 @@ namespace barrett_direct {
       \param propid[out] The ID of the property in the data
       \param propval[out] The value of the property in the data
       */
-    Puck::Errno UnpackCANFrame( const leoCAN::CANBusFrame& canframe, 
+    Puck::Errno UnpackCANFrame( const leo_can::CANBusFrame& canframe, 
         Barrett::ID& id, 
         Barrett::Value& value );
 

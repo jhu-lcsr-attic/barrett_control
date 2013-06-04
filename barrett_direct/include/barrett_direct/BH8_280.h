@@ -128,9 +128,9 @@ namespace barrett_direct {
       from the devCAN base class.
       \param canbus The CAN device used by the BH8_280. This device must be derived
       from the devCAN classe.
-      \sa leoCAN::CANBus
+      \sa leo_can::CANBus
       */
-    BH8_280( leoCAN::CANBus* canbus );
+    BH8_280( leo_can::CANBus* canbus );
 
     //! Default destructor
     ~BH8_280();

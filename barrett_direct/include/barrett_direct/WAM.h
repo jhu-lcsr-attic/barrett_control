@@ -19,7 +19,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <Eigen/Dense>
 
-#include <leoCAN/CANBus.h>
+#include <leo_can/CANBus.h>
 
 #include <barrett_direct/Puck.h>
 #include <barrett_direct/Group.h>
@@ -158,7 +158,7 @@ namespace barrett_direct {
       from the devCAN classe.
       \sa CANBus
       */
-    WAM( leoCAN::CANBus* canbus, WAM::Configuration configuration = WAM_7DOF );
+    WAM( leo_can::CANBus* canbus, WAM::Configuration configuration = WAM_7DOF );
 
     //! Default destructor
     ~WAM();

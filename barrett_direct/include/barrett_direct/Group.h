@@ -22,7 +22,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <Eigen/Dense>
 
-#include <leoCAN/CANBus.h>
+#include <leo_can/CANBus.h>
 
 #include <barrett_direct/Puck.h>
 
@@ -103,7 +103,7 @@ namespace barrett_direct {
     std::vector< Puck > pucks;
 
     //! The CAN bus that is connected to the group
-    leoCAN::CANBus* canbus; 
+    leo_can::CANBus* canbus; 
 
     //! The ID of the group
     Group::ID id;
@@ -117,7 +117,7 @@ namespace barrett_direct {
       \param canframe A CAN frame with a read/write command
       \return true if the command is a write. false if the command is a read
       */
-    static bool IsSetFrame( const leoCAN::CANBusFrame& canframe );
+    static bool IsSetFrame( const leo_can::CANBusFrame& canframe );
 
     //! pack a CAN frame
     /**
@@ -128,16 +128,16 @@ namespace barrett_direct {
       \param set True of the property must be set. False for a query
       \return false if no error occurred. true otherwise
       */
-    Group::Errno PackProperty( leoCAN::CANBusFrame& canframe,
+    Group::Errno PackProperty( leo_can::CANBusFrame& canframe,
         Barrett::Command command,
         Barrett::ID propid,
         Barrett::Value propval = 0 );
 
     //! The bit of a CAN ID that identicates a group
-    static const leoCAN::CANBusFrame::id_t GROUP_CODE = 0x0400;
+    static const leo_can::CANBusFrame::id_t GROUP_CODE = 0x0400;
 
 
-    Group::Errno PackCurrents( leoCAN::CANBusFrame& frame, 
+    Group::Errno PackCurrents( leo_can::CANBusFrame& frame, 
         const Eigen::Vector4d& I );
 
     //! Querry the group. This is only valid for querying
@@ -159,32 +159,32 @@ namespace barrett_direct {
       \param groupid The ID of the puck
       \param can The CAN device used to communicate with the pucks
       */
-    Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter=true );
+    Group( Group::ID id, leo_can::CANBus* canbus, bool createfilter=true );
 
     //! Convert a group ID to a CAN id
     /**
       Convert the ID of a group to a CAN ID used in a CAN frame. This assumes 
       that the origin of the CAN ID will be the host (00000)
       */
-    static leoCAN::CANBusFrame::id_t CANID( Group::ID groupid );
+    static leo_can::CANBusFrame::id_t CANID( Group::ID groupid );
 
     //! Return the group ID
     Group::ID GetID() const;
 
     //! Return the origin ID of the CAN id
-    static Group::ID OriginID( leoCAN::CANBusFrame::id_t canid );
+    static Group::ID OriginID( leo_can::CANBusFrame::id_t canid );
 
     //! Return the origin ID of the CAN frame
-    static Group::ID OriginID( const leoCAN::CANBusFrame& canframe );
+    static Group::ID OriginID( const leo_can::CANBusFrame& canframe );
 
     //! Return the destination ID of the CAN id
-    static Group::ID DestinationID( leoCAN::CANBusFrame::id_t canid );
+    static Group::ID DestinationID( leo_can::CANBusFrame::id_t canid );
 
     //! Return the destination ID of the CAN id
-    static Group::ID DestinationID( const leoCAN::CANBusFrame& canframe );
+    static Group::ID DestinationID( const leo_can::CANBusFrame& canframe );
 
     //! Return true if the CAN frame id's destination is a group (any group)
-    static bool IsDestinationAGroup( const leoCAN::CANBusFrame canframe );
+    static bool IsDestinationAGroup( const leo_can::CANBusFrame canframe );
 
     //! Add the puck ID to the group
     void AddPuckToGroup( Puck::ID pid );

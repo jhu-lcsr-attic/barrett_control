@@ -1,0 +1,37 @@
+<package>
+  <name>barrett_controllers</name>
+  <version>0.1.0</version>
+  <description>barrett_controllers</description>
+  <maintainer email="jbo@jhu.edu">Jonathan Bohren</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/barrett_controllers</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Jonathan Bohren</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>realtime_tools</build_depend>
+  <build_depend>barrett_model</build_depend>
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>controller_interface</build_depend>
+  <build_depend>barrett_control_msgs</build_depend>
+  <build_depend>control_toolbox</build_depend>
+  <build_depend>terse_roscpp</build_depend>
+  <build_depend>orocos_kdl</build_depend>
+
+  <run_depend>realtime_tools</run_depend>
+  <run_depend>barrett_model</run_depend>
+  <run_depend>hardware_interface</run_depend>
+  <run_depend>controller_interface</run_depend>
+  <run_depend>barrett_control_msgs</run_depend>
+  <run_depend>control_toolbox</run_depend>
+  <run_depend>terse_roscpp</run_depend>
+  <run_depend>orocos_kdl</run_depend>
+
+  <export>
+    <controller_interface plugin="${prefix}/controllers_plugins.xml"/>
+  </export>
+</package>

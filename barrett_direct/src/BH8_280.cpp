@@ -26,7 +26,7 @@ http://www.cisst.org/cisst/license.txt.
 using namespace barrett_direct;
 
 // main constructor
-BH8_280::BH8_280(	leoCAN::CANBus* canbus ) :
+BH8_280::BH8_280(	leo_can::CANBus* canbus ) :
   // create the groups
   //broadcast(      Group::BROADCAST,         canbus, false ),
   hand(           Group::HAND,              canbus, false ),
@@ -35,7 +35,7 @@ BH8_280::BH8_280(	leoCAN::CANBus* canbus ) :
   qinit( qinit ) {
 
   //
-  //canbus->AddFilter( leoCAN::CANBus::Filter( 0x051F, 0x0403 ) );
+  //canbus->AddFilter( leo_can::CANBus::Filter( 0x051F, 0x0403 ) );
 
   // create the pucks
   pucks.push_back( Puck( Puck::PUCK_IDF1, canbus ) );

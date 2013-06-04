@@ -19,7 +19,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <Eigen/Dense>
 
-#include <leoCAN/CANBus.h>
+#include <leo_can/CANBus.h>
 
 #include <barrett_direct/Group.h>
 
@@ -59,7 +59,7 @@ Group::ID operator++( Group::ID& gid, int ){
 }
 
 // default constructor
-Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) : 
+Group::Group( Group::ID id, leo_can::CANBus* canbus, bool createfilter ) : 
   canbus( canbus ),
   id( id ){
 
@@ -114,10 +114,10 @@ Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) :
           // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
           // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
           // filter all 4 pucks because the forearm has similar filters
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0423 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0443 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0463 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x0483 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x0423 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x0443 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x0463 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x0483 ) );
         }
 
         break;
@@ -134,9 +134,9 @@ Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) :
           // Also, the pucks id for the upper arm have FFFFF=00xxx such that we have
           // a mask: 0x05E3 and filter: 0x0423, 0x0443, 0x0463, 0x0483. Here we 
           // filter all 4 pucks because the forearm has similar filters
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04A3 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04C3 ) );
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x05E3, 0x04E3 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x04A3 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x04C3 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x05E3, 0x04E3 ) );
         }
 
         break;
@@ -163,7 +163,7 @@ Group::Group( Group::ID id, leoCAN::CANBus* canbus, bool createfilter ) :
           // Also, the pucks id for the hand have FFFFF=01xxx such that we have:
           // a mask: 0x0503 and id: 0x0503. The hand is the only device with the 
           // 4th bit to 1 so use that bit to determine if the hand is replying
-          canbus->AddFilter( leoCAN::CANBus::Filter( 0x0503, 0x0503 ) );
+          canbus->AddFilter( leo_can::CANBus::Filter( 0x0503, 0x0503 ) );
         }
 
         break;
@@ -226,7 +226,7 @@ std::string Group::LogPrefix(){
 
 // STATIC return true of the CAN frame is destined to a group
 // For this we test the CAN ID for the GROUPTAG bit
-bool Group::IsDestinationAGroup( const leoCAN::CANBusFrame canframe )
+bool Group::IsDestinationAGroup( const leo_can::CANBusFrame canframe )
 { return (canframe.GetID() & Group::GROUP_CODE) == Group::GROUP_CODE; }
 
 // return the group id
@@ -234,35 +234,35 @@ Group::ID Group::GetID() const { return id; }
 
 // STATIC return the CAN of a message from the host (00000) to a group ID
 // A group ID is represented by 5 bits whereas a CAN ID has 11
-leoCAN::CANBusFrame::id_t Group::CANID( Group::ID id )
-{ return (leoCAN::CANBusFrame::id_t)( Group::GROUP_CODE | (0x1F & id) ); }
+leo_can::CANBusFrame::id_t Group::CANID( Group::ID id )
+{ return (leo_can::CANBusFrame::id_t)( Group::GROUP_CODE | (0x1F & id) ); }
 
 // STATIC return true if the CAN frame is a "set" command (a command has a 
 // message of the form
 // [1*** ****][**** ****]...[**** ****]
 // thus we test if the MSB of the first byte is set
-bool Group::IsSetFrame( const leoCAN::CANBusFrame& canframe ){
-  const leoCAN::CANBusFrame::data_t* data = canframe.GetData();
+bool Group::IsSetFrame( const leo_can::CANBusFrame& canframe ){
+  const leo_can::CANBusFrame::data_t* data = canframe.GetData();
   return ( data[0] & Barrett::SET_CODE) == Barrett::SET_CODE;
 }
 
 // STATIC returns the destination of a CAN id. This assumes that the 
 // destination is a group (as opposed to a puck)
 // The destination group ID compose the 5 LSB of a CAN ID
-Group::ID Group::DestinationID( leoCAN::CANBusFrame::id_t cid )
+Group::ID Group::DestinationID( leo_can::CANBusFrame::id_t cid )
 { return (Group::ID) ( cid & 0x001F); }
 
 // STATIC extract the destination group ID
-Group::ID Group::DestinationID( const leoCAN::CANBusFrame& canframe )
+Group::ID Group::DestinationID( const leo_can::CANBusFrame& canframe )
 { return Group::DestinationID( canframe.GetID() ); }
 
 // STATIC extract the origin group ID
 // the origin bits are the bits 5 to 9 (zero index) in a CAN ID
-Group::ID Group::OriginID( leoCAN::CANBusFrame::id_t cid )
+Group::ID Group::OriginID( leo_can::CANBusFrame::id_t cid )
 { return (Group::ID) ((cid>>5) & 0x001F); }
 
 // STATIC extract the origin group ID
-Group::ID Group::OriginID( const leoCAN::CANBusFrame& canframe )
+Group::ID Group::OriginID( const leo_can::CANBusFrame& canframe )
 { return Group::OriginID( canframe.GetID() ); }
 
 void Group::AddPuckToGroup( Puck::ID pid ){
@@ -277,14 +277,14 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
     std::vector<Barrett::Value>& values ){
 
   // pack the query in a CAN frame
-  leoCAN::CANBusFrame sendframe;
+  leo_can::CANBusFrame sendframe;
   if( PackProperty( sendframe, Barrett::GET, propid ) != Group::ESUCCESS){
     std::cerr << "Failed to pack the property" << std::endl;
     return Group::EFAILURE;
   }
 
   // send the CAN frame
-  if( canbus->Send( sendframe ) != leoCAN::CANBus::ESUCCESS ){
+  if( canbus->Send( sendframe ) != leo_can::CANBus::ESUCCESS ){
     std::cerr << ": Failed to querry group" << std::endl;
     return Group::EFAILURE;
   }
@@ -295,10 +295,10 @@ Group::Errno Group::GetProperty( Barrett::ID propid,
   for( size_t i=0; i<pucks.size(); i++ ){
 
     // empty CAN frame
-    leoCAN::CANBusFrame recvframe;
+    leo_can::CANBusFrame recvframe;
 
     // receive the response in a CAN frame
-    if( canbus->Recv( recvframe ) != leoCAN::CANBus::ESUCCESS ){
+    if( canbus->Recv( recvframe ) != leo_can::CANBus::ESUCCESS ){
       std::cerr << LogPrefix() << "Failed to receive property" 
         << std::endl;
       return Group::EFAILURE;
@@ -362,7 +362,7 @@ Group::Errno Group::SetProperty( Barrett::ID propid,
     bool verify){
 
   // pack the "set" command in a CAN frame
-  leoCAN::CANBusFrame canframe;
+  leo_can::CANBusFrame canframe;
   if( PackProperty( canframe, Barrett::SET, propid, propval )
       != Group::ESUCCESS ){
     std::cerr << ": Failed to pack the property " << propid 
@@ -371,7 +371,7 @@ Group::Errno Group::SetProperty( Barrett::ID propid,
   }
 
   // Send the CAN frame
-  if( canbus->Send( canframe ) != leoCAN::CANBus::ESUCCESS ){
+  if( canbus->Send( canframe ) != leo_can::CANBus::ESUCCESS ){
     std::cerr << ": Failed to send the CAN frame."
       << std::endl;
     return Group::EFAILURE;
@@ -388,13 +388,13 @@ Group::Errno Group::SetProperty( Barrett::ID propid,
 }
 
 // This packs a frame originating from the host and destined to the puck
-Group::Errno Group::PackProperty( leoCAN::CANBusFrame& canframe,
+Group::Errno Group::PackProperty( leo_can::CANBusFrame& canframe,
     Barrett::Command cmd,
     Barrett::ID propid,
     Barrett::Value propval ){
 
-  leoCAN::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-  leoCAN::CANBusFrame::data_len_t length=1;  // default message length (for a query)
+  leo_can::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  leo_can::CANBusFrame::data_len_t length=1;  // default message length (for a query)
 
   // See Barrett's documentation to understand the format
   data[0] = propid & 0x7F;                                 //data[0] = APPPPPP
@@ -405,14 +405,14 @@ Group::Errno Group::PackProperty( leoCAN::CANBusFrame& canframe,
 
     // fill the rest of the bytes with the property value
     for(size_t i=2; i<6; i++){
-      data[i] = (leoCAN::CANBusFrame::data_t)(propval & 0x000000FF);//data[i] = values
+      data[i] = (leo_can::CANBusFrame::data_t)(propval & 0x000000FF);//data[i] = values
       propval >>= 8;
     }
     length = 6; // packed 6 bytes 
   }
 
   // create a new CAN frame
-  canframe = leoCAN::CANBusFrame( Group::CANID( GetID() ), data, length );
+  canframe = leo_can::CANBusFrame( Group::CANID( GetID() ), data, length );
 
   return Group::ESUCCESS;
 }
@@ -485,14 +485,14 @@ Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
     { currents[i] = tau[i] * pucks[i].IpNm(); }
 
     // pack the torques in a can frames
-    leoCAN::CANBusFrame frame;
+    leo_can::CANBusFrame frame;
     if( PackCurrents( frame, currents ) != Group::ESUCCESS ){
       std::cerr << "Failed to pack the torques" << std::endl;
       return Group::EFAILURE;
     }
 
     // send the canframe (blocking)
-    if( canbus->Send( frame ) != leoCAN::CANBus::ESUCCESS ){
+    if( canbus->Send( frame ) != leo_can::CANBus::ESUCCESS ){
       std::cerr << "Failed to send upper arm torques" << std::endl;
       return Group::EFAILURE;
     }
@@ -511,7 +511,7 @@ Group::Errno Group::SetTorques( const Eigen::Vector4d& tau ){
 
 // pack motor torques in a CAN frame
 // this should go into devGroup
-Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame, 
+Group::Errno Group::PackCurrents( leo_can::CANBusFrame& frame, 
     const Eigen::Vector4d& I ){
 
   // we can only pack torques for the upper arm and forearm groups
@@ -545,7 +545,7 @@ Group::Errno Group::PackCurrents( leoCAN::CANBusFrame& frame,
     msg[7]=(unsigned char)(  values[3]    &0x00FF);
 
     // build a can frame addressed to the group ID 
-    frame = leoCAN::CANBusFrame( Group::CANID( GetID() ), msg, 8 );
+    frame = leo_can::CANBusFrame( Group::CANID( GetID() ), msg, 8 );
 
     return Group::ESUCCESS;
   }

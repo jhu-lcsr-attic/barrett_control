@@ -1,0 +1,19 @@
+<package>
+  <name>barrett_sim</name>
+  <version>0.1.0</version>
+  <description>barrett_sim</description>
+  <maintainer email="jbo@jhu.edu">Jonathan Bohren</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/barrett_sim</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Jonathan Bohren</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+
+  </export>
+</package>

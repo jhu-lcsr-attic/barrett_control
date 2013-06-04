@@ -49,19 +49,19 @@ Puck::ID operator++( Puck::ID& pid, int  ){
 Puck::Puck(){}
 
 // Initialize the puck to its ID and the CAN bus
-Puck::Puck( Puck::ID id, leoCAN::CANBus* canbus, bool createfilter ){
+Puck::Puck( Puck::ID id, leo_can::CANBus* canbus, bool createfilter ){
   this->id = id;
   this->canbus = canbus;
 
   // Add a filter for the property feedback group (group 6)
   // 
   if( createfilter ){
-    leoCAN::CANBusFrame::id_t filterid = 0x0000;
+    leo_can::CANBusFrame::id_t filterid = 0x0000;
     filterid |= ( 0x00000001 << 10 ); // group bit shifted 10 bits 
     filterid |= ( GetID() << 5 );     // from  bits shifted 5 bits
     // G FFFFF TTTTT ( G:0-1, F:0-14, T: 0-14 )
     // GFF FFFT TTTT ( 0x5EF ) 
-    canbus->AddFilter( leoCAN::CANBus::Filter( 0x05EF, (filterid | 0x0006) ) );
+    canbus->AddFilter( leo_can::CANBus::Filter( 0x05EF, (filterid | 0x0006) ) );
   }
 
 }
@@ -88,35 +88,35 @@ Barrett::Value Puck::GroupIndex()          const { return grpidx; }
 
 // STATIC return the CAN ID of a message from the host (00000) to a puck ID
 // A puck ID is represented by 5 bits whereas a CAN ID has 11
-leoCAN::CANBusFrame::id_t Puck::CANID( Puck::ID id )
-{ return (leoCAN::CANBusFrame::id_t)(0x1F & id); }
+leo_can::CANBusFrame::id_t Puck::CANID( Puck::ID id )
+{ return (leo_can::CANBusFrame::id_t)(0x1F & id); }
 
 // STATIC return true if the CAN frame is a "set" command (a command has a 
 // message of the form
 // [1*** ****][**** ****]...[**** ****]
 // thus we test if the MSB of the first byte is set
-bool Puck::IsSetFrame( const leoCAN::CANBusFrame& canframe ){
-  const leoCAN::CANBusFrame::data_t* data = canframe.GetData();
+bool Puck::IsSetFrame( const leo_can::CANBusFrame& canframe ){
+  const leo_can::CANBusFrame::data_t* data = canframe.GetData();
   return ( data[0] & Barrett::SET_CODE ) == Barrett::SET_CODE;
 }
 
 // STATIC returns the destination of a CAN id. This assumes that the 
 // destination is a puck (as opposed to a group)
 // The destination puck ID compose the 5 LSB of a CAN ID
-Puck::ID Puck::DestinationID( leoCAN::CANBusFrame::id_t cid )
+Puck::ID Puck::DestinationID( leo_can::CANBusFrame::id_t cid )
 { return (Puck::ID)( cid & 0x1F); }
 
 // STATIC returns the destination of a CAN frame
-Puck::ID Puck::DestinationID( const leoCAN::CANBusFrame& canframe )
+Puck::ID Puck::DestinationID( const leo_can::CANBusFrame& canframe )
 { return Puck::DestinationID( canframe.GetID() ); }
 
 // STATIC returns the origin of a CAN id.
 // the origin bits are the bits 5 to 9 (zero index) in a CAN ID
-Puck::ID Puck::OriginID( leoCAN::CANBusFrame::id_t cid ) 
+Puck::ID Puck::OriginID( leo_can::CANBusFrame::id_t cid ) 
 { return (Puck::ID)((cid>>5) & 0x1F); }
 
 // STATIC returns the origin of a CAN frame.
-Puck::ID Puck::OriginID( const leoCAN::CANBusFrame& canframe ) 
+Puck::ID Puck::OriginID( const leo_can::CANBusFrame& canframe ) 
 { return Puck::OriginID( canframe.GetID() ); }
 
 // Get a property from the puck. this sends a query to the puck and wait for
@@ -125,7 +125,7 @@ Puck::Errno Puck::GetProperty( Barrett::ID propid,
  				     Barrett::Value& propvalue ){ 
 
   // empty CAN frame
-  leoCAN::CANBusFrame sendframe;
+  leo_can::CANBusFrame sendframe;
     
   // pack the query in a can frame
   if( PackProperty( sendframe, Barrett::GET, propid ) != Puck::ESUCCESS ){
@@ -134,16 +134,16 @@ Puck::Errno Puck::GetProperty( Barrett::ID propid,
   }
   
   // send the CAN frame
-  if( canbus->Send( sendframe ) != leoCAN::CANBus::ESUCCESS ){
+  if( canbus->Send( sendframe ) != leo_can::CANBus::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to querry puck" << std::endl;
     return Puck::EFAILURE;
   }
   
   // empty CAN frame
-  leoCAN::CANBusFrame recvframe;
+  leo_can::CANBusFrame recvframe;
 
   // receive the response in a CAN frame
-  if( canbus->Recv( recvframe ) != leoCAN::CANBus::ESUCCESS ){
+  if( canbus->Recv( recvframe ) != leo_can::CANBus::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to receive property"
 		      << std::endl;
     return Puck::EFAILURE;
@@ -174,7 +174,7 @@ Puck::Errno Puck::SetProperty( Barrett::ID propid,
 				     bool verify){
 
   // empty CAN frame
-  leoCAN::CANBusFrame frame;
+  leo_can::CANBusFrame frame;
 
   // pack the property ID and value in a "set" CAN frame 
   if( PackProperty( frame, Barrett::SET, propid, propval )!=Puck::ESUCCESS ){
@@ -184,7 +184,7 @@ Puck::Errno Puck::SetProperty( Barrett::ID propid,
   }
   
   // send the CAN frame
-  if( canbus->Send( frame ) != leoCAN::CANBus::ESUCCESS ){
+  if( canbus->Send( frame ) != leo_can::CANBus::ESUCCESS ){
     std::cerr << LogPrefix() << "Failed to send the CAN frame." 
 		      << std::endl;
     return Puck::EFAILURE;
@@ -222,14 +222,14 @@ Puck::Errno Puck::SetProperty( Barrett::ID propid,
 }
 
 // This packs a frame originating from the host and destined to the puck
-Puck::Errno Puck::PackProperty( leoCAN::CANBusFrame& canframe, 
+Puck::Errno Puck::PackProperty( leo_can::CANBusFrame& canframe, 
 				      Barrett::Command cmd,
 				      Barrett::ID propid,
 				      Barrett::Value propval ){
 
   // Can message is 8 bytes long
-  leoCAN::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-  leoCAN::CANBusFrame::data_len_t length=1;  // default message length (for a query)
+  leo_can::CANBusFrame::data_field_t data={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  leo_can::CANBusFrame::data_len_t length=1;  // default message length (for a query)
   
   // See Barrett's documentation to understand the format
   data[0] = propid & 0x7F;                                  // data[0] = APPPPPP
@@ -240,14 +240,14 @@ Puck::Errno Puck::PackProperty( leoCAN::CANBusFrame& canframe,
     
     // fill the rest of the bytes with the property value
     for(size_t i=2; i<6; i++){
-      data[i] = (leoCAN::CANBusFrame::data_t)( propval & 0xFF);     // data[i] = values
+      data[i] = (leo_can::CANBusFrame::data_t)( propval & 0xFF);     // data[i] = values
       propval >>= 8;
     }
     length = 6; // packed 6 bytes 
   }
   
   // create a new CAN frame
-  canframe = leoCAN::CANBusFrame( Puck::CANID( GetID() ), data, length );
+  canframe = leo_can::CANBusFrame( Puck::CANID( GetID() ), data, length );
 
   return Puck::ESUCCESS;
 }
@@ -256,13 +256,13 @@ Puck::Errno Puck::PackProperty( leoCAN::CANBusFrame& canframe,
 // this is a bit backwards, because this methods is usually called from the 
 // perspective of the host. Therefore, this is akin to asking a puck to unpack
 // a message that it sent...whatever
-Puck::Errno Puck::UnpackCANFrame(const leoCAN::CANBusFrame& canframe,
+Puck::Errno Puck::UnpackCANFrame(const leo_can::CANBusFrame& canframe,
 				       Barrett::ID& propid,
 				       Barrett::Value& propval ){
 
   // get the data and the data length
-  const leoCAN::CANBusFrame::data_t* data = canframe.GetData();
-  leoCAN::CANBusFrame::data_len_t length = canframe.GetLength();
+  const leo_can::CANBusFrame::data_t* data = canframe.GetData();
+  leo_can::CANBusFrame::data_len_t length = canframe.GetLength();
 
   // Ensure that the CAN frame originated from this puck!
   if( OriginID(canframe) == GetID() ){
@@ -295,7 +295,7 @@ Puck::Errno Puck::UnpackCANFrame(const leoCAN::CANBusFrame& canframe,
       propid = (Barrett::ID)(data[0] & 0x7F);  // extract the property ID
       
       propval = 0;                                 // decode the payload
-      leoCAN::CANBusFrame::data_len_t i;
+      leo_can::CANBusFrame::data_len_t i;
       for(i=0; i<length-2; i++){
 	propval |= ((Barrett::Value)data[i+2]<<(i*8)) & (0xFF<<(i*8));
       }

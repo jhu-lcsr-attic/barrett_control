@@ -19,14 +19,14 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <Eigen/Dense>
 
-#include <leoCAN/CANBus.h>
+#include <leo_can/CANBus.h>
 
 #include <barrett_direct/WAM.h>
 
 using namespace barrett_direct;
 
 // main constructor
-WAM::WAM(	leoCAN::CANBus* canbus,
+WAM::WAM(	leo_can::CANBus* canbus,
     WAM::Configuration configuration ) :
 
   configuration( configuration ),

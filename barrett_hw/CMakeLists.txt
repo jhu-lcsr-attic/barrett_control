@@ -1,47 +1,45 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+# http://ros.org/doc/groovy/api/catkin/html/user_guide/supposed.html
+cmake_minimum_required(VERSION 2.8.3)
+project(barrett_hw)
+# Load catkin and all dependencies required for this package
+# TODO: remove all from COMPONENTS that are not catkin packages.
+find_package(catkin COMPONENTS hardware_interface barrett_direct
+  barrett_model kdl_urdf_tools terse_roscpp controller_manager
+  barrett_controllers control_toolbox rospy xenomai_ros)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+if(Xenomai_FOUND)
 
-rosbuild_init()
+  include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS})
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+  # CATKIN_MIGRATION: removed during catkin migration
+  # include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+  find_package(Eigen REQUIRED)
+  include_directories(${EIGEN_INCLUDE_DIRS})
+  add_definitions(${EIGEN_DEFINITIONS})
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+  # Add xenomai flags
+  add_xenomai_flags()
 
-# Find the rosbuild_xenomai ROS package
-rosbuild_find_ros_package(rosbuild_xenomai)
-include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
+  add_library(barrett_hw src/wam.cpp include/barrett_hw/wam.h)
 
-find_package(Eigen REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
-add_definitions(${EIGEN_DEFINITIONS})
+  #add_definitions(-D__XENO__)
+  add_executable(wam_server src/wam_server.cpp)
+  target_link_libraries(wam_server xenomai native rtdm barrett_hw)
+  ## Generate added messages and services with any dependencies listed here
+  generate_messages(
+    #TODO DEPENDENCIES geometry_msgs std_msgs
+  )
+  # TODO: fill in what other packages will need to use this package
+  ## DEPENDS: system dependencies of this project that dependent projects also need
+  ## CATKIN_DEPENDS: catkin_packages dependent projects also need
+  ## INCLUDE_DIRS: 
+  ## LIBRARIES: libraries you create in this project that dependent projects also need
+  catkin_package(
+      DEPENDS hardware_interface barrett_direct barrett_model kdl_urdf_tools terse_roscpp controller_manager barrett_controllers control_toolbox rospy
+      CATKIN_DEPENDS # TODO
+      INCLUDE_DIRS # TODO include
+      LIBRARIES # TODO
+  )
 
-# Add xenomai flags
-rosbuild_add_xenomai_flags()
-
-rosbuild_add_library(barrett_hw src/wam.cpp include/barrett_hw/wam.h)
-
-#add_definitions(-D__XENO__)
-rosbuild_add_executable(wam_server src/wam_server.cpp)
-target_link_libraries(wam_server xenomai native rtdm barrett_hw)
+endif()

@@ -1,0 +1,30 @@
+<package>
+  <name>barrett_direct</name>
+  <version>0.1.0</version>
+  <description>
+    This is a driver package for the Barrett Technologies Whole Arm Manipulator
+    (WAM) Robot. It is a 4- or 7-DOF robotic arm for use in manipulation
+    research. This driver, in particular, enables direct control of a WAM robot
+    from a PC with a CANBus interface. This bypasses the PC104 stacks used in
+    the normal WAM driver.
+  </description>
+  <maintainer email="jbo@jhu.edu">Jonathan Bohren</maintainer>
+
+  <license>CISST (http://www.cisst.org/cisst/license.txt)</license>
+
+  <url type="website">http://ros.org/wiki/barrett_direct</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="sleonard@jhu.edu">Simon Leonard</author>
+  <author email="jbo@jhu.edu">Jonathan Bohren</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>xenomai_ros</build_depend>
+  <build_depend>leo_can</build_depend>
+  <run_depend>leo_can</run_depend>
+
+  <export>
+    <cpp lflags="-L${prefix}/lib -Wl,-rpath,-L${prefix}lib -lbarrett_direct" cflags="-I${prefix}/include"/>
+  </export>
+</package>

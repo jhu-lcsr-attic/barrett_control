@@ -1,11 +1,11 @@
 #include <barrett_direct/WAM.h>
-#include <leoCAN/RTSocketCAN.h>
+#include <leo_can/RTSocketCAN.h>
 #include <native/task.h>
 #include <sys/mman.h>
 #include <cmath>
 #include <time.h>
 
-using namespace leoCAN;
+using namespace leo_can;
 using namespace barrett_direct;
 
 int main( int argc, char** argv ){
@@ -24,7 +24,7 @@ int main( int argc, char** argv ){
   // Create CANBus device
   RTSocketCAN can( argv[1], CANBus::RATE_1000 );
   // Make sure the device is open
-  if( can.Open() != leoCAN::CANBus::ESUCCESS ){
+  if( can.Open() != leo_can::CANBus::ESUCCESS ){
     std::cerr << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
   }
