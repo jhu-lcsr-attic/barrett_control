@@ -13,8 +13,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>libbarrett</build_depend>
   <build_depend>hardware_interface</build_depend>
-  <build_depend>barrett_direct</build_depend>
   <build_depend>barrett_model</build_depend>
   <build_depend>kdl_urdf_tools</build_depend>
   <build_depend>terse_roscpp</build_depend>
@@ -23,8 +23,9 @@
   <build_depend>control_toolbox</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>xenomai_ros</build_depend>
+
+  <run_depend>libbarrett</run_depend>
   <run_depend>hardware_interface</run_depend>
-  <run_depend>barrett_direct</run_depend>
   <run_depend>barrett_model</run_depend>
   <run_depend>kdl_urdf_tools</run_depend>
   <run_depend>terse_roscpp</run_depend>
