@@ -11,7 +11,7 @@ find_package(barrett)
 
 if(Xenomai_FOUND)
 
-  include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS})
+  include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS} ${barrett_INCLUDE_DIRS})
 
   # CATKIN_MIGRATION: removed during catkin migration
   # include(${rosbuild_xenomai_PACKAGE_PATH}/rosbuild_xenomai.cmake)
@@ -20,18 +20,21 @@ if(Xenomai_FOUND)
   include_directories(${EIGEN_INCLUDE_DIRS})
   add_definitions(${EIGEN_DEFINITIONS})
 
+  # Barrett
+  include_directories(${BARRETT_INCLUDE_DIRS})
+  link_directories(${BARRETT_LIBRARY_DIRS})
+  add_definitions(${BARRETT_DEFINITIONS})
+
   # Add xenomai flags
   add_xenomai_flags()
 
-  add_library(barrett_hw src/wam.cpp include/barrett_hw/wam.h)
+  #add_library(barrett_hw src/wam.cpp include/barrett_hw/wam.h)
 
   #add_definitions(-D__XENO__)
   add_executable(wam_server src/wam_server.cpp)
-  target_link_libraries(wam_server xenomai native rtdm barrett_hw)
+  target_link_libraries(wam_server xenomai native rtdm ${BARRETT_LIBRARIES} ${catkin_LIBRARIES})
+
   ## Generate added messages and services with any dependencies listed here
-  generate_messages(
-    #TODO DEPENDENCIES geometry_msgs std_msgs
-  )
   # TODO: fill in what other packages will need to use this package
   ## DEPENDS: system dependencies of this project that dependent projects also need
   ## CATKIN_DEPENDS: catkin_packages dependent projects also need

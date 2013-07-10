@@ -1,0 +1,28 @@
+<launch>
+  <!-- Launch several pieces of barrett hardware -->
+
+  <arg name="CONFIG_LEFT" default="$(find barrett_hw)/cfg/default.conf"/>
+  <arg name="BUS_LEFT" default="$(find barrett_hw)/cfg/default.conf"/>
+
+  <!-- Config / Bus -->
+  <param ns="barrett" name="busses/rtcan_left/config" value="$(arg CONFIG_LEFT)"/>
+  <param ns="barrett" name="busses/rtcan_left/bus" value="$(arg BUS_LEFT)"/>
+
+  <!-- Products -->
+  <rosparam ns="barrett">
+    product_names:
+    - "wam_left"
+    #- "bhand_left"
+    products:
+      wam_left:
+        bus: "rtcan_left"
+        type: "wam"
+        tip_link: "wam_left_palm_yaw_link"
+      bhand_left:
+        bus: "rtcan_left"
+        type: "hand"
+        tactile: false
+  </rosparam>
+
+  <!-- Launch several pieces of barrett hardware -->
+</launch>
