@@ -47,36 +47,68 @@ namespace barrett_hw
     void stop();
     void cleanup();
 
+    // Wait for all devices to become active
     bool wait_for_active(
       ros::Duration timeout = ros::Duration(60.0), 
       ros::Duration poll_duration = ros::Duration(0.1));
     
-    // State structure for a product
+    // State structure for a Wam
     // This provides storage for the joint handles
     template<int DOF>
     struct WamDevice 
     {
+      // Low-level interface
       boost::shared_ptr<barrett::LowLevelWam<DOF> > interface;
+
+      // Configuration
       std::vector<std::string> joint_names;
-      Eigen::Matrix<double,DOF,1> joint_positions, joint_velocities;
-      Eigen::Matrix<double,DOF,1> joint_effort_cmds;
-      Eigen::Matrix<double,DOF,1> resolver_angles, resolver_ranges, joint_offsets;
+      Eigen::Matrix<double,DOF,1> resolver_ranges;
+
+      // State
+      Eigen::Matrix<double,DOF,1> 
+        joint_positions,
+        joint_velocities,
+        joint_effort_cmds,
+        joint_offsets,
+        resolver_angles,
+        calibration_burn_offsets;
+
       Eigen::Matrix<int,DOF,1> calibrated_joints;
-      Eigen::Matrix<double,DOF,1> calibration_burn_offsets;
+
+      void set_zero() {
+        joint_positions.setZero();
+        joint_velocities.setZero();
+        joint_effort_cmds.setZero();
+        joint_offsets.setZero();
+        resolver_angles.setZero();
+        calibration_burn_offsets.setZero();
+      }
+
     };
 
+    // State structure for a Hand
     struct HandDevice 
     {
+      // Low-level interface
       boost::shared_ptr<barrett::Hand> interface;
+
+      // Configuration
       std::vector<std::string> joint_names;
-      Eigen::Matrix<double,4,1> joint_positions, joint_velocities;
-      Eigen::Matrix<double,4,1> joint_effort_cmds;
-      Eigen::Matrix<double,4,1> resolver_angles, resolver_ranges, joint_offsets;
-      Eigen::Matrix<int,4,1> calibrated_joints;
-      Eigen::Matrix<double,4,1> calibration_burn_offsets;
+      Eigen::Vector4d resolver_ranges;
+
+      // State
+      Eigen::Vector4d
+        joint_positions,
+        joint_velocities,
+        joint_effort_cmds,
+        joint_offsets,
+        resolver_angles,
+        calibration_burn_offsets;
+
+      Eigen::Vector4i calibrated_joints;
     };
 
-    //std::map<std::string, boost::shared_ptr<barrett::MultiPuckProduct> > products;
+    // Typedefs to make the world happier
     typedef WamDevice<4> WamDevice4;
     typedef WamDevice<7> WamDevice7;
     typedef std::map<std::string, boost::shared_ptr<barrett::ProductManager> >  ManagerMap;
@@ -85,24 +117,26 @@ namespace barrett_hw
     typedef std::map<std::string, boost::shared_ptr<HandDevice> > HandMap;
 
   private:
-    ros::NodeHandle nh_;
-    size_t n_total_dof_;
-    urdf::Model urdf_model_;
 
-    // Status
+    // State
+    ros::NodeHandle nh_;
     bool configured_;
+
+    // Configuration
+    urdf::Model urdf_model_;
 
     // ros-controls interface
     hardware_interface::JointStateInterface state_interface_;
     hardware_interface::EffortJointInterface effort_interface_;
     barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
     
-    // Vectors for various barrett products
+    // Vectors of various barrett structures
     ManagerMap barrett_managers_;
     Wam4Map wam4s_;
     Wam7Map wam7s_;
     HandMap hands_;
 
+  protected:
     template <int DOF>
       Eigen::Matrix<double,DOF,1>
       compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam) 
@@ -128,7 +162,7 @@ namespace barrett_hw
 
   BarrettHW::BarrettHW(ros::NodeHandle nh) :
     nh_(nh),
-    n_total_dof_(0)
+    configured_(false)
   {
 
   }
@@ -157,9 +191,10 @@ namespace barrett_hw
       std::string bus_name;
       param::require(product_nh,"bus",bus_name, "Bus name.");
 
-      // Create the product manager if it doesn't exist
+      // Get the barrett product manager
       boost::shared_ptr<barrett::ProductManager> barrett_manager;
 
+      // Create the product manager if it doesn't exist
       if(barrett_managers_.find(bus_name) == barrett_managers_.end()) {
         // Determine the bus information 
         int bus_port;
@@ -183,7 +218,7 @@ namespace barrett_hw
       std::string product_type;
       param::require(product_nh,"type",product_type, "Barrett product type [wam,bhand].");
 
-      // Add a WAM
+      // Add products
       if(product_type == "wam") {
         // Get the configuration for this type of arm
         const libconfig::Setting& wam_config = barrett_manager->getConfig().lookup(barrett_manager->getWamDefaultConfigPath());
@@ -197,8 +232,6 @@ namespace barrett_hw
           ROS_ERROR("Could not find WAM on bus!"); 
           continue; 
         }
-
-
       } else if(product_type == "hand") {
         ROS_ERROR_STREAM("Look ma, no hands!");
         continue;
@@ -229,7 +262,7 @@ namespace barrett_hw
       // Construct a new wam device (interface and state storage)
       boost::shared_ptr<BarrettHW::WamDevice<DOF> > wam_device(new BarrettHW::WamDevice<DOF>());
 
-      // Get the wam picks
+      // Get the wam pucks
       std::vector<barrett::Puck*> wam_pucks = barrett_manager->getWamPucks();
       wam_pucks.resize(DOF);
 
@@ -301,7 +334,12 @@ namespace barrett_hw
     }
 
     // Zero the state 
-    
+    for(Wam4Map::iterator it = wam4s_.begin(); it != wam4s_.end(); ++it) {
+      it->second->set_zero();
+    }
+    for(Wam7Map::iterator it = wam7s_.begin(); it != wam7s_.end(); ++it) {
+      it->second->set_zero();
+    }
 
     // Wait for the system to become active
     this->wait_for_active();
@@ -344,6 +382,12 @@ namespace barrett_hw
     // Get state
     device->joint_positions = device->interface->getJointPositions();
     device->joint_velocities = device->interface->getJointPositions();
+
+    // Read resolver angles
+    std::vector<barrett::Puck*> pucks = device->interface->getPucks();	
+    for(size_t i=0; i<pucks.size(); i++) {
+      device->resolver_angles(i) = pucks[i]->getProperty(barrett::Puck::MECH);
+    }
 
     return true;
   }
