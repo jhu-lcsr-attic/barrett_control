@@ -47,7 +47,7 @@ namespace barrett_hw
     bool read(const ros::Time time, const ros::Duration period); 
     void write(const ros::Time time, const ros::Duration period);
     void stop();
-    void cleanup();
+    void cleanup() { }
 
     // Wait for all devices to become active
     bool wait_for_mode(
@@ -580,22 +580,12 @@ int main( int argc, char** argv ){
   // Construct the wam structure
   ros::NodeHandle barrett_nh("barrett");
 
-  barrett_hw::BarrettHW barrett(barrett_nh);
-  barrett.configure();
-  barrett.start();
+  barrett_hw::BarrettHW barrett_robot(barrett_nh);
+  barrett_robot.configure();
+  barrett_robot.start();
 
-
-  //TODO: execution manager not needed for LLW
-  //barrett_manager.getExecutionManager()->start();
-
-  //LowLevelWam::getJointPositions()
-  //LowLevelWam::setTorques()
-  //LowLevelWam::update()
-
-  ////barrett_hw::WAM wam_hw( barrett_nh );
 
   // Timer variables
-#if 0 
   struct timespec ts = {0,0};
 
   if(clock_gettime(CLOCK_REALTIME, &ts) != 0) {
@@ -614,14 +604,14 @@ int main( int argc, char** argv ){
 
   bool wam_ok = false;
   while(!g_quit && !wam_ok) {
-    if(!wam_hw.configure()) {
+    if(!barrett_robot.configure()) {
       ROS_ERROR("Could not configure WAM!");
-    } else if(!wam_hw.start()) {
+    } else if(!barrett_robot.start()) {
       ROS_ERROR("Could not start WAM!");
     } else {
       ros::Duration(1.0).sleep();
 
-      if(!wam_hw.read(now, period)) {
+      if(!barrett_robot.read(now, period)) {
         ROS_ERROR("Could not read from WAM!");
       } else {
         wam_ok = true;
@@ -633,7 +623,7 @@ int main( int argc, char** argv ){
 
   // Construct the controller manager
   ros::NodeHandle nh;
-  controller_manager::ControllerManager manager(&wam_hw, nh);
+  controller_manager::ControllerManager manager(&barrett_robot, nh);
 
   uint32_t count = 0;
 
@@ -651,7 +641,7 @@ int main( int argc, char** argv ){
     } 
 
     // Read the state from the WAM
-    if(!wam_hw.read(now, period)) {
+    if(!barrett_robot.read(now, period)) {
       g_quit=true;
       break;
     }
@@ -660,7 +650,7 @@ int main( int argc, char** argv ){
     manager.update(now, period);
 
     // Write the command to the WAM
-    wam_hw.write(now, period);
+    barrett_robot.write(now, period);
 
     if(count++ > 1000) {
       if(publisher.trylock()) {
@@ -677,11 +667,10 @@ int main( int argc, char** argv ){
   spinner.stop();
 
   std::cerr<<"Stopping WAM..."<<std::endl;
-  wam_hw.stop();
+  barrett_robot.stop();
 
   std::cerr<<"Cleaning up WAM..."<<std::endl;
-  wam_hw.cleanup();
-#endif
+  barrett_robot.cleanup();
 
   std::cerr<<"Poka!"<<std::endl;
 
