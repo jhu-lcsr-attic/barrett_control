@@ -6,6 +6,8 @@
 #include <controller_manager/controller_manager.h>
 #include <signal.h>
 #include <realtime_tools/realtime_publisher.h>
+#include <control_toolbox/filters.h>
+#include <control_toolbox/pid.h>
 #include <std_msgs/Duration.h>
 
 #include <hardware_interface/joint_state_interface.h>
@@ -54,7 +56,7 @@ namespace barrett_hw
     
     // State structure for a Wam
     // This provides storage for the joint handles
-    template<int DOF>
+    template<size_t DOF>
     struct WamDevice 
     {
       // Low-level interface
@@ -62,7 +64,10 @@ namespace barrett_hw
 
       // Configuration
       std::vector<std::string> joint_names;
-      Eigen::Matrix<double,DOF,1> resolver_ranges;
+      Eigen::Matrix<double,DOF,1> 
+        resolver_ranges,
+        effort_limits,
+        velocity_limits;
 
       // State
       Eigen::Matrix<double,DOF,1> 
@@ -137,24 +142,28 @@ namespace barrett_hw
     HandMap hands_;
 
   protected:
-    template <int DOF>
-      Eigen::Matrix<double,DOF,1>
-      compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam) 
-      {
-        Eigen::MatrixXd m_to_j_pos = wam->getMotorToJointPositionTransform();  
-        return (m_to_j_pos.diagonal().array() * 2.0*M_PI).cwiseAbs().matrix();
-      }
 
-    template <int DOF>
+    template <size_t DOF>
+      Eigen::Matrix<double,DOF,1>
+      compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam);
+
+    template <size_t DOF>
       boost::shared_ptr<BarrettHW::WamDevice<DOF> > 
       configure_wam(
           ros::NodeHandle product_nh,
           boost::shared_ptr<barrett::ProductManager> barrett_manager, 
           const libconfig::Setting &wam_config); 
 
-    template <int DOF>
+    template <size_t DOF>
       bool
       read_wam(
+          const ros::Time time, 
+          const ros::Duration period,
+          boost::shared_ptr<BarrettHW::WamDevice<DOF> > device);
+
+    template <size_t DOF>
+      void 
+      write_wam(
           const ros::Time time, 
           const ros::Duration period,
           boost::shared_ptr<BarrettHW::WamDevice<DOF> > device);
@@ -243,6 +252,11 @@ namespace barrett_hw
 
     // TODO: Set up gravity compensator
     // Write kdl_ros_integration package which handles kdl/urdf/ros_control? interfaces
+
+    // Register ros-controls interfaces
+    this->registerInterface(&state_interface_);
+    this->registerInterface(&effort_interface_);
+    this->registerInterface(&semi_absolute_interface_);
     
     // Set configured flag
     configured_ = true;
@@ -250,7 +264,15 @@ namespace barrett_hw
     return true;
   }
 
-  template<int DOF>
+  template <size_t DOF>
+    Eigen::Matrix<double,DOF,1>
+    BarrettHW::compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam) 
+    {
+      Eigen::MatrixXd m_to_j_pos = wam->getMotorToJointPositionTransform();  
+      return (m_to_j_pos.diagonal().array() * 2.0*M_PI).cwiseAbs().matrix();
+    }
+
+  template<size_t DOF>
     boost::shared_ptr<BarrettHW::WamDevice<DOF> > 
     BarrettHW::configure_wam(
         ros::NodeHandle product_nh,
@@ -281,8 +303,11 @@ namespace barrett_hw
       param::require(product_nh,"tip_joint",tip_joint_name, "WAM tip joint name in URDF.");
       boost::shared_ptr<const urdf::Joint> joint = urdf_model_.getJoint(tip_joint_name);
 
-      // Create joint handles
-      for(size_t i=0; i<DOF; i++) {
+      // Resize joint names
+      wam_device->joint_names.resize(DOF);
+
+      // Create joint handles starting at the tip
+      for(size_t i=DOF-1; i>=0; i--) {
         // While the joint has been handled or the joint type isn't revolute
         while(std::find(wam_device->joint_names.begin(), wam_device->joint_names.end(),joint->name) != wam_device->joint_names.end() 
             || joint->type != urdf::Joint::REVOLUTE)
@@ -297,7 +322,9 @@ namespace barrett_hw
         }
 
         // Store the joint name
-        wam_device->joint_names.push_back(joint->name);
+        wam_device->joint_names[i] = joint->name;
+        wam_device->effort_limits(i) = joint->limits->effort;
+        wam_device->velocity_limits(i) = joint->limits->velocity;
 
         // Joint State Handle
         hardware_interface::JointStateHandle state_handle(joint->name,
@@ -360,12 +387,24 @@ namespace barrett_hw
     return true;
   }
 
-  template <int DOF>
+  void BarrettHW::write(const ros::Time time, const ros::Duration period)
+  {
+    // Iterate over all devices
+    for(Wam4Map::iterator it = wam4s_.begin(); it != wam4s_.end(); ++it) {
+      this->write_wam(time, period, it->second);
+    }
+    for(Wam7Map::iterator it = wam7s_.begin(); it != wam7s_.end(); ++it) {
+      this->write_wam(time, period, it->second);
+    }
+  }
+
+  template <size_t DOF>
   bool BarrettHW::read_wam(
       const ros::Time time, 
       const ros::Duration period,
       boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
   {
+    // Poll the hardware
     try {
       device->interface->update();
     } catch (const std::runtime_error& e) {
@@ -379,9 +418,21 @@ namespace barrett_hw
       }
     }
 
-    // Get state
-    device->joint_positions = device->interface->getJointPositions();
-    device->joint_velocities = device->interface->getJointPositions();
+    // Get raw state
+    Eigen::Matrix<double,DOF,1> raw_positions = device->interface->getJointPositions();
+    Eigen::Matrix<double,DOF,1> raw_velocities = device->interface->getJointVelocities();
+
+    // Smooth velocity 
+    // TODO: parameterize time constant
+    for(size_t i=0; i<DOF; i++) {
+      device->joint_velocities(i) = filters::exponentialSmoothing(
+          raw_velocities(i),
+          device->joint_velocities(i),
+          0.5);
+    }
+    
+    // Store position
+    device->joint_positions = raw_positions;
 
     // Read resolver angles
     std::vector<barrett::Puck*> pucks = device->interface->getPucks();	
@@ -390,6 +441,30 @@ namespace barrett_hw
     }
 
     return true;
+  }
+
+  template <size_t DOF>
+  void BarrettHW::write_wam(
+      const ros::Time time, 
+      const ros::Duration period,
+      boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
+  {
+    static int warning = 0;
+    
+    for(size_t i=0; i<DOF; i++) {
+      if(std::abs(device->joint_effort_cmds(i)) > device->effort_limits[i]) {
+        if(warning++ > 1000) {
+          ROS_WARN_STREAM("Commanded torque ("<<device->joint_effort_cmds(i)<<") of joint ("<<i<<") exceeded safety limits! They have been truncated to: +/- "<<device->effort_limits[i]);
+          warning = 0;
+        }
+        // Truncate this joint torque
+        device->joint_effort_cmds(i) = std::max(
+            std::min(device->joint_effort_cmds(i), device->effort_limits[i]),
+            -1.0*device->effort_limits[i]);
+      }
+    }
+
+    device->interface->setTorques(device->joint_effort_cmds);
   }
 
   bool BarrettHW::wait_for_active(
@@ -435,6 +510,8 @@ int main( int argc, char** argv ){
   ros::NodeHandle barrett_nh("barrett");
 
   barrett_hw::BarrettHW barrett(barrett_nh);
+  barrett.configure();
+  barrett.start();
 
 
   //TODO: execution manager not needed for LLW
