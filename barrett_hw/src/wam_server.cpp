@@ -130,6 +130,7 @@ namespace barrett_hw
     // State
     ros::NodeHandle nh_;
     bool configured_;
+    bool calibrated_;
 
     // Configuration
     urdf::Model urdf_model_;
@@ -175,9 +176,10 @@ namespace barrett_hw
 
   BarrettHW::BarrettHW(ros::NodeHandle nh) :
     nh_(nh),
-    configured_(false)
+    configured_(false),
+    calibrated_(false)
   {
-
+    // TODO: Determine pre-existing calibration from ROS parameter server
   }
 
   bool BarrettHW::configure() 
@@ -476,7 +478,53 @@ namespace barrett_hw
         }
       }
 
+      // Set the torques
       device->interface->setTorques(device->joint_effort_cmds);
+
+      // If not calibrated, servo estimated position to calibration position
+      static int calib_decimate = 0;
+      if(!calibrated_ && calib_decimate++ > 0) {
+        calib_decimate = 0;
+
+        // Check if each joint is calibrated, if
+        bool all_joints_calibrated = true;
+        for(size_t i=0; i<DOF; i++) {
+          if(!all_joints_calibrated) {
+            device->calibration_burn_offsets = device->joint_positions;
+          }
+          all_joints_calibrated = all_joints_calibrated && device->calibrated_joints[i] == 1;
+        }
+
+        if(all_joints_calibrated) {
+
+#if 0
+          // Setting the positions cannot violate the velocity limits
+          // We need to update them incrementally
+          double minimum_time = calibration_burn_offsets_.cwiseQuotient(velocity_limits_).cwiseAbs().maxCoeff();
+          double step = std::min(1.0,std::max(period.toSec()/minimum_time,0.0));
+
+          calibration_burn_offsets_ -= (step)*calibration_burn_offsets_;
+          joint_offsets_.data += (step)*calibration_burn_offsets_;
+
+          static int decimate =0;
+          if(decimate++ > 100) {
+            ROS_INFO_STREAM("Adjusting offset by: "<<step<<" minimum time: "<<minimum_time);
+            decimate = 0;
+          }
+#endif
+
+          // Assign the positions to the current robot configuration
+          device->calibration_burn_offsets.setZero();
+          device->interface->definePosition(device->calibration_burn_offsets);
+
+          //if(std::abs(step-1.0) < 1E-4) {
+          calibrated_ = true;
+          //}
+
+          ROS_INFO("Zeroed joints.");
+
+        }
+      }
     }
 
   bool BarrettHW::wait_for_mode(
