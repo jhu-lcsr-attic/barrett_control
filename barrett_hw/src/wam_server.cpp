@@ -26,6 +26,8 @@
 
 #include <urdf/model.h>
 
+#include <stdexcept>
+
 bool g_quit = false;
 
 void quitRequested(int sig) {
@@ -45,25 +47,52 @@ namespace barrett_hw
     void stop();
     void cleanup();
 
-    bool wait_for_active();
+    bool wait_for_active(
+      ros::Duration timeout = ros::Duration(60.0), 
+      ros::Duration poll_duration = ros::Duration(0.1));
+    
+    // State structure for a product
+    // This provides storage for the joint handles
+    template<int DOF>
+    struct WamDevice 
+    {
+      boost::shared_ptr<barrett::LowLevelWam<DOF> > interface;
+      std::vector<std::string> joint_names;
+      Eigen::Matrix<double,DOF,1> joint_positions, joint_velocities;
+      Eigen::Matrix<double,DOF,1> joint_effort_cmds;
+      Eigen::Matrix<double,DOF,1> resolver_angles, resolver_ranges, joint_offsets;
+      Eigen::Matrix<int,DOF,1> calibrated_joints;
+      Eigen::Matrix<double,DOF,1> calibration_burn_offsets;
+    };
+
+    struct HandDevice 
+    {
+      boost::shared_ptr<barrett::Hand> interface;
+      std::vector<std::string> joint_names;
+      Eigen::Matrix<double,4,1> joint_positions, joint_velocities;
+      Eigen::Matrix<double,4,1> joint_effort_cmds;
+      Eigen::Matrix<double,4,1> resolver_angles, resolver_ranges, joint_offsets;
+      Eigen::Matrix<int,4,1> calibrated_joints;
+      Eigen::Matrix<double,4,1> calibration_burn_offsets;
+    };
 
     //std::map<std::string, boost::shared_ptr<barrett::MultiPuckProduct> > products;
+    typedef WamDevice<4> WamDevice4;
+    typedef WamDevice<7> WamDevice7;
     typedef std::map<std::string, boost::shared_ptr<barrett::ProductManager> >  ManagerMap;
-    typedef std::map<std::string, boost::shared_ptr<barrett::LowLevelWam<4> > > Wam4Map;
-    typedef std::map<std::string, boost::shared_ptr<barrett::LowLevelWam<7> > > Wam7Map;
-    typedef std::map<std::string, boost::shared_ptr<barrett::Hand > > HandMap;
+    typedef std::map<std::string, boost::shared_ptr<WamDevice4> > Wam4Map;
+    typedef std::map<std::string, boost::shared_ptr<WamDevice7> > Wam7Map;
+    typedef std::map<std::string, boost::shared_ptr<HandDevice> > HandMap;
 
   private:
     ros::NodeHandle nh_;
     size_t n_total_dof_;
+    urdf::Model urdf_model_;
+
+    // Status
+    bool configured_;
 
     // ros-controls interface
-    std::vector<std::string> joint_names_;
-    Eigen::VectorXd joint_positions_, joint_velocities_;
-    Eigen::VectorXd joint_effort_cmds_;
-    Eigen::VectorXd resolver_angles_, resolver_ranges_, joint_offsets_;
-    Eigen::VectorXi calibrated_joints_;
-
     hardware_interface::JointStateInterface state_interface_;
     hardware_interface::EffortJointInterface effort_interface_;
     barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
@@ -74,13 +103,27 @@ namespace barrett_hw
     Wam7Map wam7s_;
     HandMap hands_;
 
-    template<int DOF>
-    Eigen::Matrix<double,DOF,1> compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam) 
-    {
-      Eigen::MatrixXd m_to_j_pos = wam->getMotorToJointPositionTransform();  
-      return (m_to_j_pos.diagonal().array() * 2.0*M_PI).cwiseAbs().matrix();
-    }
+    template <int DOF>
+      Eigen::Matrix<double,DOF,1>
+      compute_resolver_ranges(boost::shared_ptr<barrett::LowLevelWam<DOF> > wam) 
+      {
+        Eigen::MatrixXd m_to_j_pos = wam->getMotorToJointPositionTransform();  
+        return (m_to_j_pos.diagonal().array() * 2.0*M_PI).cwiseAbs().matrix();
+      }
 
+    template <int DOF>
+      boost::shared_ptr<BarrettHW::WamDevice<DOF> > 
+      configure_wam(
+          ros::NodeHandle product_nh,
+          boost::shared_ptr<barrett::ProductManager> barrett_manager, 
+          const libconfig::Setting &wam_config); 
+
+    template <int DOF>
+      bool
+      read_wam(
+          const ros::Time time, 
+          const ros::Duration period,
+          boost::shared_ptr<BarrettHW::WamDevice<DOF> > device);
   };
 
   BarrettHW::BarrettHW(ros::NodeHandle nh) :
@@ -98,8 +141,7 @@ namespace barrett_hw
     // Get URDF
     std::string urdf_str;
     param::require(nh_, "robot_description", urdf_str, "The URDF for this barrett system.");
-    urdf::Model urdf;
-    urdf.initString(urdf_str);
+    urdf_model_.initString(urdf_str);
 
     // Load parameters
     param::require(nh_,"product_names",product_names, "The unique barrett product names.");
@@ -146,87 +188,14 @@ namespace barrett_hw
         // Get the configuration for this type of arm
         const libconfig::Setting& wam_config = barrett_manager->getConfig().lookup(barrett_manager->getWamDefaultConfigPath());
 
-        // Determine the DOF of this wam
-        size_t dof = 0;
-
-        if(barrett_manager->foundWam4()) { dof = 4; }
-        else if(barrett_manager->foundWam7()) { dof = 7; }
-        else { ROS_ERROR("Could not find WAM on bus!"); continue; }
-
-        // Resize state vectors
-        n_total_dof_ += dof;
-        joint_positions_.resize(n_total_dof_);
-        joint_velocities_.resize(n_total_dof_);
-        joint_effort_cmds_.resize(n_total_dof_);
-        calibrated_joints_.resize(n_total_dof_);
-        joint_offsets_.resize(n_total_dof_);
-        resolver_angles_.resize(n_total_dof_);
-        resolver_ranges_.conservativeResize(n_total_dof_);
-
-        // Construct the wam interface
-        Eigen::VectorXd resolver_ranges;
-
-        // Get the pucks from this wam
-        std::vector<barrett::Puck*> wam_pucks = barrett_manager->getWamPucks();
-        wam_pucks.resize(dof);
-
-        // Store the wam interface
-        switch(dof) {
-          case 4: { boost::shared_ptr<barrett::LowLevelWam<4> > wam_ptr(new barrett::LowLevelWam<4>(wam_pucks, barrett_manager->getSafetyModule(), wam_config["low_level"]));
-                    resolver_ranges_.bottomRows<4>() = this->compute_resolver_ranges<4>(wam_ptr);
-                    wam4s_[product_name] = wam_ptr; }
-                  break;
-          case 7: { boost::shared_ptr<barrett::LowLevelWam<7> > wam_ptr(new barrett::LowLevelWam<7>(wam_pucks, barrett_manager->getSafetyModule(), wam_config["low_level"]));
-                    resolver_ranges_.bottomRows<7>() = this->compute_resolver_ranges<7>(wam_ptr);
-                    wam7s_[product_name] = wam_ptr; }
-                  break;
-        };
-
-        // Get URDF links starting at product root link
-        std::string tip_joint_name;
-        param::require(product_nh,"tip_joint",tip_joint_name, "WAM tip joint name in URDF.");
-        boost::shared_ptr<const urdf::Joint> joint = urdf.getJoint(tip_joint_name);
-
-        // Create joint handles
-        for(size_t i=0; i<dof; i++) {
-          // While the joint has been handled or the joint type isn't revolute
-          while(std::find(joint_names_.begin(),joint_names_.end(),joint->name) != joint_names_.end() 
-                || joint->type != urdf::Joint::REVOLUTE)
-          {
-            // Get the next joint
-            joint = urdf.getLink(joint->parent_link_name)->parent_joint;
-            // Make sure we didn't run out of links
-            if(!joint.get()) {
-              ROS_ERROR_STREAM("Ran out of joints while parsing URDF starting at joint: "<<tip_joint_name);
-              // TODO: throw exception, clean up everything
-              return false;
-            }
-          }
-          
-          // Store the joint name
-          joint_names_.push_back(joint->name);
-
-          // Joint State Handle
-          hardware_interface::JointStateHandle state_handle(joint->name,
-              &joint_positions_(i),
-              &joint_velocities_(i),
-              &joint_effort_cmds_(i));
-          state_interface_.registerHandle(state_handle);
-
-          // Effort Command Handle
-          effort_interface_.registerHandle(
-              hardware_interface::JointHandle(
-                state_interface_.getHandle(joint->name),
-                &joint_effort_cmds_(i)));
-
-          // Transmission / Calibration handle
-          semi_absolute_interface_.registerJoint(
-              effort_interface_.getHandle(joint->name),
-              resolver_ranges_(i),
-              &resolver_angles_(i),
-              &joint_offsets_(i),
-              &calibrated_joints_(i));
-
+        // Construct and store the wam interface
+        if(barrett_manager->foundWam4()) { 
+          wam4s_[product_name] = this->configure_wam<4>(product_nh, barrett_manager, wam_config);
+        } else if(barrett_manager->foundWam7()) {
+          wam7s_[product_name] = this->configure_wam<7>(product_nh, barrett_manager, wam_config);
+        } else {
+          ROS_ERROR("Could not find WAM on bus!"); 
+          continue; 
         }
 
 
@@ -241,20 +210,166 @@ namespace barrett_hw
 
     // TODO: Set up gravity compensator
     // Write kdl_ros_integration package which handles kdl/urdf/ros_control? interfaces
+    
+    // Set configured flag
+    configured_ = true;
 
     return true;
   }
 
-  bool BarrettHW::wait_for_active() 
+  template<int DOF>
+    boost::shared_ptr<BarrettHW::WamDevice<DOF> > 
+    BarrettHW::configure_wam(
+        ros::NodeHandle product_nh,
+        boost::shared_ptr<barrett::ProductManager> barrett_manager, 
+        const libconfig::Setting &wam_config) 
+    {
+      using namespace terse_roscpp;
+
+      // Construct a new wam device (interface and state storage)
+      boost::shared_ptr<BarrettHW::WamDevice<DOF> > wam_device(new BarrettHW::WamDevice<DOF>());
+
+      // Get the wam picks
+      std::vector<barrett::Puck*> wam_pucks = barrett_manager->getWamPucks();
+      wam_pucks.resize(DOF);
+
+      // Construct a low-level wam
+      wam_device->interface.reset(
+          new barrett::LowLevelWam<DOF>(
+            wam_pucks, 
+            barrett_manager->getSafetyModule(), 
+            wam_config["low_level"]));
+
+      // Initialize resolver ranges
+      wam_device->resolver_ranges = this->compute_resolver_ranges<DOF>(wam_device->interface);
+
+      // Get URDF links starting at product root link
+      std::string tip_joint_name;
+      param::require(product_nh,"tip_joint",tip_joint_name, "WAM tip joint name in URDF.");
+      boost::shared_ptr<const urdf::Joint> joint = urdf_model_.getJoint(tip_joint_name);
+
+      // Create joint handles
+      for(size_t i=0; i<DOF; i++) {
+        // While the joint has been handled or the joint type isn't revolute
+        while(std::find(wam_device->joint_names.begin(), wam_device->joint_names.end(),joint->name) != wam_device->joint_names.end() 
+            || joint->type != urdf::Joint::REVOLUTE)
+        {
+          // Get the next joint
+          joint = urdf_model_.getLink(joint->parent_link_name)->parent_joint;
+          // Make sure we didn't run out of links
+          if(!joint.get()) {
+            ROS_ERROR_STREAM("Ran out of joints while parsing URDF starting at joint: "<<tip_joint_name);
+            throw std::runtime_error("Ran out of joints.");
+          }
+        }
+
+        // Store the joint name
+        wam_device->joint_names.push_back(joint->name);
+
+        // Joint State Handle
+        hardware_interface::JointStateHandle state_handle(joint->name,
+            &wam_device->joint_positions(i),
+            &wam_device->joint_velocities(i),
+            &wam_device->joint_effort_cmds(i));
+        state_interface_.registerHandle(state_handle);
+
+        // Effort Command Handle
+        effort_interface_.registerHandle(
+            hardware_interface::JointHandle(
+              state_interface_.getHandle(joint->name),
+              &wam_device->joint_effort_cmds(i)));
+
+        // Transmission / Calibration handle
+        semi_absolute_interface_.registerJoint(
+            effort_interface_.getHandle(joint->name),
+            wam_device->resolver_ranges(i),
+            &wam_device->resolver_angles(i),
+            &wam_device->joint_offsets(i),
+            &wam_device->calibrated_joints(i));
+
+      }
+
+      return wam_device;
+    }
+
+  bool BarrettHW::start()
   {
+    // Guard on configured
+    if(!configured_) {
+      ROS_ERROR("Barrett hardware must be configured before it can be started.");
+      return false;
+    }
+
+    // Zero the state 
+    
+
+    // Wait for the system to become active
+    this->wait_for_active();
+
+    return true;
+  }
+
+  bool BarrettHW::read(const ros::Time time, const ros::Duration period)
+  {
+    // Iterate over all devices
+    for(Wam4Map::iterator it = wam4s_.begin(); it != wam4s_.end(); ++it) {
+      this->read_wam(time, period, it->second);
+    }
+    for(Wam7Map::iterator it = wam7s_.begin(); it != wam7s_.end(); ++it) {
+      this->read_wam(time, period, it->second);
+    }
+
+    return true;
+  }
+
+  template <int DOF>
+  bool BarrettHW::read_wam(
+      const ros::Time time, 
+      const ros::Duration period,
+      boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
+  {
+    try {
+      device->interface->update();
+    } catch (const std::runtime_error& e) {
+      if (device->interface->getSafetyModule() != NULL  &&
+          device->interface->getSafetyModule()->getMode(true) == barrett::SafetyModule::ESTOP) 
+      {
+        ROS_ERROR_STREAM("systems::LowLevelWamWrapper::Source::operate(): E-stop! Cannot communicate with Pucks.");
+        return false;
+      } else {
+        throw;
+      }
+    }
+
+    // Get state
+    device->joint_positions = device->interface->getJointPositions();
+    device->joint_velocities = device->interface->getJointPositions();
+
+    return true;
+  }
+
+  bool BarrettHW::wait_for_active(
+      ros::Duration timeout, 
+      ros::Duration poll_duration) 
+  {
+    ros::Time polling_start_time = ros::Time::now();
+    ros::Rate poll_rate(1.0/poll_duration.toSec());
+
     for(ManagerMap::iterator it = barrett_managers_.begin(); 
         it != barrett_managers_.end();
         ++it) 
     {
-      it->second->getSafetyModule()->waitForMode(barrett::SafetyModule::ACTIVE);
+      while( ros::ok() 
+          && (ros::Time::now() - polling_start_time < timeout)
+          && (it->second->getSafetyModule()->getMode() != barrett::SafetyModule::ACTIVE)) 
+      {
+        poll_rate.sleep();
+      }
     }
-    return true;
+    return (ros::Time::now() - polling_start_time < timeout);
   }
+
+
 }
 
 int main( int argc, char** argv ){
