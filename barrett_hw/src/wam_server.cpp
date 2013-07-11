@@ -50,46 +50,50 @@ namespace barrett_hw
     void cleanup();
 
     // Wait for all devices to become active
-    bool wait_for_active(
-      ros::Duration timeout = ros::Duration(60.0), 
-      ros::Duration poll_duration = ros::Duration(0.1));
-    
+    bool wait_for_mode(
+        barrett::SafetyModule::SafetyMode mode,
+        ros::Duration timeout = ros::Duration(60.0), 
+        ros::Duration poll_duration = ros::Duration(0.1));
+
+    void set_mode(
+        barrett::SafetyModule::SafetyMode mode);
+
     // State structure for a Wam
     // This provides storage for the joint handles
     template<size_t DOF>
-    struct WamDevice 
-    {
-      // Low-level interface
-      boost::shared_ptr<barrett::LowLevelWam<DOF> > interface;
+      struct WamDevice 
+      {
+        // Low-level interface
+        boost::shared_ptr<barrett::LowLevelWam<DOF> > interface;
 
-      // Configuration
-      std::vector<std::string> joint_names;
-      Eigen::Matrix<double,DOF,1> 
-        resolver_ranges,
-        effort_limits,
-        velocity_limits;
+        // Configuration
+        std::vector<std::string> joint_names;
+        Eigen::Matrix<double,DOF,1> 
+          resolver_ranges,
+          effort_limits,
+          velocity_limits;
 
-      // State
-      Eigen::Matrix<double,DOF,1> 
-        joint_positions,
-        joint_velocities,
-        joint_effort_cmds,
-        joint_offsets,
-        resolver_angles,
-        calibration_burn_offsets;
+        // State
+        Eigen::Matrix<double,DOF,1> 
+          joint_positions,
+          joint_velocities,
+          joint_effort_cmds,
+          joint_offsets,
+          resolver_angles,
+          calibration_burn_offsets;
 
-      Eigen::Matrix<int,DOF,1> calibrated_joints;
+        Eigen::Matrix<int,DOF,1> calibrated_joints;
 
-      void set_zero() {
-        joint_positions.setZero();
-        joint_velocities.setZero();
-        joint_effort_cmds.setZero();
-        joint_offsets.setZero();
-        resolver_angles.setZero();
-        calibration_burn_offsets.setZero();
-      }
+        void set_zero() {
+          joint_positions.setZero();
+          joint_velocities.setZero();
+          joint_effort_cmds.setZero();
+          joint_offsets.setZero();
+          resolver_angles.setZero();
+          calibration_burn_offsets.setZero();
+        }
 
-    };
+      };
 
     // State structure for a Hand
     struct HandDevice 
@@ -134,7 +138,7 @@ namespace barrett_hw
     hardware_interface::JointStateInterface state_interface_;
     hardware_interface::EffortJointInterface effort_interface_;
     barrett_model::SemiAbsoluteJointInterface semi_absolute_interface_;
-    
+
     // Vectors of various barrett structures
     ManagerMap barrett_managers_;
     Wam4Map wam4s_;
@@ -257,7 +261,7 @@ namespace barrett_hw
     this->registerInterface(&state_interface_);
     this->registerInterface(&effort_interface_);
     this->registerInterface(&semi_absolute_interface_);
-    
+
     // Set configured flag
     configured_ = true;
 
@@ -369,9 +373,17 @@ namespace barrett_hw
     }
 
     // Wait for the system to become active
-    this->wait_for_active();
+    this->wait_for_mode(barrett::SafetyModule::ACTIVE);
 
     return true;
+  }
+
+  void BarrettHW::stop()
+  {
+    // Set the mode to IDLE
+    this->set_mode(barrett::SafetyModule::IDLE);
+    // Wait for the system to become active
+    this->wait_for_mode(barrett::SafetyModule::IDLE);
   }
 
   bool BarrettHW::read(const ros::Time time, const ros::Duration period)
@@ -399,75 +411,76 @@ namespace barrett_hw
   }
 
   template <size_t DOF>
-  bool BarrettHW::read_wam(
-      const ros::Time time, 
-      const ros::Duration period,
-      boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
-  {
-    // Poll the hardware
-    try {
-      device->interface->update();
-    } catch (const std::runtime_error& e) {
-      if (device->interface->getSafetyModule() != NULL  &&
-          device->interface->getSafetyModule()->getMode(true) == barrett::SafetyModule::ESTOP) 
-      {
-        ROS_ERROR_STREAM("systems::LowLevelWamWrapper::Source::operate(): E-stop! Cannot communicate with Pucks.");
-        return false;
-      } else {
-        throw;
+    bool BarrettHW::read_wam(
+        const ros::Time time, 
+        const ros::Duration period,
+        boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
+    {
+      // Poll the hardware
+      try {
+        device->interface->update();
+      } catch (const std::runtime_error& e) {
+        if (device->interface->getSafetyModule() != NULL  &&
+            device->interface->getSafetyModule()->getMode(true) == barrett::SafetyModule::ESTOP) 
+        {
+          ROS_ERROR_STREAM("systems::LowLevelWamWrapper::Source::operate(): E-stop! Cannot communicate with Pucks.");
+          return false;
+        } else {
+          throw;
+        }
       }
+
+      // Get raw state
+      Eigen::Matrix<double,DOF,1> raw_positions = device->interface->getJointPositions();
+      Eigen::Matrix<double,DOF,1> raw_velocities = device->interface->getJointVelocities();
+
+      // Smooth velocity 
+      // TODO: parameterize time constant
+      for(size_t i=0; i<DOF; i++) {
+        device->joint_velocities(i) = filters::exponentialSmoothing(
+            raw_velocities(i),
+            device->joint_velocities(i),
+            0.5);
+      }
+
+      // Store position
+      device->joint_positions = raw_positions;
+
+      // Read resolver angles
+      std::vector<barrett::Puck*> pucks = device->interface->getPucks();	
+      for(size_t i=0; i<pucks.size(); i++) {
+        device->resolver_angles(i) = pucks[i]->getProperty(barrett::Puck::MECH);
+      }
+
+      return true;
     }
-
-    // Get raw state
-    Eigen::Matrix<double,DOF,1> raw_positions = device->interface->getJointPositions();
-    Eigen::Matrix<double,DOF,1> raw_velocities = device->interface->getJointVelocities();
-
-    // Smooth velocity 
-    // TODO: parameterize time constant
-    for(size_t i=0; i<DOF; i++) {
-      device->joint_velocities(i) = filters::exponentialSmoothing(
-          raw_velocities(i),
-          device->joint_velocities(i),
-          0.5);
-    }
-    
-    // Store position
-    device->joint_positions = raw_positions;
-
-    // Read resolver angles
-    std::vector<barrett::Puck*> pucks = device->interface->getPucks();	
-    for(size_t i=0; i<pucks.size(); i++) {
-      device->resolver_angles(i) = pucks[i]->getProperty(barrett::Puck::MECH);
-    }
-
-    return true;
-  }
 
   template <size_t DOF>
-  void BarrettHW::write_wam(
-      const ros::Time time, 
-      const ros::Duration period,
-      boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
-  {
-    static int warning = 0;
-    
-    for(size_t i=0; i<DOF; i++) {
-      if(std::abs(device->joint_effort_cmds(i)) > device->effort_limits[i]) {
-        if(warning++ > 1000) {
-          ROS_WARN_STREAM("Commanded torque ("<<device->joint_effort_cmds(i)<<") of joint ("<<i<<") exceeded safety limits! They have been truncated to: +/- "<<device->effort_limits[i]);
-          warning = 0;
+    void BarrettHW::write_wam(
+        const ros::Time time, 
+        const ros::Duration period,
+        boost::shared_ptr<BarrettHW::WamDevice<DOF> > device)
+    {
+      static int warning = 0;
+
+      for(size_t i=0; i<DOF; i++) {
+        if(std::abs(device->joint_effort_cmds(i)) > device->effort_limits[i]) {
+          if(warning++ > 1000) {
+            ROS_WARN_STREAM("Commanded torque ("<<device->joint_effort_cmds(i)<<") of joint ("<<i<<") exceeded safety limits! They have been truncated to: +/- "<<device->effort_limits[i]);
+            warning = 0;
+          }
+          // Truncate this joint torque
+          device->joint_effort_cmds(i) = std::max(
+              std::min(device->joint_effort_cmds(i), device->effort_limits[i]),
+              -1.0*device->effort_limits[i]);
         }
-        // Truncate this joint torque
-        device->joint_effort_cmds(i) = std::max(
-            std::min(device->joint_effort_cmds(i), device->effort_limits[i]),
-            -1.0*device->effort_limits[i]);
       }
+
+      device->interface->setTorques(device->joint_effort_cmds);
     }
 
-    device->interface->setTorques(device->joint_effort_cmds);
-  }
-
-  bool BarrettHW::wait_for_active(
+  bool BarrettHW::wait_for_mode(
+      barrett::SafetyModule::SafetyMode mode,
       ros::Duration timeout, 
       ros::Duration poll_duration) 
   {
@@ -480,7 +493,7 @@ namespace barrett_hw
     {
       while( ros::ok() 
           && (ros::Time::now() - polling_start_time < timeout)
-          && (it->second->getSafetyModule()->getMode() != barrett::SafetyModule::ACTIVE)) 
+          && (it->second->getSafetyModule()->getMode() != mode)) 
       {
         poll_rate.sleep();
       }
@@ -488,6 +501,16 @@ namespace barrett_hw
     return (ros::Time::now() - polling_start_time < timeout);
   }
 
+  void BarrettHW::set_mode(
+      barrett::SafetyModule::SafetyMode mode)
+  {
+    for(ManagerMap::iterator it = barrett_managers_.begin(); 
+        it != barrett_managers_.end();
+        ++it) 
+    {
+      it->second->getSafetyModule()->setMode(mode);
+    }
+  }
 
 }
 
